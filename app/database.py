@@ -11,5 +11,5 @@ class Fundamental(db.Model):
     report_date = db.Column(db.Date, nullable=False)
     revenue = db.Column(db.Float)
     net_income = db.Column(db.Float)
-    eps = db.Column(db.Float)  # Earnings Per Share
+    eps = db.Column(db.Float)  
     # Add other metrics your ML model needs here

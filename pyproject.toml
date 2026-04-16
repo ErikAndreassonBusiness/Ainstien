@@ -10,6 +10,7 @@ dependencies = [
     "pandas>=3.0.2",
     "python-dotenv>=1.2.2",
     "scikit-learn>=1.8.0",
+    "simfin>=1.0.1",
     "sqlalchemy-migrate>=0.13.0",
     "yfinance>=1.2.2",
 ]
