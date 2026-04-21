@@ -19,3 +19,9 @@ class Fundamental(db.Model):
     revenue = db.Column(db.Float)
     net_income = db.Column(db.Float)
     eps = db.Column(db.Float)
+
+    omsattningstillvaxt = db.Column(db.Float)
+    vinsttillvaxt = db.Column(db.Float)
+    ebit_marginal = db.Column(db.Float)
+    soliditet = db.Column(db.Float)
+    net_debt_ebitda = db.Column(db.Float)
