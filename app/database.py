@@ -29,3 +29,9 @@ class Fundamental(db.Model):
     revenue: Mapped[float] = mapped_column()
     net_income: Mapped[float] = mapped_column()
     eps: Mapped[float] = mapped_column()
+
+    omsattningstillvaxt: Mapped[float] = mapped_column()
+    vinsttillvaxt: Mapped[float] = mapped_column()
+    ebit_marginal: Mapped[float] = mapped_column()
+    soliditet: Mapped[float] = mapped_column()
+    net_debt_ebitda: Mapped[float] = mapped_column()
