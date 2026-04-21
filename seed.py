@@ -16,7 +16,7 @@ TICKERS = ["8TRA.ST",
                     "BUFAB.SR", 
                     "NCC-B.ST", 
                     "BRAV.ST", 
-                    "AQ.ST,", 
+                    "AQ.ST", 
                     "OEM-B.ST", 
                     "STOR-B.ST", 
                     "BEIA-B.ST", 
@@ -142,20 +142,30 @@ TICKERS = ["8TRA.ST",
                     "ZENZIP-B.ST", 
                     "PADEL.ST"]
 
+
 def seed_data():
     app = create_app()
     with app.app_context():
-        print("Seeding Swedish Annual Fundamentals...")
+        print("Wiping and rebuilding database...")
+        db.drop_all()   
+        db.create_all() 
+
+        print("Seeding Swedish Annual Fundamentals with Ratios...")
         
         for symbol in TICKERS:
+            # Clean ticker (removes trailing commas if any)
+            symbol = symbol.strip().replace(",", "")
             print(f"Processing {symbol}...")
+            
             ticker = yf.Ticker(symbol)
             
-            # Fetch ANNUAL data (gives 4 years)
-            df = ticker.financials 
+            # Fetch necessary DataFrames
+            inc = ticker.financials        # Income Statement
+            bal = ticker.balance_sheet    # Balance Sheet
+            cf = ticker.cashflow          # Cash Flow (optional, for EBITDA)
             
-            if df is None or df.empty:
-                print(f"No data for {symbol}")
+            if inc is None or inc.empty or bal.empty:
+                print(f"Skipping {symbol}: Missing Financials or Balance Sheet")
                 continue
 
             # Ensure Company entry exists
@@ -165,27 +175,80 @@ def seed_data():
                 db.session.add(company)
                 db.session.flush()
 
-            # Iterate through the 4 years of history
-            for report_date in df.columns:
+            # ... (Inside the ticker loop, after fetching inc, bal, cf) ...
+
+            # Sort dates from oldest to newest to ensure growth is calculated correctly
+            # i.e., [2020, 2021, 2022, 2023]
+            sorted_dates = sorted(inc.columns)
+            
+            for i in range(len(sorted_dates)):
+                report_date = sorted_dates[i]
                 r_date = report_date.date()
                 
-                # Deduplication
-                exists = Fundamental.query.filter_by(company_id=company.id, report_date=r_date).first()
-                if not exists:
-                    # Mapping Yahoo's index names to your DB columns
+                # 2. Don't sotre data for the first year
+                if i == 0:
+                    continue
+                    
+                # 3. Manually get the previous report date
+                prev_date = sorted_dates[i - 1]
+
+                # Check if this specific year is already in the DB
+                if Fundamental.query.filter_by(company_id=company.id, report_date=r_date).first():
+                    continue
+
+                try:
+                    # Current Year Data
+                    rev = inc.loc['Total Revenue', report_date] if 'Total Revenue' in inc.index else 0
+                    ebit = inc.loc['EBIT', report_date] if 'EBIT' in inc.index else 0
+                    ebitda = inc.loc['EBITDA', report_date] if 'EBITDA' in inc.index else None
+                    net_income = inc.loc['Net Income', report_date] if 'Net Income' in inc.index else 0
+                    
+                    # Previous Year Data (for growth)
+                    prev_rev = inc.loc['Total Revenue', prev_date] if 'Total Revenue' in inc.index else 0
+                    prev_vinst = inc.loc['Net Income', prev_date] if 'Net Income' in inc.index else 0
+
+                    # Calculations
+                    # Omsättningstillväxt
+                    rev_growth = (rev - prev_rev) / prev_rev if prev_rev and prev_rev != 0 else 0
+                    
+                    # Vinsttillväxt (using absolute value for denominator to handle negative-to-positive swings)
+                    vinst_growth = (net_income - prev_vinst) / abs(prev_vinst) if prev_vinst and prev_vinst != 0 else 0
+
+                    # EBIT-marginal
+                    ebit_margin = (ebit / rev) if rev and rev != 0 else 0
+                    
+                    # Soliditet (Balance Sheet)
+                    total_assets = bal.loc['Total Assets', report_date] if 'Total Assets' in bal.index else 0
+                    total_equity = bal.loc['Stockholders Equity', report_date] if 'Stockholders Equity' in bal.index else 0
+                    soliditet = (total_equity / total_assets) if total_assets and total_assets != 0 else 0
+                    
+                    # Nettoskuld/EBITDA
+                    total_debt = bal.loc['Total Debt', report_date] if 'Total Debt' in bal.index else 0
+                    cash = bal.loc['Cash And Cash Equivalents', report_date] if 'Cash And Cash Equivalents' in bal.index else 0
+                    net_debt = total_debt - cash
+                    net_debt_ebitda = (net_debt / ebitda) if ebitda and ebitda != 0 else 0
+
+                    # Save the record
                     f = Fundamental(
                         company_id=company.id,
                         report_date=r_date,
-                        revenue=df.loc['Total Revenue', report_date] if 'Total Revenue' in df.index else 0,
-                        net_income=df.loc['Net Income', report_date] if 'Net Income' in df.index else 0,
-                        eps=df.loc['Basic EPS', report_date] if 'Basic EPS' in df.index else 0
-                        # You can add more attributes here as you expand
+                        revenue=rev,
+                        net_income=net_income,
+                        omsattningstillvaxt=rev_growth,
+                        vinsttillvaxt=vinst_growth,
+                        ebit_marginal=ebit_margin,
+                        soliditet=soliditet,
+                        net_debt_ebitda=net_debt_ebitda
                     )
                     db.session.add(f)
+
+                except Exception as e:
+                    print(f"Error for {symbol} on {report_date}: {e}")
             
             db.session.commit()
             print(f"Saved {symbol}")
-            time.sleep(0.5) # Avoid rate limits
+            time.sleep(0.8)  # Slightly longer sleep for mid-caps to avoid YF blocks
+
 
 if __name__ == "__main__":
     seed_data()
