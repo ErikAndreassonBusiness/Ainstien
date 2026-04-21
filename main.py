@@ -1,4 +1,4 @@
-from database import db, Company, Fundamental
+from app.database import db, Company, Fundamental
 
 def main():
     print("Hello from ainstien!")
