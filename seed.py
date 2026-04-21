@@ -142,6 +142,40 @@ TICKERS = ["8TRA.ST",
                     "ZENZIP-B.ST", 
                     "PADEL.ST"]
 
+def calc_revenue_growth(rev, prev_rev): 
+    return (rev - prev_rev) / prev_rev if prev_rev and prev_rev != 0 else 0
+
+def calc_profit_growth(net_income, prev_vinst): 
+    return (net_income - prev_vinst) / abs(prev_vinst) if prev_vinst and prev_vinst != 0 else 0
+
+def calc_ebit_margin(ebit, rev): 
+    return (ebit / rev) if rev and rev != 0 else 0
+
+def calc_soliditet(bal, report_date): 
+    total_assets = bal.loc['Total Assets', report_date] if 'Total Assets' in bal.index else 0
+    total_equity = bal.loc['Stockholders Equity', report_date] if 'Stockholders Equity' in bal.index else 0
+    return (total_equity / total_assets) if total_assets and total_assets != 0 else 0
+
+def calc_net_debt_ebitda(bal, report_date, ebitda): 
+    total_debt = bal.loc['Total Debt', report_date] if 'Total Debt' in bal.index else 0
+    cash = bal.loc['Cash And Cash Equivalents', report_date] if 'Cash And Cash Equivalents' in bal.index else 0
+    net_debt = total_debt - cash
+    return (net_debt / ebitda) if ebitda and ebitda != 0 else 0
+
+def add_fundementals_to_db(id, r_date, rev, net_income, rev_growth, vinst_growth, ebit_margin, soliditet, net_debt_ebitda): 
+    fundementals = Fundamental(
+        company_id=id,
+        report_date=r_date,
+        revenue=rev,
+        net_income=net_income,
+        omsattningstillvaxt=rev_growth,
+        vinsttillvaxt=vinst_growth,
+        ebit_marginal=ebit_margin,
+        soliditet=soliditet,
+        net_debt_ebitda=net_debt_ebitda
+    )
+
+    db.session.add(fundementals)
 
 def seed_data():
     app = create_app()
@@ -208,46 +242,23 @@ def seed_data():
                     prev_vinst = inc.loc['Net Income', prev_date] if 'Net Income' in inc.index else 0
 
                     # Calculations
-                    # Omsättningstillväxt
                     rev_growth = (rev - prev_rev) / prev_rev if prev_rev and prev_rev != 0 else 0
-                    
-                    # Vinsttillväxt (using absolute value for denominator to handle negative-to-positive swings)
-                    vinst_growth = (net_income - prev_vinst) / abs(prev_vinst) if prev_vinst and prev_vinst != 0 else 0
+                    vinst_growth = calc_profit_growth(net_income, prev_vinst)
+                    ebit_margin = calc_ebit_margin(ebit, rev)
+                    soliditet = calc_soliditet(bal,report_date)
+                    net_debt_ebitda = calc_net_debt_ebitda(bal)
 
-                    # EBIT-marginal
-                    ebit_margin = (ebit / rev) if rev and rev != 0 else 0
-                    
-                    # Soliditet (Balance Sheet)
-                    total_assets = bal.loc['Total Assets', report_date] if 'Total Assets' in bal.index else 0
-                    total_equity = bal.loc['Stockholders Equity', report_date] if 'Stockholders Equity' in bal.index else 0
-                    soliditet = (total_equity / total_assets) if total_assets and total_assets != 0 else 0
-                    
-                    # Nettoskuld/EBITDA
-                    total_debt = bal.loc['Total Debt', report_date] if 'Total Debt' in bal.index else 0
-                    cash = bal.loc['Cash And Cash Equivalents', report_date] if 'Cash And Cash Equivalents' in bal.index else 0
-                    net_debt = total_debt - cash
-                    net_debt_ebitda = (net_debt / ebitda) if ebitda and ebitda != 0 else 0
-
-                    # Save the record
-                    f = Fundamental(
-                        company_id=company.id,
-                        report_date=r_date,
-                        revenue=rev,
-                        net_income=net_income,
-                        omsattningstillvaxt=rev_growth,
-                        vinsttillvaxt=vinst_growth,
-                        ebit_marginal=ebit_margin,
-                        soliditet=soliditet,
-                        net_debt_ebitda=net_debt_ebitda
-                    )
-                    db.session.add(f)
+                    #Add to database
+                    add_fundementals_to_db(company.id, r_date, rev, net_income, 
+                                                                rev_growth, vinst_growth, ebit_margin, 
+                                                                soliditet, net_debt_ebitda)
 
                 except Exception as e:
                     print(f"Error for {symbol} on {report_date}: {e}")
             
             db.session.commit()
             print(f"Saved {symbol}")
-            time.sleep(0.8)  # Slightly longer sleep for mid-caps to avoid YF blocks
+            time.sleep(0.3)  # Slightly longer sleep for mid-caps to avoid YF blocks
 
 
 if __name__ == "__main__":
