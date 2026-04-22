@@ -15,23 +15,22 @@ class Company(db.Model):
     __tablename__ = "company"
     id : Mapped[int] = mapped_column(primary_key=True)
     ticker : Mapped[str] = mapped_column(unique=True, nullable=False)
-    name : Mapped[str] = mapped_column()
-    fundamentals: Mapped['Fundamental'] = relationship(back_populates='company', )
+    name : Mapped[str] = mapped_column(nullable = True)
+    fundamentals: Mapped[list['Fundamental']] = relationship(back_populates='company', )
 
 class Fundamental(db.Model):
     __tablename__ = "fundamental"
     id: Mapped[int] = mapped_column(primary_key=True)
-    company_id: Mapped[int] = mapped_column(ForeignKey('company.id'), unique=True, nullable=False)
+    company_id: Mapped[int] = mapped_column(ForeignKey('company.id'), nullable=False)
 
     company : Mapped['Company'] = relationship(back_populates='fundamentals')
 
     report_date: Mapped[date] = mapped_column(nullable=False)
-    revenue: Mapped[float] = mapped_column()
-    net_income: Mapped[float] = mapped_column()
-    eps: Mapped[float] = mapped_column()
+    revenue: Mapped[float] = mapped_column(nullable=False)
+    net_income: Mapped[float] = mapped_column(nullable=False)
 
-    omsattningstillvaxt: Mapped[float] = mapped_column()
-    vinsttillvaxt: Mapped[float] = mapped_column()
-    ebit_marginal: Mapped[float] = mapped_column()
-    soliditet: Mapped[float] = mapped_column()
-    net_debt_ebitda: Mapped[float] = mapped_column()
+    revenue_growth_percent: Mapped[float] = mapped_column(nullable=False)
+    profit_growth_percent: Mapped[float] = mapped_column(nullable=False)
+    ebit_margin_percent: Mapped[float] = mapped_column(nullable=False)
+    soliditet_percent: Mapped[float] = mapped_column(nullable=False)
+    #net_debt_ebitda: Mapped[float] = mapped_column(nullable=False)

@@ -14,14 +14,20 @@ import os
 def create_app():
     app = Flask(__name__)
     
-    # Configure SQLite
+    # ===== Configure the database =======
     basedir = os.path.abspath(os.path.dirname(__file__))
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, '../data/trading.db')
+
+    data_folder = os.path.join(basedir, '../data') #go to the data folder
+    if not os.path.exists(data_folder): #if not exists, create one
+        os.makedirs(data_folder)
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(data_folder, 'company.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    db.init_app(app)
+    db.init_app(app) #Connect the app woth the database
 
+    # create the database
     with app.app_context():
-        db.create_all()  # This creates the .db file and tables automatically
+        db.create_all()  
 
     return app

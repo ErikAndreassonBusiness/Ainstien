@@ -4,6 +4,7 @@ Purpose: Seeds the DB with 4 years of ANNUAL fundamental data from Yahoo Finance
 Target: Swedish Mid-Cap stocks (.ST).
 """
 import yfinance as yf
+import pandas as pd
 import time
 from app import create_app
 from app.database import db, Company, Fundamental
@@ -143,64 +144,99 @@ TICKERS = ["8TRA.ST",
                     "PADEL.ST"]
 
 def get_revenue(inc, report_date): 
-    if 'Total Revenue' in inc.index: 
-        return inc.loc['Total Revenue', report_date]
-    else: 
-        return 0
+    for key in ['Total Revenue', 'Revenue', 'Operating Revenue']:
+        if key in inc.index:
+            revenue = inc.loc[key, report_date]
+            if pd.notna(revenue) and revenue != 0:
+                return revenue
+    raise ValueError(f"Revenue not found for {report_date}")
+
+    # if 'Total Revenue' in inc.index: 
+    #     revenue = inc.loc['Total Revenue', report_date]
+
+    #     if pd.isna(revenue): 
+    #         raise ValueError("Revenue is NaN")
+    #     return revenue
+
+    # else: 
+    #     raise ValueError("Total Revenue not found")
                         
 def get_profit(inc, report_date):
     if 'Net Income' in inc.index: 
-        return  inc.loc['Net Income', report_date]  
+        net_income =  inc.loc['Net Income', report_date]  
+
+        if pd.isna(net_income): 
+            raise ValueError("Net Income is NaN")
+        return net_income
     else: 
-        return 0
+        raise ValueError("Net Income not found")
 
 def get_ebit(inc, report_date): 
     if 'EBIT' in inc.index: 
-        return inc.loc['EBIT', report_date] 
+        ebit = inc.loc['EBIT', report_date] 
+
+        if pd.isna(ebit): 
+            raise ValueError("EBIT is NaN")
+        return ebit
     else: 
-        return 0
+        raise ValueError("EBIT not found")
 
 def get_ebitda(inc, report_date): 
     if 'EBITDA' in inc.index: 
-        return inc.loc['EBITDA', report_date]
+        ebitda = inc.loc['EBITDA', report_date]
+
+        if pd.isna(ebitda): 
+            raise ValueError("EBITDA is NaN")
+        return ebitda
     else: 
-        return 0
+        raise ValueError("EBITDA not found")
 
 def calc_growth_to_percent(current_data, prev_data): 
     if prev_data < 0: 
         return (current_data - prev_data) / -prev_data
     elif prev_data == 0: 
-        return 0
+        raise ValueError("Cannot divide with zero!")
     else:
         return 100 * (current_data - prev_data) / prev_data
 
     
 def calc_margin_to_percent(attribute, revenue): 
     if revenue == 0: 
-        return 0
+        raise ValueError("Cannot divide with zero!")
     else: 
         return 100 *attribute / revenue #convert to percent
 
 def calc_soliditet_to_percent(bal, report_date): 
-    total_assets = bal.loc['Total Assets', report_date] if 'Total Assets' in bal.index else 0
-    total_equity = bal.loc['Stockholders Equity', report_date] if 'Stockholders Equity' in bal.index else 0
-    return 100 * (total_equity / total_assets) if total_assets and total_assets != 0 else 0
+    if 'Total Assets' in bal.index and 'Stockholders Equity' in bal.index: 
+        total_assets = bal.loc['Total Assets', report_date]
+        total_equity = bal.loc['Stockholders Equity', report_date]
+    else:
+        raise ValueError("Total Assets or Stockholders Equity not found!")
+    
+    if total_assets != 0: 
+        return 100 * (total_equity / total_assets) 
+    else:
+        raise ValueError("Cannot divide with zero!")
 
 def calc_net_debt_ebitda(bal, report_date, ebitda): 
     if ebitda == 0: 
-        return 0
+        raise ValueError("Cannot divide with zero!")
 
     if 'Total Debt' in bal.index: 
         total_debt = bal.loc['Total Debt', report_date]
     else: 
-        total_debt = 0
+        raise ValueError("Total Debt not found")
     
     if 'Cash And Cash Equivalents' in bal.index: 
         cash = bal.loc['Cash And Cash Equivalents', report_date]
     else: 
-        cash = 0
+        raise ValueError("Cash And Cash Equivalents not found")
     
-    return (total_debt - cash) / ebitda
+    result = (total_debt - cash) / ebitda
+
+    if pd.isna(result):
+        raise ValueError("Net Debt/EBITDA is NaN")
+    return result
 
 def seed_data():
     app = create_app()
@@ -227,16 +263,16 @@ def seed_data():
                 print(f"Skipping {ticker}: Missing Financials or Balance Sheet")
                 continue
 
-            # If a company is not already in db, create one
-            company = Company.query.filter_by(ticker=ticker).first()
-            if not company:
-                company = Company(ticker=ticker, name=ticker_data.info.get('shortName'))
-                db.session.add(company)
-                db.session.flush()
+            # Only save companies with all the data provided
+            temp_fundamentals = []
+            sorted_dates = sorted(inc.columns)[-4:] #get the 4 resent year
+            all_years_valid = True 
 
-            # Sort dates from oldest to newest to ensure growth is calculated correctly
-            sorted_dates = sorted(inc.columns)
-            
+            # Ensure that there is 3 years of data can be strored
+            if len(sorted_dates) < 4:
+                print(f"  SKIPPED: {ticker} - Not enough raw data (need 4 years, found {len(sorted_dates)})")
+                continue
+
             for i in range(1, len(sorted_dates)): #skips the first year since we need a base reveneue and profiit
 
                 report_date = sorted_dates[i] # to get data from reports
@@ -245,51 +281,71 @@ def seed_data():
                 # 3. Manually get the previous report date
                 prev_report_date = sorted_dates[i - 1]
 
-                # Check if this specific fundemental year is already in the DB
-                if Fundamental.query.filter_by(company_id=company.id, report_date=r_date).first() is None:
-                    try:
-                        
-                        # ======= Fecth reveneue and profit =======
-                        # Get previous years revenue and profit 
-                        prev_rev = get_revenue(inc, prev_report_date)
-                        prev_profit = get_profit(inc, prev_report_date)
+                try:
+                    # ======= Fecth reveneue and profit =======
+                    # Get previous years revenue and profit 
+                    prev_rev = get_revenue(inc, prev_report_date)
+                    prev_profit = get_profit(inc, prev_report_date)
 
-                        # Get  current years revenue and profit 
-                        rev_raw = get_revenue(inc, report_date)
-                        net_income_raw = get_profit(inc, report_date)
+                    # Get  current years revenue and profit 
+                    rev_raw = get_revenue(inc, report_date)
+                    net_income_raw = get_profit(inc, report_date)
 
-                        # Fetch current years data
-                        ebit_raw = get_ebit(inc, report_date)
-                        ebitda_raw =  get_ebitda(inc,  report_date)
+                    # Fetch current years data
+                    ebit_raw = get_ebit(inc, report_date)
+                    ebitda_raw =  get_ebitda(inc,  report_date)
 
-                        # ======== Calculations of x1, ... xn ========
-                        rev_growth = calc_growth_to_percent(rev_raw, prev_rev)
-                        profit_growth = calc_growth_to_percent(net_income_raw, prev_profit)
-                        ebit_margin = calc_margin_to_percent(ebit_raw, rev_raw)
-                        soliditet = calc_soliditet_to_percent(bal,report_date)
-                        net_debt_ebitda = calc_net_debt_ebitda(bal, report_date, ebitda_raw)
-                        
-                        # ========= Add to database ==========
-                        new_fundementals = Fundamental(
-                            company_id=company.id,
-                            report_date=r_date,
-                            revenue=rev_raw / 1000000, #Convert to MSEK
-                            net_income=net_income_raw / 1000000, #Convert MSEK 
-                            omsattningstillvaxt=rev_growth,
-                            vinsttillvaxt=profit_growth,
-                            ebit_marginal=ebit_margin,
-                            soliditet=soliditet,
-                            net_debt_ebitda=net_debt_ebitda
-                        )
+                    # ======== Calculations of x1, ... xn ========
+                    rev_growth = calc_growth_to_percent(rev_raw, prev_rev)
+                    profit_growth = calc_growth_to_percent(net_income_raw, prev_profit)
+                    ebit_margin = calc_margin_to_percent(ebit_raw, rev_raw)
+                    soliditet = calc_soliditet_to_percent(bal,report_date)
+                    #net_debt_ebitda = calc_net_debt_ebitda(bal, report_date, ebitda_raw)
+                    
+                    # ========= Add to database ==========
+                    new_year_fundementals = Fundamental(
+                        report_date=r_date,
+                        revenue=rev_raw / 1000000, #Convert to MSEK
+                        net_income=net_income_raw / 1000000, #Convert MSEK 
+                        revenue_growth_percent=rev_growth,
+                        profit_growth_percent=profit_growth,
+                        ebit_margin_percent=ebit_margin,
+                        soliditet_percent=soliditet,
+                        #net_debt_ebitda=net_debt_ebitda
+                    )
+                    temp_fundamentals.append(new_year_fundementals)
 
-                        db.session.add(new_fundementals)
+                # Check if any year failed
+                # If so, skip the rest of the years
+                except Exception as e:
+                    print(f"  FAILED: Year {report_date.date()} had error: {e}")
+                    all_years_valid = False
+                    break  
+        
+            # Save only if EVERY year passed
+            if all_years_valid:
+                try:
+                    # check so the company not already exist in db
+                    # if not, create it
+                    company = Company.query.filter_by(ticker=ticker).first() 
+                    if not company:
+                        company = Company(ticker=ticker, name=ticker_data.info.get('shortName'))
+                        db.session.add(company)
+                    
+                    company.fundamentals = temp_fundamentals #add the fundementals to the company 
+                    
+                    db.session.add(company)
+                    db.session.commit()
+                    print(f"  SUCCESS: {ticker} saved with {len(temp_fundamentals)} years.")
 
-                    except Exception as e:
-                        print(f"Error for {ticker} on {report_date}: {e}")
+                #some dataabase error
+                except Exception as db_err: 
+                    db.session.rollback()
+                    print(f"  DATABASE ERROR for {ticker}: {db_err}")
+            else:
+                print(f"  SKIPPED: {ticker} due to incomplete data.")
             
-            db.session.commit()
-            print(f"Saved {ticker}")
-            time.sleep(0.3)  # Slightly longer sleep for mid-caps to avoid YF blocks
+            time.sleep(0.1)
 
 
 if __name__ == "__main__":
