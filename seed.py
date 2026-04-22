@@ -142,122 +142,153 @@ TICKERS = ["8TRA.ST",
                     "ZENZIP-B.ST", 
                     "PADEL.ST"]
 
-def calc_revenue_growth(rev, prev_rev): 
-    return (rev - prev_rev) / prev_rev if prev_rev and prev_rev != 0 else 0
+def get_revenue(inc, report_date): 
+    if 'Total Revenue' in inc.index: 
+        return inc.loc['Total Revenue', report_date]
+    else: 
+        return 0
+                        
+def get_profit(inc, report_date):
+    if 'Net Income' in inc.index: 
+        return  inc.loc['Net Income', report_date]  
+    else: 
+        return 0
 
-def calc_profit_growth(net_income, prev_vinst): 
-    return (net_income - prev_vinst) / abs(prev_vinst) if prev_vinst and prev_vinst != 0 else 0
+def get_ebit(inc, report_date): 
+    if 'EBIT' in inc.index: 
+        return inc.loc['EBIT', report_date] 
+    else: 
+        return 0
 
-def calc_ebit_margin(ebit, rev): 
-    return (ebit / rev) if rev and rev != 0 else 0
+def get_ebitda(inc, report_date): 
+    if 'EBITDA' in inc.index: 
+        return inc.loc['EBITDA', report_date]
+    else: 
+        return 0
 
-def calc_soliditet(bal, report_date): 
+def calc_growth_to_percent(current_data, prev_data): 
+    if prev_data < 0: 
+        return (current_data - prev_data) / -prev_data
+    elif prev_data == 0: 
+        return 0
+    else:
+        return 100 * (current_data - prev_data) / prev_data
+
+    
+def calc_margin_to_percent(attribute, revenue): 
+    if revenue == 0: 
+        return 0
+    else: 
+        return 100 *attribute / revenue #convert to percent
+
+def calc_soliditet_to_percent(bal, report_date): 
     total_assets = bal.loc['Total Assets', report_date] if 'Total Assets' in bal.index else 0
     total_equity = bal.loc['Stockholders Equity', report_date] if 'Stockholders Equity' in bal.index else 0
-    return (total_equity / total_assets) if total_assets and total_assets != 0 else 0
+    return 100 * (total_equity / total_assets) if total_assets and total_assets != 0 else 0
 
 def calc_net_debt_ebitda(bal, report_date, ebitda): 
-    total_debt = bal.loc['Total Debt', report_date] if 'Total Debt' in bal.index else 0
-    cash = bal.loc['Cash And Cash Equivalents', report_date] if 'Cash And Cash Equivalents' in bal.index else 0
-    net_debt = total_debt - cash
-    return (net_debt / ebitda) if ebitda and ebitda != 0 else 0
+    if ebitda == 0: 
+        return 0
 
-def add_fundementals_to_db(id, r_date, rev, net_income, rev_growth, vinst_growth, ebit_margin, soliditet, net_debt_ebitda): 
-    fundementals = Fundamental(
-        company_id=id,
-        report_date=r_date,
-        revenue=rev,
-        net_income=net_income,
-        omsattningstillvaxt=rev_growth,
-        vinsttillvaxt=vinst_growth,
-        ebit_marginal=ebit_margin,
-        soliditet=soliditet,
-        net_debt_ebitda=net_debt_ebitda
-    )
-
-    db.session.add(fundementals)
+    if 'Total Debt' in bal.index: 
+        total_debt = bal.loc['Total Debt', report_date]
+    else: 
+        total_debt = 0
+    
+    if 'Cash And Cash Equivalents' in bal.index: 
+        cash = bal.loc['Cash And Cash Equivalents', report_date]
+    else: 
+        cash = 0
+    
+    return (total_debt - cash) / ebitda
 
 def seed_data():
     app = create_app()
     with app.app_context():
-        print("Wiping and rebuilding database...")
+        # Recreate the database
         db.drop_all()   
         db.create_all() 
 
-        print("Seeding Swedish Annual Fundamentals with Ratios...")
+        print("Seeding trading.db")
         
-        for symbol in TICKERS:
+        for ticker in TICKERS:
+
             # Clean ticker (removes trailing commas if any)
-            symbol = symbol.strip().replace(",", "")
-            print(f"Processing {symbol}...")
+            ticker = ticker.strip().replace(",", "")
+            print(f"Processing {ticker}...")
             
-            ticker = yf.Ticker(symbol)
+            ticker_data = yf.Ticker(ticker)
             
             # Fetch necessary DataFrames
-            inc = ticker.financials        # Income Statement
-            bal = ticker.balance_sheet    # Balance Sheet
-            cf = ticker.cashflow          # Cash Flow (optional, for EBITDA)
+            inc = ticker_data.financials        # Income Statement
+            bal = ticker_data.balance_sheet    # Balance Sheet
             
             if inc is None or inc.empty or bal.empty:
-                print(f"Skipping {symbol}: Missing Financials or Balance Sheet")
+                print(f"Skipping {ticker}: Missing Financials or Balance Sheet")
                 continue
 
-            # Ensure Company entry exists
-            company = Company.query.filter_by(ticker=symbol).first()
+            # If a company is not already in db, create one
+            company = Company.query.filter_by(ticker=ticker).first()
             if not company:
-                company = Company(ticker=symbol, name=symbol)
+                company = Company(ticker=ticker, name=ticker_data.info.get('shortName'))
                 db.session.add(company)
                 db.session.flush()
 
-            # ... (Inside the ticker loop, after fetching inc, bal, cf) ...
-
             # Sort dates from oldest to newest to ensure growth is calculated correctly
-            # i.e., [2020, 2021, 2022, 2023]
             sorted_dates = sorted(inc.columns)
             
-            for i in range(len(sorted_dates)):
-                report_date = sorted_dates[i]
-                r_date = report_date.date()
-                
-                # 2. Don't sotre data for the first year
-                if i == 0:
-                    continue
+            for i in range(1, len(sorted_dates)): #skips the first year since we need a base reveneue and profiit
+
+                report_date = sorted_dates[i] # to get data from reports
+                r_date = report_date.date() # to load the database
                     
                 # 3. Manually get the previous report date
-                prev_date = sorted_dates[i - 1]
+                prev_report_date = sorted_dates[i - 1]
 
-                # Check if this specific year is already in the DB
-                if Fundamental.query.filter_by(company_id=company.id, report_date=r_date).first():
-                    continue
+                # Check if this specific fundemental year is already in the DB
+                if Fundamental.query.filter_by(company_id=company.id, report_date=r_date).first() is None:
+                    try:
+                        
+                        # ======= Fecth reveneue and profit =======
+                        # Get previous years revenue and profit 
+                        prev_rev = get_revenue(inc, prev_report_date)
+                        prev_profit = get_profit(inc, prev_report_date)
 
-                try:
-                    # Current Year Data
-                    rev = inc.loc['Total Revenue', report_date] if 'Total Revenue' in inc.index else 0
-                    ebit = inc.loc['EBIT', report_date] if 'EBIT' in inc.index else 0
-                    ebitda = inc.loc['EBITDA', report_date] if 'EBITDA' in inc.index else None
-                    net_income = inc.loc['Net Income', report_date] if 'Net Income' in inc.index else 0
-                    
-                    # Previous Year Data (for growth)
-                    prev_rev = inc.loc['Total Revenue', prev_date] if 'Total Revenue' in inc.index else 0
-                    prev_vinst = inc.loc['Net Income', prev_date] if 'Net Income' in inc.index else 0
+                        # Get  current years revenue and profit 
+                        rev_raw = get_revenue(inc, report_date)
+                        net_income_raw = get_profit(inc, report_date)
 
-                    # Calculations
-                    rev_growth = (rev - prev_rev) / prev_rev if prev_rev and prev_rev != 0 else 0
-                    vinst_growth = calc_profit_growth(net_income, prev_vinst)
-                    ebit_margin = calc_ebit_margin(ebit, rev)
-                    soliditet = calc_soliditet(bal,report_date)
-                    net_debt_ebitda = calc_net_debt_ebitda(bal)
+                        # Fetch current years data
+                        ebit_raw = get_ebit(inc, report_date)
+                        ebitda_raw =  get_ebitda(inc,  report_date)
 
-                    #Add to database
-                    add_fundementals_to_db(company.id, r_date, rev, net_income, 
-                                                                rev_growth, vinst_growth, ebit_margin, 
-                                                                soliditet, net_debt_ebitda)
+                        # ======== Calculations of x1, ... xn ========
+                        rev_growth = calc_growth_to_percent(rev_raw, prev_rev)
+                        profit_growth = calc_growth_to_percent(net_income_raw, prev_profit)
+                        ebit_margin = calc_margin_to_percent(ebit_raw, rev_raw)
+                        soliditet = calc_soliditet_to_percent(bal,report_date)
+                        net_debt_ebitda = calc_net_debt_ebitda(bal, report_date, ebitda_raw)
+                        
+                        # ========= Add to database ==========
+                        new_fundementals = Fundamental(
+                            company_id=company.id,
+                            report_date=r_date,
+                            revenue=rev_raw / 1000000, #Convert to MSEK
+                            net_income=net_income_raw / 1000000, #Convert MSEK 
+                            omsattningstillvaxt=rev_growth,
+                            vinsttillvaxt=profit_growth,
+                            ebit_marginal=ebit_margin,
+                            soliditet=soliditet,
+                            net_debt_ebitda=net_debt_ebitda
+                        )
 
-                except Exception as e:
-                    print(f"Error for {symbol} on {report_date}: {e}")
+                        db.session.add(new_fundementals)
+
+                    except Exception as e:
+                        print(f"Error for {ticker} on {report_date}: {e}")
             
             db.session.commit()
-            print(f"Saved {symbol}")
+            print(f"Saved {ticker}")
             time.sleep(0.3)  # Slightly longer sleep for mid-caps to avoid YF blocks
 
 
