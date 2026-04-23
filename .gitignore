@@ -207,4 +207,4 @@ marimo/_lsp/
 __marimo__/
 
 #database
-data/trading.db
+data/company.db
