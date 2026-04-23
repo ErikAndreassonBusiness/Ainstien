@@ -1,0 +1,107 @@
+/* Custom variables for a consistent Quant look */
+:root {
+  --ainstien-dark: #1a1d20;
+  --ainstien-blue: #0056b3;
+  --ainstien-success: #28a745;
+  --ainstien-danger: #dc3545;
+}
+
+body {
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  background-color: #f4f7f6;
+  color: #333;
+}
+
+/* Monospaced numbers for financial data alignment */
+.financial-data {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-weight: 500;
+}
+
+/* Dashboard & Cards */
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+.card-header {
+  background-color: white;
+  border-bottom: 1px solid #eee;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+/* Table styling */
+.table thead th {
+  background-color: var(--ainstien-dark);
+  color: white;
+  border: none;
+  font-size: 0.8rem;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f0f4f8;
+  cursor: pointer;
+}
+
+/* Growth badges */
+.growth-positive {
+  color: var(--ainstien-success);
+}
+.growth-negative {
+  color: var(--ainstien-danger);
+}
+
+/* Navigation */
+.navbar {
+  background-color: var(--ainstien-dark) !important;
+}
+
+.navbar-brand {
+  font-weight: 800;
+  color: #fff !important;
+}
+
+/* Table Row Hover Effects */
+.stock-row {
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.stock-row:hover {
+  background-color: #f1f8ff !important;
+}
+
+/* Make buttons look consistent */
+.btn-dark {
+  background-color: #1a1d20;
+  border: none;
+  padding: 0.4rem 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.btn-dark:hover {
+  background-color: #0056b3;
+}
+
+/* Status colors */
+.text-success {
+  color: #28a745 !important;
+  font-weight: 600;
+}
+.text-danger {
+  color: #dc3545 !important;
+  font-weight: 600;
+}

@@ -8,11 +8,14 @@ and ensuring all database tables are created within the application context.
 """
 
 from flask import Flask
-from .database import db
+from .server.database import db
 import os
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__,
+            template_folder='templates',
+            static_folder='static')
+
     
     # ===== Configure the database =======
     basedir = os.path.abspath(os.path.dirname(__file__))
@@ -28,6 +31,7 @@ def create_app():
 
     # create the database
     with app.app_context():
+        from .server import routes
         db.create_all()  
 
     return app
