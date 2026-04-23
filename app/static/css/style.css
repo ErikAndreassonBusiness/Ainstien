@@ -105,3 +105,30 @@ body {
   color: #dc3545 !important;
   font-weight: 600;
 }
+
+/* Custom typography for financial data */
+.text-success {
+  color: #28a745 !important;
+}
+
+.badge {
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  padding: 0.5em 1em;
+}
+
+/* Make the description look readable */
+p.text-muted {
+  font-size: 1.05rem;
+  color: #495057 !important;
+}
+
+/* Card styling for the chart */
+.card {
+  border-radius: 12px;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}

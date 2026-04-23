@@ -5,6 +5,7 @@ from .db_queries import (
     get_company_by_ticker, 
     sort_fundamentals_from_company
 )
+from .live_market import get_live_market_data
 # ===== Home (Dashboard) page =======
 @app.route('/')
 def dashboard():
@@ -14,5 +15,11 @@ def dashboard():
 @app.route('/company/<company_ticker>')
 def company(company_ticker = None):
     company = get_company_by_ticker(company_ticker)
+    market_data = get_live_market_data(company_ticker)
+
     fundamentals = sort_fundamentals_from_company(company)
-    return render_template('company.html', company=company, fundamentals=fundamentals)
+    return render_template(
+        'company.html', 
+        company=company, 
+        fundamentals=fundamentals, 
+        **market_data) #unpacking the market_data dictionary
