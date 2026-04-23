@@ -1,0 +1,46 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-4">
+  <h1>Ainstien: Swedish Mid-Cap Screener</h1>
+  <p>Monitoring {{ companies|length }} companies</p>
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Ticker</th>
+        <th>Name</th>
+        <th>Latest Revenue Growth</th>
+        <th>EBIT Margin</th>
+        <th>Soliditet</th>
+        <th class="text-end"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for co in companies %} {% set latest =
+      co.fundamentals|sort(attribute='report_date', reverse=True)|first %}
+      <tr>
+        <td><strong>{{ co.ticker }}</strong></td>
+        <td>{{ co.name }}</td>
+        <td>
+          {{ "%.2f"|format(latest.revenue_growth_percent) if latest else 'N/A'
+          }}%
+        </td>
+        <td>
+          {{ "%.2f"|format(latest.ebit_margin_percent) if latest else 'N/A' }}%
+        </td>
+        <td>
+          {{ "%.2f"|format(latest.soliditet_percent) if latest else 'N/A' }}%
+        </td>
+        <td class="text-end">
+          <a
+            href="{{ url_for('company', company_ticker=co.ticker) }}"
+            class="btn btn-sm btn-dark"
+          >
+            Analysis
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %} {% block title %}{{ company.name }} | Ainstien{%
+endblock %} {% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+          </li>
+          <li class="breadcrumb-item active">{{ company.ticker }}</li>
+        </ol>
+      </nav>
+      <h1 class="display-5 fw-bold mb-0">{{ company.name }}</h1>
+      <div class="mt-2">
+        <span class="badge bg-dark">{{ company.ticker }}</span>
+        <span class="text-muted ms-2" style="font-weight: 500"
+          >{{ category_info }}</span
+        >
+      </div>
+    </div>
+    <div class="text-end">
+      <h2 class="text-success fw-bold mb-1">
+        {{ "%.2f"|format(current_price) }} SEK
+      </h2>
+      <button class="btn btn-outline-primary btn-sm" onclick="window.print()">
+        Export PDF
+      </button>
+    </div>
+  </div>
+
+  <div class="row mb-5">
+    <div class="col-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+          <strong>Market Performance (1 Year)</strong>
+        </div>
+        <div class="card-body">
+          <div style="position: relative; height: 300px; width: 100%">
+            <canvas id="stockChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12 mb-4">
+      <div class="card">
+        <div class="card-header">Historical Fundamental Data</div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Report Date</th>
+                  <th>Revenue (M)</th>
+                  <th>Revenue Growth</th>
+                  <th>Net Income (M)</th>
+                  <th>Profit Growth</th>
+                  <th>EBIT Margin</th>
+                  <th>Soliditet</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for f in fundamentals %}
+                <tr>
+                  <td>{{ f.report_date.strftime('%Y-%m-%d') }}</td>
+                  <td>
+                    {{ "{:,.0f}".format(f.revenue / 1000000) if f.revenue else
+                    'N/A' }}
+                  </td>
+                  <td
+                    class="{{ 'growth-positive' if f.revenue_growth_percent and f.revenue_growth_percent > 0 else 'growth-negative' }}"
+                  >
+                    {{ "%.2f"|format(f.revenue_growth_percent) if
+                    f.revenue_growth_percent else '0.00' }}%
+                  </td>
+                  <td>
+                    {{ "{:,.0f}".format(f.net_income / 1000000) if f.net_income
+                    else 'N/A' }}
+                  </td>
+                  <td
+                    class="{{ 'growth-positive' if f.profit_growth_percent and f.profit_growth_percent > 0 else 'growth-negative' }}"
+                  >
+                    {{ "%.2f"|format(f.profit_growth_percent) if
+                    f.profit_growth_percent else '0.00' }}%
+                  </td>
+                  <td>
+                    {{ "%.2f"|format(f.ebit_margin_percent) if
+                    f.ebit_margin_percent else 'N/A' }}%
+                  </td>
+                  <td>
+                    {{ "%.2f"|format(f.soliditet_percent) if f.soliditet_percent
+                    else 'N/A' }}%
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script id="chartLabelsData" type="application/json">
+    {{ history_dates | tojson }}
+  </script>
+  <script id="chartValuesData" type="application/json">
+    {{ history_prices | tojson }}
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</div>
+{% endblock %}
