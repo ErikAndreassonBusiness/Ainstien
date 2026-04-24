@@ -1,42 +1,47 @@
 // app/static/js/company.js
 
+let stockChartInstance = null;
+
 async function initCompanyPage() {
-  const tickerElement = document.getElementById("companyTicker");
-  if (!tickerElement) return;
+  const tickerEl = document.getElementById("companyTicker");
+  if (!tickerEl) return;
+  const ticker = tickerEl.value;
 
-  const ticker = tickerElement.value;
-
-  // 1. Fetch Company Fundamentals (GET)
-  const details = await fetchCompanyDetails(ticker);
-  if (details) {
-    displayHeader(details); // This was likely causing the crash!
-    displayFundamentals(details.fundamentals);
+  // 1. Fetch & Display Fundamentals (The Table)
+  try {
+    const details = await fetchCompanyDetails(ticker);
+    if (details) {
+      displayHeader(details);
+      displayFundamentals(details.fundamentals);
+    }
+  } catch (error) {
+    console.error("Table failed to load:", error);
+    document.getElementById("headerContainer").innerHTML =
+      "<h3>Error loading company details</h3>";
   }
 
-  // 2. Fetch Market Data & Price History (GET)
-  const marketResponse = await fetchMarketData(ticker);
+  // 2. Fetch & Display Market Data (The Chart)
+  try {
+    const marketData = await fetchMarketData(ticker);
+    if (marketData) {
+      // Update price in the header we just created
+      const priceEl = document.getElementById("currentPriceDisplay");
+      if (priceEl && marketData.current_price) {
+        priceEl.textContent = `${marketData.current_price.toFixed(2)} SEK`;
+      }
 
-  if (marketResponse) {
-    updateCurrentPrice(marketResponse.current_price);
-
-    // Render chart if data exists
-    if (marketResponse.history_dates && marketResponse.history_prices) {
-      renderStockChart(
-        marketResponse.history_dates,
-        marketResponse.history_prices,
-      );
+      if (marketData.history_dates && marketData.history_prices) {
+        renderStockChart(marketData.history_dates, marketData.history_prices);
+      }
     }
+  } catch (error) {
+    console.error("Chart failed to load:", error);
   }
 }
 
-/**
- * UI Painter: Header Section
- * Creates the breadcrumbs, title, and the price placeholder
- */
 function displayHeader(data) {
   const container = document.getElementById("headerContainer");
-  if (!container) return;
-
+  // This replaces the "Loading..." spinner with the actual UI
   container.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -46,7 +51,7 @@ function displayHeader(data) {
                         <li class="breadcrumb-item active">${data.ticker}</li>
                     </ol>
                 </nav>
-                <h1 class="display-5 fw-bold mb-0">${data.name}</h1>
+                <h1 class="display-5 fw-bold mb-0">${data.name || "N/A"}</h1>
                 <div class="mt-2">
                     <span class="badge bg-dark">${data.ticker}</span>
                 </div>
@@ -59,15 +64,18 @@ function displayHeader(data) {
     `;
 }
 
-/**
- * UI Painter: Historical Table
- */
 function displayFundamentals(fundamentals) {
   const tableBody = document.getElementById("fundamentalTableBody");
   if (!tableBody) return;
-
   tableBody.innerHTML = "";
 
+  if (!fundamentals || fundamentals.length === 0) {
+    tableBody.innerHTML =
+      '<tr><td colspan="7" class="text-center">No fundamental data available.</td></tr>';
+    return;
+  }
+
+  // Sort descending by date
   fundamentals.sort(
     (a, b) => new Date(b.report_date) - new Date(a.report_date),
   );
@@ -75,51 +83,50 @@ function displayFundamentals(fundamentals) {
   fundamentals.forEach((f) => {
     const row = document.createElement("tr");
 
-    const rev = f.revenue || 0;
-    const net = f.net_income || 0;
-
-    const displayRevenue =
-      rev > 1000000 ? (rev / 1000000).toFixed(0) : rev.toFixed(0);
-    const displayNetIncome =
-      net > 1000000 ? (net / 1000000).toFixed(0) : net.toFixed(0);
+    // Helper to safely handle nulls and formatting
+    const fmt = (val) =>
+      val !== null && val !== undefined ? val.toFixed(2) : "0.00";
+    const mil = (val) =>
+      val !== null && val !== undefined
+        ? val > 1000000
+          ? (val / 1000000).toFixed(0)
+          : val.toFixed(0)
+        : "0";
 
     row.innerHTML = `
             <td>${f.report_date}</td>
-            <td>${displayRevenue}M</td>
-            <td class="${f.revenue_growth_percent >= 0 ? "text-success" : "text-danger"}">
-                ${(f.revenue_growth_percent || 0).toFixed(2)}%
-            </td>
-            <td>${displayNetIncome}M</td>
-            <td class="${f.profit_growth_percent >= 0 ? "text-success" : "text-danger"}">
-                ${(f.profit_growth_percent || 0).toFixed(2)}%
-            </td>
-            <td>${(f.ebit_margin_percent || 0).toFixed(2)}%</td>
-            <td>${(f.soliditet_percent || 0).toFixed(2)}%</td>
+            <td>${mil(f.revenue)}M</td>
+            <td class="${f.revenue_growth_percent >= 0 ? "text-success" : "text-danger"}">${fmt(f.revenue_growth_percent)}%</td>
+            <td>${mil(f.net_income)}M</td>
+            <td class="${f.profit_growth_percent >= 0 ? "text-success" : "text-danger"}">${fmt(f.profit_growth_percent)}%</td>
+            <td>${fmt(f.ebit_margin_percent)}%</td>
+            <td>${fmt(f.soliditet_percent)}%</td>
         `;
     tableBody.appendChild(row);
   });
 }
 
-/**
- * UI Painter: Chart.js Line Chart
- */
 function renderStockChart(labels, prices) {
   const canvas = document.getElementById("stockChart");
   if (!canvas) return;
 
-  new Chart(canvas.getContext("2d"), {
+  if (stockChartInstance) {
+    stockChartInstance.destroy();
+  }
+
+  stockChartInstance = new Chart(canvas.getContext("2d"), {
     type: "line",
     data: {
       labels: labels,
       datasets: [
         {
-          label: "Price (SEK)",
+          label: "Price",
           data: prices,
           borderColor: "#0d6efd",
           backgroundColor: "rgba(13, 110, 253, 0.1)",
           fill: true,
           tension: 0.2,
-          pointRadius: 0, // Makes it look cleaner
+          pointRadius: 0,
         },
       ],
     },
@@ -127,19 +134,8 @@ function renderStockChart(labels, prices) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false } },
-        y: { ticks: { callback: (val) => val + " SEK" } },
-      },
     },
   });
-}
-
-function updateCurrentPrice(price) {
-  const priceDisplay = document.getElementById("currentPriceDisplay");
-  if (priceDisplay && price) {
-    priceDisplay.textContent = `${price.toFixed(2)} SEK`;
-  }
 }
 
 document.addEventListener("DOMContentLoaded", initCompanyPage);
