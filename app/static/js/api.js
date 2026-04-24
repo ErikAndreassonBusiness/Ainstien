@@ -50,3 +50,28 @@ async function fetchMarketData(ticker) {
     return null;
   }
 }
+
+/**
+ * Fetches the full company details (Fundamentals + Info)
+ */
+async function fetchCompanyDetails(ticker) {
+  try {
+    const route = `${host}/company-details/${ticker}`;
+
+    const response = await fetch(route, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Kunde inte hämta detaljer för ${ticker}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("API Error (Company Details):", error);
+    return null;
+  }
+}

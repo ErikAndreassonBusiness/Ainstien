@@ -1,48 +1,25 @@
 {% extends "base.html" %} {% block content %}
 <div class="container mt-4">
-  <h1>Ainstien: Swedish Mid-Cap Screener</h1>
-  <p>Monitoring {{ companies|length }} companies</p>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Ainstien: Swedish Mid-Cap Screener</h1>
+    <div id="statusIndicator" class="badge bg-secondary">Fetching data...</div>
+  </div>
 
-  <table class="table table-striped">
+  <table class="table table-hover">
     <thead>
       <tr>
         <th>Ticker</th>
         <th>Name</th>
-        <th>Latest Revenue Growth</th>
+        <th>Revenue Growth</th>
         <th>EBIT Margin</th>
         <th>Soliditet</th>
-        <th class="text-end"></th>
+        <th class="text-end">Action</th>
       </tr>
     </thead>
-    <tbody>
-      {% for co in companies %} {% set latest =
-      co.fundamentals|sort(attribute='report_date', reverse=True)|first %}
-      <tr>
-        <td><strong>{{ co.ticker }}</strong></td>
-        <td>{{ co.name }}</td>
-        <td>
-          {{ "%.2f"|format(latest.revenue_growth_percent) if latest else 'N/A'
-          }}%
-        </td>
-        <td>
-          {{ "%.2f"|format(latest.ebit_margin_percent) if latest else 'N/A' }}%
-        </td>
-        <td>
-          {{ "%.2f"|format(latest.soliditet_percent) if latest else 'N/A' }}%
-        </td>
-        <td class="text-end">
-          <a
-            href="{{ url_for('company', company_ticker=co.ticker) }}"
-            class="btn btn-sm btn-dark"
-          >
-            Analysis
-          </a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
+    <tbody id="companyTableBody"></tbody>
   </table>
 </div>
 {% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

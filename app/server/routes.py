@@ -1,37 +1,40 @@
 # app/server/routes.py
-from flask import render_template, current_app as app, jsonify
+from flask import render_template, current_app as app, jsonify, redirect, url_for
 from .db_queries import (
     get_all_tickers_in_order, 
     get_company_by_ticker, 
     sort_fundamentals_from_company
 )
 from .live_market import get_live_market_data
-# ===== Home (Dashboard) page =======
-@app.route('/')
-def dashboard():
-    return render_template('dashboard.html', companies=get_all_tickers_in_order())
+from .db_queries import get_dashboard_market_data, get_company_by_ticker
 
 @app.route('/api/market-summary', methods = ['GET'])
 def market_summary():
     data = get_dashboard_market_data()
     return jsonify(data)
 
-# ====== Company Info page ========
-@app.route('/company/<company_ticker>')
-def company(company_ticker = None):
-    company = get_company_by_ticker(company_ticker)
-    market_data = get_live_market_data(company_ticker)
-
-    fundamentals = sort_fundamentals_from_company(company)
-    return render_template(
-        'company.html', 
-        company=company, 
-        fundamentals=fundamentals, 
-        **market_data) #unpacking the market_data dictionary
-
+@app.route('/api/company-details/<ticker>')
+def api_company_details(ticker):
+    company = get_company_by_ticker(ticker)
+    return jsonify(company.serialize_company_and_fundementals())
 
 @app.route('/api/market-data/<ticker>', methods = ['GET'])
 def api_market_data(ticker = None):
     data = get_live_market_data(ticker)
     return jsonify(data)
     
+# ===== Standard routes =======
+
+@app.route('/')
+def index():
+    return redirect(url_for('dashboard'))
+
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/company/<ticker>')
+def company_page(ticker):
+    return render_template('company.html', ticker=ticker)
+
+
