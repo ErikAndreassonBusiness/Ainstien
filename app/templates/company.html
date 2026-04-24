@@ -36,6 +36,10 @@ endblock %} {% block content %}
           <strong>Market Performance (1 Year)</strong>
         </div>
         <div class="card-body">
+          <div id="chartLoader" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Fetching market data...</p>
+          </div>
           <div style="position: relative; height: 300px; width: 100%">
             <canvas id="stockChart"></canvas>
           </div>
@@ -113,5 +117,10 @@ endblock %} {% block content %}
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/api.js') }}"></script>
 </div>
+{% endblock %} {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/company.js') }}"></script>
 {% endblock %}

@@ -1,5 +1,5 @@
 # app/server/routes.py
-from flask import render_template, current_app as app
+from flask import render_template, current_app as app, jsonify
 from .db_queries import (
     get_all_tickers_in_order, 
     get_company_by_ticker, 
@@ -10,6 +10,11 @@ from .live_market import get_live_market_data
 @app.route('/')
 def dashboard():
     return render_template('dashboard.html', companies=get_all_tickers_in_order())
+
+@app.route('/api/market-summary', methods = ['GET'])
+def market_summary():
+    data = get_dashboard_market_data()
+    return jsonify(data)
 
 # ====== Company Info page ========
 @app.route('/company/<company_ticker>')
@@ -23,3 +28,10 @@ def company(company_ticker = None):
         company=company, 
         fundamentals=fundamentals, 
         **market_data) #unpacking the market_data dictionary
+
+
+@app.route('/api/market-data/<ticker>', methods = ['GET'])
+def api_market_data(ticker = None):
+    data = get_live_market_data(ticker)
+    return jsonify(data)
+    
