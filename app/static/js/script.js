@@ -43,10 +43,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 });
 
-/**
- * NEW: The renderStockChart function
- * Handles the Chart.js creation and destruction
- */
 function renderStockChart(canvasElement, labels, prices) {
   if (prices.length === 0) {
     console.warn("Ainstien: Ingen historik hittades för denna ticker.");
