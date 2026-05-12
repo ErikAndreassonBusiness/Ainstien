@@ -26,6 +26,7 @@ async function fetchMarketSummary() {
 
 /**
  * Fetches market data for a specific stock ticker.
+ * This include a stock chart, currrent price and industry
  */
 async function fetchMarketData(ticker) {
   try {

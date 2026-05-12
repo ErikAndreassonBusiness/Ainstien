@@ -3,16 +3,17 @@
 let stockChartInstance = null;
 
 async function initCompanyPage() {
+  displayLoading(); // Display a loading sign until data is fetched.
   const tickerEl = document.getElementById("companyTicker");
   if (!tickerEl) return;
   const ticker = tickerEl.value;
 
-  // 1. Fetch & Display Fundamentals (The Table)
+  // Fetch & Display Fundamentals (The Table)
   try {
-    const details = await fetchCompanyDetails(ticker);
-    if (details) {
-      displayHeader(details);
-      displayFundamentals(details.fundamentals);
+    const companyData = await fetchCompanyDetails(ticker);
+    if (companyData) {
+      displayHeader(companyData);
+      displayFundamentals(companyData.fundamentals);
     }
   } catch (error) {
     console.error("Table failed to load:", error);
@@ -20,7 +21,7 @@ async function initCompanyPage() {
       "<h3>Error loading company details</h3>";
   }
 
-  // 2. Fetch & Display Market Data (The Chart)
+  // Fetch & Display Market Data (The Chart)
   try {
     const marketData = await fetchMarketData(ticker);
     if (marketData) {
@@ -39,29 +40,48 @@ async function initCompanyPage() {
   }
 }
 
-function displayHeader(data) {
-  const container = document.getElementById("headerContainer");
-  // This replaces the "Loading..." spinner with the actual UI
-  container.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
-                        <li class="breadcrumb-item active">${data.ticker}</li>
-                    </ol>
-                </nav>
-                <h1 class="display-5 fw-bold mb-0">${data.name || "N/A"}</h1>
-                <div class="mt-2">
-                    <span class="badge bg-dark">${data.ticker}</span>
-                </div>
-            </div>
-            <div class="text-end">
-                <h2 id="currentPriceDisplay" class="text-success fw-bold mb-1">... SEK</h2>
-                <button class="btn btn-outline-primary btn-sm" onclick="window.print()">Export PDF</button>
-            </div>
-        </div>
-    `;
+function displayLoading() {
+  // Get container to fill
+  let loadingContainerHTML = document.getElementById("headerContainer");
+
+  let loadingContainer = ``;
+  loadingContainer += `<div class="text-center py-5">`;
+  loadingContainer += `<div class="spinner-border text-primary" role="status"></div>`;
+  loadingContainer += `<p>Loading company data...</p>`;
+  loadingContainer += `</div></div>`;
+
+  loadingContainerHTML.innerHTML = loadingContainer; // convert to HTML
+}
+
+function displayHeader(company) {
+  let containerHeaderHTML = document.getElementById("headerContainer");
+
+  //Build the HTML stucture
+  let containerHeader = ``;
+  containerHeader += `<div class="d-flex justify-content-between align-items-center mb-4">`;
+  containerHeader += `<div>`; //to have the stock name to the left
+
+  //Return button to dashboard
+  containerHeader += ` <nav aria-label="breadcrumb">`;
+  containerHeader += `<ol class="breadcrumb">`;
+  containerHeader += `<li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>`;
+  containerHeader += `<li class="breadcrumb-item active">${company.ticker}</li>`;
+  containerHeader += `</ol>`;
+  containerHeader += `</nav>`;
+
+  // DIsplay company info
+  containerHeader += ` <h1 class="display-5 fw-bold mb-0">${company.name || "N/A"}</h1>`;
+  containerHeader += `<div class="mt-2">`;
+  containerHeader += `<span class="badge bg-dark">${company.ticker}</span>`;
+  containerHeader += `</div>`;
+  containerHeader += `</div>`;
+  containerHeader += `<div class="text-end">`;
+  containerHeader += `<h2 id="currentPriceDisplay" class="text-success fw-bold mb-1">... SEK</h2>`;
+  containerHeader += `<button class="btn btn-outline-primary btn-sm" onclick="window.print()">Export PDF</button>`;
+  containerHeader += `</div>`;
+  containerHeader += ` </div>`;
+
+  containerHeaderHTML.innerHTML = containerHeader;
 }
 
 function displayFundamentals(fundamentals) {
@@ -138,4 +158,5 @@ function renderStockChart(labels, prices) {
   });
 }
 
+// Executes the JS script
 document.addEventListener("DOMContentLoaded", initCompanyPage);
