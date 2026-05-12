@@ -50,9 +50,18 @@ class Fundamental(db.Model):
     ebit_margin_percent: Mapped[float] = mapped_column(nullable=False)
     soliditet_percent: Mapped[float] = mapped_column(nullable=False)
 
+    def serialize_fundamental_info(self): 
+        return [
+            self.revenue, 
+            self.net_income,
+            self.revenue_growth_percent, 
+            self.profit_growth_percent, 
+            self.ebit_margin_percent, 
+            self.soliditet_percent
+        ]
+    
     def serialize(self):
         return {
-            "id": self.id,
             "company_id": self.company_id,
             "report_date": self.report_date.isoformat(),
             "revenue": self.revenue, 
