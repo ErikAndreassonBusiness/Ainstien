@@ -1,78 +1,90 @@
+// At the very top, keep your instance tracker
 var stockChartInstance = stockChartInstance || null;
 
 // ========== For the Analyse buttons on dashboard ========
 document.addEventListener("DOMContentLoaded", function () {
-  // Select all rows with the class 'stock-row'
   const rows = document.querySelectorAll(".stock-row");
-
   rows.forEach((row) => {
     row.addEventListener("click", function (e) {
-      // Check if the click was on the button itself or a link
-      // If it was, let the browser handle it normally.
-      if (e.target.tagName === "A" || e.target.tagName === "BUTTON") {
-        return;
-      }
-
-      // Otherwise, get the URL from the data attribute and navigate
+      if (e.target.tagName === "A" || e.target.tagName === "BUTTON") return;
       const url = this.getAttribute("data-url");
-      if (url) {
-        window.location.href = url;
-      }
+      if (url) window.location.href = url;
     });
   });
 });
 
 // ============== For the Live Market Charts =============
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
   const ctx = document.getElementById("stockChart");
-  if (!ctx) return;
+  const tickerInput = document.getElementById("companyTicker");
 
-  try {
-    const labelsRaw = document.getElementById("chartLabelsData").textContent;
-    const valuesRaw = document.getElementById("chartValuesData").textContent;
+  // Only run if we are on the company details page
+  if (!ctx || !tickerInput) return;
 
-    const labels = JSON.parse(labelsRaw);
-    const dataPoints = JSON.parse(valuesRaw);
+  const ticker = tickerInput.value;
+  const loader = document.getElementById("chartLoader");
 
-    if (stockChartInstance !== null) {
-      stockChartInstance.destroy();
-    }
+  // 1. Fetch data from your new api.js function
+  const data = await fetchMarketData(ticker);
 
-    if (dataPoints.length === 0) {
-      console.warn("Ainstien: History data is empty for this ticker.");
-      return;
-    }
+  if (data) {
+    // 2. Hide loader if it exists
+    if (loader) loader.style.display = "none";
 
-    // Render the chart
-    stockChartInstance = new Chart(ctx.getContext("2d"), {
-      type: "line",
-      data: {
-        labels: labels,
-        datasets: [
-          {
-            label: "Closing Price",
-            data: dataPoints,
-            borderColor: "#0d6efd",
-            backgroundColor: "rgba(13, 110, 253, 0.1)",
-            fill: true,
-            borderWidth: 2,
-            pointRadius: 0,
-            tension: 0.2,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { display: false },
-          y: { ticks: { callback: (val) => val + " kr" } },
-        },
-      },
-    });
-    console.log("Ainstien: Chart rendered successfully!");
-  } catch (error) {
-    console.error("Ainstien: Logic error:", error);
+    // 3. Call the new render function
+    renderStockChart(ctx, data.history_dates, data.history_prices);
+
+    // 4. (Optional) Update the Sector/Industry label if you have one
+    const categoryLabel = document.getElementById("categoryInfoLabel");
+    if (categoryLabel) categoryLabel.textContent = data.category_info;
+  } else {
+    if (loader)
+      loader.innerHTML = '<p class="text-danger">Kunde inte ladda graffen.</p>';
   }
 });
+
+function renderStockChart(canvasElement, labels, prices) {
+  if (prices.length === 0) {
+    console.warn("Ainstien: Ingen historik hittades för denna ticker.");
+    return;
+  }
+
+  // Destroy previous instance to avoid "Canvas already in use" error
+  if (stockChartInstance !== null) {
+    stockChartInstance.destroy();
+  }
+
+  // Create new chart and store it in the global variable
+  stockChartInstance = new Chart(canvasElement.getContext("2d"), {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Stängningskurs",
+          data: prices,
+          borderColor: "#0d6efd",
+          backgroundColor: "rgba(13, 110, 253, 0.1)",
+          fill: true,
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: {
+          ticks: {
+            callback: (val) => val + " kr",
+          },
+        },
+      },
+    },
+  });
+  console.log("Ainstien: Chart rendered successfully via API!");
+}
