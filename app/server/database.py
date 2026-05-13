@@ -10,7 +10,9 @@ class Company(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     ticker: Mapped[str] = mapped_column(unique=True, nullable=False)
     name: Mapped[str] = mapped_column(nullable=True)
+
     fundamentals: Mapped[list['Fundamental']] = relationship(back_populates='company') #1:M
+    metrics: Mapped[list['Metrics']] = relationship(back_populates='company') #1:M
 
     def serialize_company_info(self): 
         return {
@@ -71,3 +73,48 @@ class Fundamental(db.Model):
             "ebit_margin_percent": self.ebit_margin_percent, 
             "soliditet_percent": self.soliditet_percent
         }
+
+    class Metrics(db.Model):
+        __tablename__ = "metrics"
+        id: Mapped[int] = mapped_column(primary_key=True)
+        company_id: Mapped[int] = mapped_column(ForeignKey('company.id'), nullable=False)
+        company: Mapped['Company'] = relationship(back_populates='metrics')
+
+        """ ========================== Growth ratios ======================= """
+        #Omsättningstillväxt (%)
+        revenue_growth_percent: Mapped[float] = mapped_column(nullable=False)
+
+        #Vinsttillväxt (%)
+        profit_growth_percent: Mapped[float] = mapped_column(nullable=False)
+        
+        """ ================ Liquidity ratios: Short-term payment ability =========== """
+        #Kassalikviditet (%)
+        quick_ratio_percent: Mapped[float] = mapped_column(nullable=False) # Omsättningstillgånger - Varulager +  Pågående arbete / Kortfirstiga skulder
+
+        """ =============== Leverage ratios: Debt and capital structure ============="""
+        #Soliditet (%)
+        equity_ratio_percent: Mapped[float] = mapped_column(nullable=False) # Tot. Equtiy / Tot. Assests
+
+        """ ============== Efficiency ratios: Asset use and productivity ============= """
+        #Kaptialomsättningshastighet (ggr)
+        assets_turnover_ratio: Mapped[float] = mapped_column(nullable=False) #Sales / Tot. Average Assets
+
+        #Varulagersomsättningshastighet (ggr)
+        inventory_turnover_ratio : Mapped[float] = mapped_column(nullable=False) # Cost of Goods Sold / Average Inventory 
+
+        # Return on Assets
+        ROA : Mapped[float] = mapped_column(nullable=False) #Net Income / Tot. Average Assets 
+
+        #Return on Equtiy
+        ROE : Mapped[float] = mapped_column(nullable=False) #Net Income / Avarage Shareholders' Equity
+
+        #Return on Investment
+        ROI : Mapped[float] = mapped_column(nullable=False) #Net Income from Investment / Cost of Investment
+
+        """ ============== Profitability ratios: Profit relative to sales, assets, or equity ============= """
+        gross_profit_margin_percent: Mapped[float] = mapped_column(nullable=False)
+        ebit_margin_percent: Mapped[float] = mapped_column(nullable=False)
+        profit_margin_percent: Mapped[float] = mapped_column(nullable=False)
+
+        
+
