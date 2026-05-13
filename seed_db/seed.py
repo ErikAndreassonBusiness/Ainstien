@@ -7,7 +7,7 @@ import yfinance as yf
 import pandas as pd
 import time
 from app import create_app
-from app.server.database import db, Company, Fundamental
+from app.server.database import db, Company, Report, Fundamental, Metrics
 
 # Start with a small list to test, then add your full 200
 TICKERS = ["8TRA.ST", 
