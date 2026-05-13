@@ -150,16 +150,6 @@ def get_revenue(inc, report_date):
             if pd.notna(revenue) and revenue != 0:
                 return revenue
     raise ValueError(f"Revenue not found for {report_date}")
-
-    # if 'Total Revenue' in inc.index: 
-    #     revenue = inc.loc['Total Revenue', report_date]
-
-    #     if pd.isna(revenue): 
-    #         raise ValueError("Revenue is NaN")
-    #     return revenue
-
-    # else: 
-    #     raise ValueError("Total Revenue not found")
                         
 def get_profit(inc, report_date):
     if 'Net Income' in inc.index: 
@@ -259,7 +249,7 @@ def seed_data():
             inc = ticker_data.financials        # Income Statement
             bal = ticker_data.balance_sheet    # Balance Sheet
             
-            if inc is None or inc.empty or bal.empty:
+            if inc is None or bal is None or inc.empty or bal.empty:
                 print(f"Skipping {ticker}: Missing Financials or Balance Sheet")
                 continue
 
