@@ -7,6 +7,8 @@ db = SQLAlchemy()
 
 class Company(db.Model): 
     __tablename__ = "company"
+    __table_args__ = {'extend_existing': True}
+
     id: Mapped[int] = mapped_column(primary_key=True)
     ticker: Mapped[str] = mapped_column(unique=True, nullable=False)
     name: Mapped[str] = mapped_column(nullable=True)

@@ -7,9 +7,9 @@ import yfinance as yf
 import pandas as pd
 import time
 from app import create_app
-from app.server.database import db, Company, Report, Fundamental, Metrics
-from seed_metrics import *
-from seed_fundementals import *
+from app.server.database import db, Company, Report, Fundamental, Metric
+from seed_db.seed_metrics import *
+from seed_db.seed_fundementals import *
 
 # Start with a small list to test, then add your full 200
 TICKERS = ["8TRA.ST", 
@@ -230,31 +230,65 @@ def calc_net_debt_ebitda(bal, report_date, ebitda):
         raise ValueError("Net Debt/EBITDA is NaN")
     return result
 
+def fetch_all_tickers_data(cleaned_list): 
+    data_dictionary = {} 
+
+    for ticker in cleaned_list: 
+        print(f"Processing {ticker}...")
+        ticker_data = yf.Ticker(ticker)
+        
+        # Fetch data
+        inc = ticker_data.income_stmt        # Income Statement
+        bal = ticker_data.balance_sheet     # Balance Sheet
+        
+        if inc is None or bal is None or inc.empty or bal.empty:
+            print(f"Skipping {ticker}: Missing Financials or Balance Sheet")
+            continue
+
+        print(inc.columns)
+        return None
+
+        for date_timestamp in inc.columns:
+            # Format timestamp to a clean 'YYYY-MM-DD' string
+            date_str = date_timestamp.strftime('%Y-%m-%d')
+            
+            # Define the tuple key
+            composite_key = (ticker, date_str)
+            
+            # Extract the specific column (Series) for this date
+            # Safety check: ensures the date also exists in the balance sheet
+            inc_column = inc[date_timestamp]
+            bal_column = bal[date_timestamp] if date_timestamp in bal.columns else None
+            
+            # Map the tuple key to the specific date's financial data
+            data_dictionary[composite_key] = {
+                "income_statement": inc_column,
+                "balance_sheet": bal_column
+            }
+    
+    return data_dictionary
+
+def clean_ticker_list(ticker_list): 
+    cleaned_list = []
+    for ticker in ticker_list: 
+        ticker = ticker.strip().replace(",", "")
+        cleaned_list.append(ticker)
+
+    return cleaned_list
+
 def seed_data():
     app = create_app()
     with app.app_context():
-        # Recreate the database
+       # Recreate db
         db.drop_all()   
-        db.create_all() 
+        db.create_all()
 
-        print("Seeding trading.db")
+        TICKERS = clean_ticker_list(TICKERS)
+        ticker_fundemental_dict = fetch_all_tickers_data(TICKERS)
+
+        print("Seeding Fundementals in company.db... ")
         
         for ticker in TICKERS:
-
-            # Clean ticker (removes trailing commas if any)
-            ticker = ticker.strip().replace(",", "")
-            print(f"Processing {ticker}...")
-            
-            ticker_data = yf.Ticker(ticker)
-            
-            # Fetch necessary DataFrames
-            inc = ticker_data.financials        # Income Statement
-            bal = ticker_data.balance_sheet    # Balance Sheet
-            
-            if inc is None or bal is None or inc.empty or bal.empty:
-                print(f"Skipping {ticker}: Missing Financials or Balance Sheet")
-                continue
-
             # Only save companies with all the data provided
             temp_fundamentals = []
             sorted_dates = sorted(inc.columns)[-4:] #get the 4 resent year

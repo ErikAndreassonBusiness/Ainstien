@@ -1,4 +1,3 @@
-import yfinance as yf
 import pandas as pd
 
 # Constants
@@ -41,6 +40,9 @@ def calc_growth(current, previous):
     return round(100 * ((current - previous) / previous), 2)
 
 # ======== Calculare Liquidy Ratios =======
+def calc_current_assets(bal, prev_bal): 
+    return 
+
 def calc_quick_ratio(current_assets, inventory, wip, short_term_debt): #%
     return round((current_assets - inventory - wip) / short_term_debt, 2) * 100
 
