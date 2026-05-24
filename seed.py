@@ -277,7 +277,7 @@ def clean_ticker_list(ticker_list):
         cleaned_list.append(ticker)
 
     return cleaned_list
-
+    
 def seed_company_report_fundementals(cleaned_tickers): 
     companies_to_seed = []
 
@@ -305,6 +305,7 @@ def seed_company_report_fundementals(cleaned_tickers):
 
             # Queary yf
             report = Report(
+                company_id = company.id,
                 report_date=clean_date,
                 share_outstanding=1000000,       
                 current_price=10.0,              
@@ -313,6 +314,7 @@ def seed_company_report_fundementals(cleaned_tickers):
 
             # Query yf
             fundamental = Fundamental(
+                report = report.id,
                 substansvarde = 0,
                 revenue=0.0,
                 net_income=0.0,
