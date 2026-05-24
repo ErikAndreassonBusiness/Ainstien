@@ -278,6 +278,63 @@ def clean_ticker_list(ticker_list):
 
     return cleaned_list
 
+def seed_company_report_fundementals(cleaned_tickers): 
+    companies_to_seed = []
+
+    for ticker in cleaned_tickers:
+        print(f"Processing {ticker}...")
+        ticker_data = yf.Ticker(ticker)
+        
+        inc = ticker_data.income_stmt
+        bal = ticker_data.balance_sheet
+    
+        if inc is None or bal is None or inc.empty or bal.empty:
+            print(f"  Skipping {ticker}: Missing Financials or Balance Sheet")
+            continue
+            
+        sorted_dates = sorted(inc.columns)[-4:] #For recent years, not report date!!!!
+        if len(sorted_dates) < 4:
+            print(f"  SKIPPED: {ticker} - Not enough historical raw data")
+            continue
+
+        # Instance company entity
+        company = Company(ticker=ticker, name=ticker_data.info.get('shortName', ticker))
+
+        for date in sorted_dates: 
+            clean_date = date.date()
+
+            # Queary yf
+            report = Report(
+                report_date=clean_date,
+                share_outstanding=1000000,       
+                current_price=10.0,              
+                max_average_future_price=15.0    
+            )
+
+            # Query yf
+            fundamental = Fundamental(
+                substansvarde = 0,
+                revenue=0.0,
+                net_income=0.0,
+                total_assets=0.0,
+                total_equity=0.0,
+                depreciation=0.0, 
+                total_debt=0.0, 
+                short_term_debt=0.0,
+                long_term_debt=0.0,
+                current_assets=0.0, 
+                inventory=0.0, 
+                account_receiveables=0.0, 
+                cash=0.0,
+                fixed_assets=0.0, 
+                goodwill=0.0
+            )
+
+            db.session.add(report)
+            db.session.add(fundamental)
+
+        db.session.commit()
+
 def seed_data():
     app = create_app()
     with app.app_context():
@@ -286,6 +343,8 @@ def seed_data():
         db.create_all()
 
         cleaned_tickers = clean_ticker_list(TICKERS) 
+        seed_company_report_fundementals(cleaned_tickers)
+        return 
         ticker_fundemental_dict = fetch_all_tickers_data(cleaned_tickers)
         return
 
