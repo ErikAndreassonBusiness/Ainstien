@@ -1,4 +1,3 @@
-import pandas as pd
 
 # Constants
 REVENUE_LIST = ['Total Revenue', 'Revenue', 'Operating Revenue']

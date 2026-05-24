@@ -14,229 +14,229 @@ from seed_db.seed_fundementals import *
 # Start with a small list to test, then add your full 200
 TICKERS = ["8TRA.ST", 
                     "VOLO.ST", 
-                    "PEAB-B.ST", 
-                    "HUSQ-B.ST", 
-                    "BUFAB.SR", 
-                    "NCC-B.ST", 
-                    "BRAV.ST", 
-                    "AQ.ST", 
-                    "OEM-B.ST", 
-                    "STOR-B.ST", 
-                    "BEIA-B.ST", 
-                    "SYSR.ST", 
-                    "EPRO-B.ST", 
-                    "AFRY.ST", 
-                    "LIAB.ST", 
-                    "ALIG.ST", 
-                    "RATO-B.ST", 
-                    "PLEJD.ST", 
-                    "VSURE.ST", 
-                    "ENGCON-B.ST", 
-                    "INSTAL.ST", 
-                    "INWI.ST", 
-                    "SPID-B.ST", 
-                    "MILDEF.ST", 
-                    "BERG-B.ST", 
-                    "KAR.ST", 
-                    "ALLIGO-B.ST", 
-                    "MMGR-B.ST", 
-                    "GOTL-B.ST", 
-                    "TROAX.ST", 
-                    "COOR.ST", 
-                    "FAG.ST", 
-                    "NYAB.ST", 
-                    "ITAB.ST", 
-                    "FMM-B.ST", 
-                    "KARNEL-B.ST", 
-                    "REJL-B.ST", 
-                    "VESTUM.ST", 
-                    "XANO-B.ST", 
-                    "GOMX.ST", 
-                    "SVED-B.ST", 
-                    "BTS-B.ST", 
-                    "TEQ.ST", 
-                    "SVIK.ST", 
-                    "GREEN.ST", 
-                    "ARSO.ST", 
-                    "BYGGP.ST", 
-                    "FG.ST", 
-                    "BERNER-B.ST", 
-                    "VSSAB-B.ST", 
-                    "CTT.ST", 
-                    "ELAN-B.ST",
-                    "CCC.ST", 
-                    "PCELL.ST", 
-                    "INISS-B.ST", 
-                    "EWRK.ST", 
-                    "FIRE.ST", 
-                    "VPAB-B.ST", 
-                    "CTEK.ST", 
-                    "ACC.ST", 
-                    "SALT-B.ST", 
-                    "W5.ST", 
-                    "PROF-B.ST", 
-                    "RAIL.ST", 
-                    "HAKI-B.ST", 
-                    "NORB-B.ST", 
-                    "SINT.ST", 
-                    "FNM.ST", 
-                    "GARO.ST", 
-                    "CNCJO-B.ST", 
-                    "CARE.ST", 
-                    "PRIC-B.ST", 
-                    "INFREA.ST", 
-                    "SUMMAS.ST", 
-                    "AVT-B.ST", 
-                    "TERNOR.ST", 
-                    "FLEXQ.ST", 
-                    "WTW-A.ST", 
-                    "DEDI.ST", 
-                    "QAIR.ST", 
-                    "SBOK.ST", 
-                    "META.ST", 
-                    "AGES-B.ST", 
-                    "OCUN-B.ST", 
-                    "SUSG.ST", 
-                    "FERRO.ST", 
-                    "FREEM.ST", 
-                    "CALVIK.ST", 
-                    "IMPC.ST", 
-                    "TURA.ST", 
-                    "PION-B.ST",
-                    "WBGR-B.ST", 
-                    "NETEL.ST", 
-                    "STW.ST", 
-                    "SES.ST", 
-                    "ENVI-B.ST", 
-                    "LYGRD.ST", 
-                    "HULT-B.ST", 
-                    "DRIL.ST", 
-                    "OXE.ST", 
-                    "NOTEK.ST", 
-                    "OPTI.ST", 
-                    "NEPA.ST", 
-                    "WISE.ST", 
-                    "STWK.ST", 
-                    "BIOEX.ST", 
-                    "LEVEL.ST", 
-                    "TSEC.ST", 
-                    "VIMAB.ST", 
-                    "ESGR-B.ST", 
-                    "AXOLOT.ST", 
-                    "SAXG.ST", 
-                    "GGEO.ST", 
-                    "RAMSH.ST", 
-                    "BAWAT.ST", 
-                    "CI.ST", 
-                    "HEXI.ST", 
-                    "AERW-B.ST", 
-                    "MBBAB.ST", 
-                    "HELIO.ST", 
-                    "NFGAB.ST", 
-                    "BOMILL.ST", 
-                    "BRILL.ST", 
-                    "ABAS.ST", 
-                    "IRIS.ST", 
-                    "CIRCHE.ST", 
-                    "EASY-B.ST", 
-                    "HEGR.ST", 
-                    "MANTEX.ST", 
-                    "PCOM-B.ST", 
-                    "ZENZIP-B.ST", 
-                    "PADEL.ST"]
+                    "PEAB-B.ST"]
+                    # "HUSQ-B.ST", 
+                    # "BUFAB.SR", 
+                    # "NCC-B.ST", 
+                    # "BRAV.ST", 
+                    # "AQ.ST", 
+                    # "OEM-B.ST", 
+                    # "STOR-B.ST", 
+                    # "BEIA-B.ST", 
+                    # "SYSR.ST", 
+                    # "EPRO-B.ST", 
+                    # "AFRY.ST", 
+                    # "LIAB.ST", 
+                    # "ALIG.ST", 
+                    # "RATO-B.ST", 
+                    # "PLEJD.ST", 
+                    # "VSURE.ST", 
+                    # "ENGCON-B.ST", 
+                    # "INSTAL.ST", 
+                    # "INWI.ST", 
+                    # "SPID-B.ST", 
+                    # "MILDEF.ST", 
+                    # "BERG-B.ST", 
+                    # "KAR.ST", 
+                    # "ALLIGO-B.ST", 
+                    # "MMGR-B.ST", 
+                    # "GOTL-B.ST", 
+                    # "TROAX.ST", 
+                    # "COOR.ST", 
+                    # "FAG.ST", 
+                    # "NYAB.ST", 
+                    # "ITAB.ST", 
+                    # "FMM-B.ST", 
+                    # "KARNEL-B.ST", 
+                    # "REJL-B.ST", 
+                    # "VESTUM.ST", 
+                    # "XANO-B.ST", 
+                    # "GOMX.ST", 
+                    # "SVED-B.ST", 
+                    # "BTS-B.ST", 
+                    # "TEQ.ST", 
+                    # "SVIK.ST", 
+                    # "GREEN.ST", 
+                    # "ARSO.ST", 
+                    # "BYGGP.ST", 
+                    # "FG.ST", 
+                    # "BERNER-B.ST", 
+                    # "VSSAB-B.ST", 
+                    # "CTT.ST", 
+                    # "ELAN-B.ST",
+                    # "CCC.ST", 
+                    # "PCELL.ST", 
+                    # "INISS-B.ST", 
+                    # "EWRK.ST", 
+                    # "FIRE.ST", 
+                    # "VPAB-B.ST", 
+                    # "CTEK.ST", 
+                    # "ACC.ST", 
+                    # "SALT-B.ST", 
+                    # "W5.ST", 
+                    # "PROF-B.ST", 
+                    # "RAIL.ST", 
+                    # "HAKI-B.ST", 
+                    # "NORB-B.ST", 
+                    # "SINT.ST", 
+                    # "FNM.ST", 
+                    # "GARO.ST", 
+                    # "CNCJO-B.ST", 
+                    # "CARE.ST", 
+                    # "PRIC-B.ST", 
+                    # "INFREA.ST", 
+                    # "SUMMAS.ST", 
+                    # "AVT-B.ST", 
+                    # "TERNOR.ST", 
+                    # "FLEXQ.ST", 
+                    # "WTW-A.ST", 
+                    # "DEDI.ST", 
+                    # "QAIR.ST", 
+                    # "SBOK.ST", 
+                    # "META.ST", 
+                    # "AGES-B.ST", 
+                    # "OCUN-B.ST", 
+                    # "SUSG.ST", 
+                    # "FERRO.ST", 
+                    # "FREEM.ST", 
+                    # "CALVIK.ST", 
+                    # "IMPC.ST", 
+                    # "TURA.ST", 
+                    # "PION-B.ST",
+                    # "WBGR-B.ST", 
+                    # "NETEL.ST", 
+                    # "STW.ST", 
+                    # "SES.ST", 
+                    # "ENVI-B.ST", 
+                    # "LYGRD.ST", 
+                    # "HULT-B.ST", 
+                    # "DRIL.ST", 
+                    # "OXE.ST", 
+                    # "NOTEK.ST", 
+                    # "OPTI.ST", 
+                    # "NEPA.ST", 
+                    # "WISE.ST", 
+                    # "STWK.ST", 
+                    # "BIOEX.ST", 
+                    # "LEVEL.ST", 
+                    # "TSEC.ST", 
+                    # "VIMAB.ST", 
+                    # "ESGR-B.ST", 
+                    # "AXOLOT.ST", 
+                    # "SAXG.ST", 
+                    # "GGEO.ST", 
+                    # "RAMSH.ST", 
+                    # "BAWAT.ST", 
+                    # "CI.ST", 
+                    # "HEXI.ST", 
+                    # "AERW-B.ST", 
+                    # "MBBAB.ST", 
+                    # "HELIO.ST", 
+                    # "NFGAB.ST", 
+                    # "BOMILL.ST", 
+                    # "BRILL.ST", 
+                    # "ABAS.ST", 
+                    # "IRIS.ST", 
+                    # "CIRCHE.ST", 
+                    # "EASY-B.ST", 
+                    # "HEGR.ST", 
+                    # "MANTEX.ST", 
+                    # "PCOM-B.ST", 
+                    # "ZENZIP-B.ST", 
+                    # "PADEL.ST"]
 
-def get_revenue(inc, report_date): 
-    for key in ['Total Revenue', 'Revenue', 'Operating Revenue']:
-        if key in inc.index:
-            revenue = inc.loc[key, report_date]
-            if pd.notna(revenue) and revenue != 0:
-                return revenue
-    raise ValueError(f"Revenue not found for {report_date}")
+# def get_revenue(inc, report_date): 
+#     for key in ['Total Revenue', 'Revenue', 'Operating Revenue']:
+#         if key in inc.index:
+#             revenue = inc.loc[key, report_date]
+#             if pd.notna(revenue) and revenue != 0:
+#                 return revenue
+#     raise ValueError(f"Revenue not found for {report_date}")
                         
-def get_profit(inc, report_date):
-    if 'Net Income' in inc.index: 
-        net_income =  inc.loc['Net Income', report_date]  
+# def get_profit(inc, report_date):
+#     if 'Net Income' in inc.index: 
+#         net_income =  inc.loc['Net Income', report_date]  
 
-        if pd.isna(net_income): 
-            raise ValueError("Net Income is NaN")
-        return net_income
-    else: 
-        raise ValueError("Net Income not found")
+#         if pd.isna(net_income): 
+#             raise ValueError("Net Income is NaN")
+#         return net_income
+#     else: 
+#         raise ValueError("Net Income not found")
 
-def get_ebit(inc, report_date): 
-    if 'EBIT' in inc.index: 
-        ebit = inc.loc['EBIT', report_date] 
+# def get_ebit(inc, report_date): 
+#     if 'EBIT' in inc.index: 
+#         ebit = inc.loc['EBIT', report_date] 
 
-        if pd.isna(ebit): 
-            raise ValueError("EBIT is NaN")
-        return ebit
-    else: 
-        raise ValueError("EBIT not found")
+#         if pd.isna(ebit): 
+#             raise ValueError("EBIT is NaN")
+#         return ebit
+#     else: 
+#         raise ValueError("EBIT not found")
 
-def get_ebitda(inc, report_date): 
-    if 'EBITDA' in inc.index: 
-        ebitda = inc.loc['EBITDA', report_date]
+# def get_ebitda(inc, report_date): 
+#     if 'EBITDA' in inc.index: 
+#         ebitda = inc.loc['EBITDA', report_date]
 
-        if pd.isna(ebitda): 
-            raise ValueError("EBITDA is NaN")
-        return ebitda
-    else: 
-        raise ValueError("EBITDA not found")
+#         if pd.isna(ebitda): 
+#             raise ValueError("EBITDA is NaN")
+#         return ebitda
+#     else: 
+#         raise ValueError("EBITDA not found")
 
-def calc_growth_to_percent(current_data, prev_data): 
-    if prev_data < 0: 
-        return (current_data - prev_data) / -prev_data
-    elif prev_data == 0: 
-        raise ValueError("Cannot divide with zero!")
-    else:
-        return 100 * (current_data - prev_data) / prev_data
+# def calc_growth_to_percent(current_data, prev_data): 
+#     if prev_data < 0: 
+#         return (current_data - prev_data) / -prev_data
+#     elif prev_data == 0: 
+#         raise ValueError("Cannot divide with zero!")
+#     else:
+#         return 100 * (current_data - prev_data) / prev_data
 
     
-def calc_margin_to_percent(attribute, revenue): 
-    if revenue == 0: 
-        raise ValueError("Cannot divide with zero!")
-    else: 
-        return 100 *attribute / revenue #convert to percent
+# def calc_margin_to_percent(attribute, revenue): 
+#     if revenue == 0: 
+#         raise ValueError("Cannot divide with zero!")
+#     else: 
+#         return 100 *attribute / revenue #convert to percent
 
-def calc_soliditet_to_percent(bal, report_date): 
-    if 'Total Assets' in bal.index and 'Stockholders Equity' in bal.index: 
-        total_assets = bal.loc['Total Assets', report_date]
-        total_equity = bal.loc['Stockholders Equity', report_date]
-    else:
-        raise ValueError("Total Assets or Stockholders Equity not found!")
+# def calc_soliditet_to_percent(bal, report_date): 
+#     if 'Total Assets' in bal.index and 'Stockholders Equity' in bal.index: 
+#         total_assets = bal.loc['Total Assets', report_date]
+#         total_equity = bal.loc['Stockholders Equity', report_date]
+#     else:
+#         raise ValueError("Total Assets or Stockholders Equity not found!")
     
-    if total_assets != 0: 
-        return 100 * (total_equity / total_assets) 
-    else:
-        raise ValueError("Cannot divide with zero!")
+#     if total_assets != 0: 
+#         return 100 * (total_equity / total_assets) 
+#     else:
+#         raise ValueError("Cannot divide with zero!")
 
-def calc_net_debt_ebitda(bal, report_date, ebitda): 
-    if ebitda == 0: 
-        raise ValueError("Cannot divide with zero!")
+# def calc_net_debt_ebitda(bal, report_date, ebitda): 
+#     if ebitda == 0: 
+#         raise ValueError("Cannot divide with zero!")
 
-    if 'Total Debt' in bal.index: 
-        total_debt = bal.loc['Total Debt', report_date]
-    else: 
-        raise ValueError("Total Debt not found")
+#     if 'Total Debt' in bal.index: 
+#         total_debt = bal.loc['Total Debt', report_date]
+#     else: 
+#         raise ValueError("Total Debt not found")
     
-    if 'Cash And Cash Equivalents' in bal.index: 
-        cash = bal.loc['Cash And Cash Equivalents', report_date]
-    else: 
-        raise ValueError("Cash And Cash Equivalents not found")
+#     if 'Cash And Cash Equivalents' in bal.index: 
+#         cash = bal.loc['Cash And Cash Equivalents', report_date]
+#     else: 
+#         raise ValueError("Cash And Cash Equivalents not found")
     
-    result = (total_debt - cash) / ebitda
+#     result = (total_debt - cash) / ebitda
 
-    if pd.isna(result):
-        raise ValueError("Net Debt/EBITDA is NaN")
-    return result
+#     if pd.isna(result):
+#         raise ValueError("Net Debt/EBITDA is NaN")
+#     return result
 
 def fetch_all_tickers_data(cleaned_list): 
-    data_dictionary = {} 
+    fundemental_dict = {} 
 
     for ticker in cleaned_list: 
         print(f"Processing {ticker}...")
         ticker_data = yf.Ticker(ticker)
-        
+
         # Fetch data
         inc = ticker_data.income_stmt        # Income Statement
         bal = ticker_data.balance_sheet     # Balance Sheet
@@ -244,31 +244,33 @@ def fetch_all_tickers_data(cleaned_list):
         if inc is None or bal is None or inc.empty or bal.empty:
             print(f"Skipping {ticker}: Missing Financials or Balance Sheet")
             continue
+        
+        period_end_dates = sorted(inc.columns)[-4:] #get period_end_dates, not report dates!!! Not possible with yfinance
 
-        print(inc.columns)
-        return None
+        # Ensure that there is 3 years of data can be strored
+        if len(period_end_dates) < 4:
+            print(f"  SKIPPED: {ticker} - Not enough raw data (need 4 years, found {len(period_end_dates)})")
+            continue
 
-        for date_timestamp in inc.columns:
-            # Format timestamp to a clean 'YYYY-MM-DD' string
-            date_str = date_timestamp.strftime('%Y-%m-%d')
-            
+        for period_end_date  in period_end_dates:
             # Define the tuple key
-            composite_key = (ticker, date_str)
+            composite_key = (ticker, period_end_date)
             
-            # Extract the specific column (Series) for this date
-            # Safety check: ensures the date also exists in the balance sheet
-            inc_column = inc[date_timestamp]
-            bal_column = bal[date_timestamp] if date_timestamp in bal.columns else None
+            inc_column = inc[period_end_date]
+            bal_column = bal[period_end_date]
             
             # Map the tuple key to the specific date's financial data
-            data_dictionary[composite_key] = {
+            fundemental_dict[composite_key] = {
                 "income_statement": inc_column,
                 "balance_sheet": bal_column
             }
-    
-    return data_dictionary
+                
+    print(fundemental_dict)
+    return 
+    return fundemental_dict
 
 def clean_ticker_list(ticker_list): 
+    """Convert all tickers to the correct format"""
     cleaned_list = []
     for ticker in ticker_list: 
         ticker = ticker.strip().replace(",", "")
@@ -283,22 +285,18 @@ def seed_data():
         db.drop_all()   
         db.create_all()
 
-        TICKERS = clean_ticker_list(TICKERS)
-        ticker_fundemental_dict = fetch_all_tickers_data(TICKERS)
+        cleaned_tickers = clean_ticker_list(TICKERS) 
+        ticker_fundemental_dict = fetch_all_tickers_data(cleaned_tickers)
+        return
 
         print("Seeding Fundementals in company.db... ")
         
         for ticker in TICKERS:
             # Only save companies with all the data provided
             temp_fundamentals = []
-            sorted_dates = sorted(inc.columns)[-4:] #get the 4 resent year
+            
+            
             all_years_valid = True 
-
-            # Ensure that there is 3 years of data can be strored
-            if len(sorted_dates) < 4:
-                print(f"  SKIPPED: {ticker} - Not enough raw data (need 4 years, found {len(sorted_dates)})")
-                continue
-
             for i in range(1, len(sorted_dates)): #skips the first year since we need a base reveneue and profiit
 
                 report_date = sorted_dates[i] # to get data from reports

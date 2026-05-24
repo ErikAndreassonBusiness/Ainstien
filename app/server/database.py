@@ -29,15 +29,20 @@ class Report(db.Model):
     company_id: Mapped[int] = mapped_column(ForeignKey('company.id'), nullable=False)
     company: Mapped["Company"] = relationship(back_populates='reports')
 
-    fundamental_id: Mapped[int] = mapped_column(ForeignKey('fundamental.id'), nullable=False)
-    metric_id: Mapped[int] = mapped_column(ForeignKey('metric.id'), nullable=False)
+    # Relationship (delete-orphan: Om report tas bort, tas även fundementals och metrics bort)
+    fundamental: Mapped["Fundamental"] = relationship(back_populates='report', cascade="all, delete-orphan")
+    metric: Mapped["Metric"] = relationship(back_populates='report', cascade="all, delete-orphan")
+
+    #  KAN BLI DUBBELRELATIONER OM DESSA ÄR MED
+    # fundamental_id: Mapped[int] = mapped_column(ForeignKey('fundamental.id'), nullable=False)
+    # metric_id: Mapped[int] = mapped_column(ForeignKey('metric.id'), nullable=False)
 
 class Fundamental(db.Model): #4 år bak
     __tablename__ = "fundamental"
     id: Mapped[int] = mapped_column(primary_key=True)
 
     report_id: Mapped[int] = mapped_column(ForeignKey('report.id'), nullable=False)
-    report: Mapped["Report"] = relationship(back_populates='fundamentals')
+    report: Mapped["Report"] = relationship(back_populates='fundamental')
 
     substansvarde: Mapped[float] = mapped_column(nullable=False)
 
@@ -72,7 +77,7 @@ class Metric(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     report_id: Mapped[int] = mapped_column(ForeignKey('report.id'), nullable=False)
-    report: Mapped["Report"] = relationship(back_populates='metrics')
+    report: Mapped["Report"] = relationship(back_populates='metric')
 
     """ ========================== Growth ratios ======================= """
     #Omsättningstillväxt (%)
