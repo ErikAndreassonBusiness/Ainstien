@@ -5,7 +5,9 @@ Target: Swedish Mid-Cap stocks (.ST).
 """
 import yfinance as yf
 import pandas as pd
+from datetime import timedelta
 import time
+
 from app import create_app
 from app.server.database import db, Company, Report, Fundamental, Metric
 from seed_db.seed_metrics import *
@@ -145,6 +147,8 @@ TICKERS = ["8TRA.ST",
                     # "ZENZIP-B.ST", 
                     # "PADEL.ST"]
 
+COMPANIES_TO_COMMIT = []
+
 # def get_revenue(inc, report_date): 
 #     for key in ['Total Revenue', 'Revenue', 'Operating Revenue']:
 #         if key in inc.index:
@@ -230,45 +234,6 @@ TICKERS = ["8TRA.ST",
 #         raise ValueError("Net Debt/EBITDA is NaN")
 #     return result
 
-def fetch_all_tickers_data(cleaned_list): 
-    fundemental_dict = {} 
-
-    for ticker in cleaned_list: 
-        print(f"Processing {ticker}...")
-        ticker_data = yf.Ticker(ticker)
-
-        # Fetch data
-        inc = ticker_data.income_stmt        # Income Statement
-        bal = ticker_data.balance_sheet     # Balance Sheet
-        
-        if inc is None or bal is None or inc.empty or bal.empty:
-            print(f"Skipping {ticker}: Missing Financials or Balance Sheet")
-            continue
-        
-        period_end_dates = sorted(inc.columns)[-4:] #get period_end_dates, not report dates!!! Not possible with yfinance
-
-        # Ensure that there is 3 years of data can be strored
-        if len(period_end_dates) < 4:
-            print(f"  SKIPPED: {ticker} - Not enough raw data (need 4 years, found {len(period_end_dates)})")
-            continue
-
-        for period_end_date  in period_end_dates:
-            # Define the tuple key
-            composite_key = (ticker, period_end_date)
-            
-            inc_column = inc[period_end_date]
-            bal_column = bal[period_end_date]
-            
-            # Map the tuple key to the specific date's financial data
-            fundemental_dict[composite_key] = {
-                "income_statement": inc_column,
-                "balance_sheet": bal_column
-            }
-                
-    print(fundemental_dict)
-    return 
-    return fundemental_dict
-
 def clean_ticker_list(ticker_list): 
     """Convert all tickers to the correct format"""
     cleaned_list = []
@@ -278,64 +243,95 @@ def clean_ticker_list(ticker_list):
 
     return cleaned_list
     
-def seed_company_report_fundementals(cleaned_tickers): 
-    companies_to_seed = []
+def stage_company(ticker, ticker_data): 
+    """ Stages one compnay in COMPANIES_TO_COMMIT list """
 
-    for ticker in cleaned_tickers:
-        print(f"Processing {ticker}...")
-        ticker_data = yf.Ticker(ticker)
+    # Instance company entity
+    new_compnay = Company(ticker=ticker, name=ticker_data.info.get('shortName', ticker))
+    COMPANIES_TO_COMMIT.append(new_compnay)
+
+def stage_report(report_dates, ticker_data, inc, bal): 
+    """ Stages one report in COMPANIES_TO_COMMIT list """
+
+    for date in report_dates:
+         # --- Calulcate price when report is published ---
+        end_date = date + timedelta(days=5) # handeling holidays
+        start_str = date.strftime('%Y-%m-%d')
+        end_str = end_date.strftime('%Y-%m-%d')
+
+        report_date_prices = ticker_obj.history(
+            start=start_str, 
+            end=end_str, 
+            interval="1d")
         
-        inc = ticker_data.income_stmt
-        bal = ticker_data.balance_sheet
-    
-        if inc is None or bal is None or inc.empty or bal.empty:
-            print(f"  Skipping {ticker}: Missing Financials or Balance Sheet")
-            continue
-            
-        sorted_dates = sorted(inc.columns)[-4:] #For recent years, not report date!!!!
-        if len(sorted_dates) < 4:
-            print(f"  SKIPPED: {ticker} - Not enough historical raw data")
-            continue
+        for price in report_date_prices:
+            if not(price is None or price == 'Nan'): 
+                close_price = price['Close']
+                break
+        
+        # --- Calculate max_avarage price ---
+        start_date  = date + timedelta(days = 90) # 3 months
+        end_date = start_date + timedelta(days = 5)
 
-        # Instance company entity
-        company = Company(ticker=ticker, name=ticker_data.info.get('shortName', ticker))
+        max_prices = ticker_obj.history(
+            start=start_str, 
+            end=end_str, 
+            interval="1d")
+        
+        prices_to_avarage = []
+        for price in max_prices:
+            if not(price is None or price == 'Nan'): 
+                prices_to_avarage.append(price['Close'])
 
-        for date in sorted_dates: 
-            clean_date = date.date()
+        sum_prices = 0
+        for price in prices_to_avarage: 
+            sum_prices = sum_prices + price
+        
+        avarage_prices = sum_prices / len(prices_to_avarage)
 
-            # Queary yf
-            report = Report(
-                company_id = company.id,
-                report_date=clean_date,
-                share_outstanding=1000000,       
-                current_price=10.0,              
-                max_average_future_price=15.0    
-            )
+        new_report = Report(
+            report_date = date,
+            share_outstanding = 10000000,
+            current_price = close_price,
+            max_average_future_price = avarage
+        )
 
-            # Query yf
-            fundamental = Fundamental(
-                report = report.id,
-                substansvarde = 0,
-                revenue=0.0,
-                net_income=0.0,
-                total_assets=0.0,
-                total_equity=0.0,
-                depreciation=0.0, 
-                total_debt=0.0, 
-                short_term_debt=0.0,
-                long_term_debt=0.0,
-                current_assets=0.0, 
-                inventory=0.0, 
-                account_receiveables=0.0, 
-                cash=0.0,
-                fixed_assets=0.0, 
-                goodwill=0.0
-            )
+        # for date in sorted_dates: 
+        #     clean_date = date.date()
 
-            db.session.add(report)
-            db.session.add(fundamental)
+        #     # Queary yf
+        #     report = Report(
+        #         company_id = company.id,
+        #         report_date=clean_date,
+        #         share_outstanding=1000000,       
+        #         current_price=10.0,              
+        #         max_average_future_price=15.0    
+        #     )
 
-        db.session.commit()
+        #     # Query yf
+        #     fundamental = Fundamental(
+        #         report = report.id,
+        #         substansvarde = 0,
+        #         revenue=0.0,
+        #         net_income=0.0,
+        #         total_assets=0.0,
+        #         total_equity=0.0,
+        #         depreciation=0.0, 
+        #         total_debt=0.0, 
+        #         short_term_debt=0.0,
+        #         long_term_debt=0.0,
+        #         current_assets=0.0, 
+        #         inventory=0.0, 
+        #         account_receiveables=0.0, 
+        #         cash=0.0,
+        #         fixed_assets=0.0, 
+        #         goodwill=0.0
+        #     )
+
+        #     db.session.add(report)
+        #     db.session.add(fundamental)
+
+        # db.session.commit()
 
 def seed_data():
     app = create_app()
@@ -345,10 +341,27 @@ def seed_data():
         db.create_all()
 
         cleaned_tickers = clean_ticker_list(TICKERS) 
-        seed_company_report_fundementals(cleaned_tickers)
-        return 
-        ticker_fundemental_dict = fetch_all_tickers_data(cleaned_tickers)
-        return
+
+        # ===== Loop for staging all companies ======
+        for ticker in cleaned_tickers:
+            print(f"Processing {ticker}...")
+            ticker_data = yf.Ticker(ticker)
+            
+            inc = ticker_data.income_stmt
+            bal = ticker_data.balance_sheet
+        
+            if inc is None or bal is None or inc.empty or bal.empty:
+                print(f"  Skipping {ticker}: Missing Financials or Balance Sheet")
+                continue
+
+            sorted_dates = sorted(inc.columns)[-4:] #For recent years, not report date!!!!
+            if len(sorted_dates) < 4:
+                print(f"  SKIPPED: {ticker} - Not enough historical raw data")
+                continue
+            
+            stage_company(ticker = ticker, ticker_data = ticker_data)
+            
+       
 
         print("Seeding Fundementals in company.db... ")
         
