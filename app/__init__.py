@@ -8,7 +8,7 @@ and ensuring all database tables are created within the application context.
 """
 
 from flask import Flask
-from .server.database import db
+from app.server.database import db
 import os
 
 def create_app():
