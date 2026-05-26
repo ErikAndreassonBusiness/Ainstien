@@ -147,303 +147,169 @@ TICKERS = ["8TRA.ST",
                     # "ZENZIP-B.ST", 
                     # "PADEL.ST"]
 
-COMPANIES_TO_COMMIT = []
 
-# def get_revenue(inc, report_date): 
-#     for key in ['Total Revenue', 'Revenue', 'Operating Revenue']:
-#         if key in inc.index:
-#             revenue = inc.loc[key, report_date]
-#             if pd.notna(revenue) and revenue != 0:
-#                 return revenue
-#     raise ValueError(f"Revenue not found for {report_date}")
-                        
-# def get_profit(inc, report_date):
-#     if 'Net Income' in inc.index: 
-#         net_income =  inc.loc['Net Income', report_date]  
-
-#         if pd.isna(net_income): 
-#             raise ValueError("Net Income is NaN")
-#         return net_income
-#     else: 
-#         raise ValueError("Net Income not found")
-
-# def get_ebit(inc, report_date): 
-#     if 'EBIT' in inc.index: 
-#         ebit = inc.loc['EBIT', report_date] 
-
-#         if pd.isna(ebit): 
-#             raise ValueError("EBIT is NaN")
-#         return ebit
-#     else: 
-#         raise ValueError("EBIT not found")
-
-# def get_ebitda(inc, report_date): 
-#     if 'EBITDA' in inc.index: 
-#         ebitda = inc.loc['EBITDA', report_date]
-
-#         if pd.isna(ebitda): 
-#             raise ValueError("EBITDA is NaN")
-#         return ebitda
-#     else: 
-#         raise ValueError("EBITDA not found")
-
-# def calc_growth_to_percent(current_data, prev_data): 
-#     if prev_data < 0: 
-#         return (current_data - prev_data) / -prev_data
-#     elif prev_data == 0: 
-#         raise ValueError("Cannot divide with zero!")
-#     else:
-#         return 100 * (current_data - prev_data) / prev_data
-
-    
-# def calc_margin_to_percent(attribute, revenue): 
-#     if revenue == 0: 
-#         raise ValueError("Cannot divide with zero!")
-#     else: 
-#         return 100 *attribute / revenue #convert to percent
-
-# def calc_soliditet_to_percent(bal, report_date): 
-#     if 'Total Assets' in bal.index and 'Stockholders Equity' in bal.index: 
-#         total_assets = bal.loc['Total Assets', report_date]
-#         total_equity = bal.loc['Stockholders Equity', report_date]
-#     else:
-#         raise ValueError("Total Assets or Stockholders Equity not found!")
-    
-#     if total_assets != 0: 
-#         return 100 * (total_equity / total_assets) 
-#     else:
-#         raise ValueError("Cannot divide with zero!")
-
-# def calc_net_debt_ebitda(bal, report_date, ebitda): 
-#     if ebitda == 0: 
-#         raise ValueError("Cannot divide with zero!")
-
-#     if 'Total Debt' in bal.index: 
-#         total_debt = bal.loc['Total Debt', report_date]
-#     else: 
-#         raise ValueError("Total Debt not found")
-    
-#     if 'Cash And Cash Equivalents' in bal.index: 
-#         cash = bal.loc['Cash And Cash Equivalents', report_date]
-#     else: 
-#         raise ValueError("Cash And Cash Equivalents not found")
-    
-#     result = (total_debt - cash) / ebitda
-
-#     if pd.isna(result):
-#         raise ValueError("Net Debt/EBITDA is NaN")
-#     return result
-
-def clean_ticker_list(ticker_list): 
+def clean_ticker_list(): 
     """Convert all tickers to the correct format"""
     cleaned_list = []
-    for ticker in ticker_list: 
+    for ticker in TICKERS: 
         ticker = ticker.strip().replace(",", "")
         cleaned_list.append(ticker)
 
     return cleaned_list
+
+def inc_and_bal_exists(ticker, inc, bal): 
+    if inc is None or bal is None or inc.empty or bal.empty:
+        print(f"  Skipping {ticker}: Missing Financials or Balance Sheet")
+        return False
+
+    return True
+
+def four_reports_exists(ticker, report_dates):
+    if len(report_dates) < 4:
+        return False
     
-def stage_company(ticker, ticker_data): 
-    """ Stages one compnay in COMPANIES_TO_COMMIT list """
+    return True
 
-    # Instance company entity
-    new_compnay = Company(ticker=ticker, name=ticker_data.info.get('shortName', ticker))
-    COMPANIES_TO_COMMIT.append(new_compnay)
+# def instance_company_entity(): 
+#     return Company(
+#                 ticker = ticker, 
+#                 name = ticker_data.info.get('shortName')
+#             )
 
-def stage_report(report_dates, ticker_data, inc, bal): 
-    """ Stages one report in COMPANIES_TO_COMMIT list """
+# def instance_report_entitiy(): 
+#     return Report(
+#                     report_date = date, 
+#                     share_outstanding = get_shares_outstanding(), 
+#                     current_price = get_price_at_report_date(),
+#                     max_average_future_price = get_max_avarage_future_prices(),
+#                     company = new_company,
+#                 )
 
-    for date in report_dates:
-         # --- Calulcate price when report is published ---
-        end_date = date + timedelta(days=5) # handeling holidays
-        start_str = date.strftime('%Y-%m-%d')
-        end_str = end_date.strftime('%Y-%m-%d')
+# def instance_fundemental_entity(): 
+#     return Fundamental(
+#                     report=new_report,
+#                     revenue=get_revenue(inc, r_date),
+#                     depreciation=get_depreciation(inc, r_date),
+#                     EBITDA=get_ebitda(inc, r_date),
+#                     EBIT=get_ebit(inc, r_date),
+#                     net_income=get_net_income(inc, r_date),
+#                     total_assets=get_total_assets(bal, r_date),
+#                     total_equity=get_total_equity(bal, r_date),
+#                     total_debt=get_total_debt(bal, r_date),
+#                     short_term_debt=get_short_debt(bal, r_date),
+#                     long_term_debt=get_long_debt(bal, r_date),
+#                     current_assets=get_current_assets(bal, r_date),
+#                     inventory=get_inventory(bal, r_date),
+#                     account_receiveables=get_receivables(bal, r_date),
+#                     cash=get_cash(bal, r_date),
+#                     fixed_assets=get_fixed_assets(bal, r_date),
+#                     goodwill=get_goodwill(bal, r_date)
+#                 )
 
-        report_date_prices = ticker_obj.history(
-            start=start_str, 
-            end=end_str, 
-            interval="1d")
-        
-        for price in report_date_prices:
-            if not(price is None or price == 'Nan'): 
-                close_price = price['Close']
-                break
-        
-        # --- Calculate max_avarage price ---
-        start_date  = date + timedelta(days = 90) # 3 months
-        end_date = start_date + timedelta(days = 5)
+# def instance_metric_entity(): 
+#     return Metric(
+#                     report=new_report,
+#                     revenue_growth_percent=get_rev_growth(inc, r_date),
+#                     profit_growth_percent=get_profit_growth(inc, r_date),
+#                     quick_ratio_percent=get_quick_ratio(bal, r_date),
+#                     net_debt_ebitda_ratio=get_net_debt_ebitda(inc, bal, r_date),
+#                     equity_ratio_percent=get_equity_ratio(bal, r_date),
+#                     assets_turnover_ratio=get_asset_turnover(inc, bal, r_date),
+#                     inventory_turnover_ratio=get_inv_turnover(inc, bal, r_date),
+#                     ROA=get_roa(inc, bal, r_date),
+#                     ROE=get_roe(inc, bal, r_date),
+#                     ROI=get_roi(inc, bal, r_date),
+#                     gross_profit_margin_percent=get_gross_margin(inc, r_date),
+#                     ebit_margin_percent=get_ebit_margin(inc, r_date),
+#                     profit_margin_percent=get_profit_margin(inc, r_date)
+#                 )
 
-        max_prices = ticker_obj.history(
-            start=start_str, 
-            end=end_str, 
-            interval="1d")
-        
-        prices_to_avarage = []
-        for price in max_prices:
-            if not(price is None or price == 'Nan'): 
-                prices_to_avarage.append(price['Close'])
+def instance_company_entity(ticker, ticker_data): 
+    return Company(
+        ticker=ticker, 
+        # Using .get() with a default in case info is empty
+        name=ticker_data.info.get('shortName', "Unknown Company")
+    )
 
-        sum_prices = 0
-        for price in prices_to_avarage: 
-            sum_prices = sum_prices + price
-        
-        avarage_prices = sum_prices / len(prices_to_avarage)
+def instance_report_entity(report_date, company_obj): 
+    return Report(
+        report_date=report_date, 
+        share_outstanding=0, 
+        current_price=0.0,
+        max_average_future_price=0.0,
+        company=company_obj  # Links to the Company object
+    )
 
-        new_report = Report(
-            report_date = date,
-            share_outstanding = 10000000,
-            current_price = close_price,
-            max_average_future_price = avarage
-        )
+def instance_fundamental_entity(report_obj): 
+    return Fundamental(
+        report=report_obj, # Links to the Report object
+        substansvarde=0.0,
+        revenue=0.0,
+        depreciation=0.0,
+        EBITDA=0.0,
+        EBIT=0.0,
+        net_income=0.0,
+        total_assets=0.0,
+        total_equity=0.0,
+        total_debt=0.0,
+        short_term_debt=0.0,
+        long_term_debt=0.0,
+        current_assets=0.0,
+        inventory=0.0,
+        account_receiveables=0.0,
+        cash=0.0,
+        fixed_assets=0.0,
+        goodwill=0.0
+    )
 
-        # for date in sorted_dates: 
-        #     clean_date = date.date()
+def instance_metric_entity(report_obj): 
+    return Metric(
+        report=report_obj, # Links to the Report object
+        revenue_growth_percent=0.0,
+        profit_growth_percent=0.0,
+        quick_ratio_percent=0.0,
+        net_debt_ebitda_ratio=0.0,
+        equity_ratio_percent=0.0,
+        assets_turnover_ratio=0.0,
+        inventory_turnover_ratio=0.0,
+        ROA=0.0,
+        ROE=0.0,
+        ROI=0.0,
+        gross_profit_margin_percent=0.0,
+        ebit_margin_percent=0.0,
+        profit_margin_percent=0.0
+    )
 
-        #     # Queary yf
-        #     report = Report(
-        #         company_id = company.id,
-        #         report_date=clean_date,
-        #         share_outstanding=1000000,       
-        #         current_price=10.0,              
-        #         max_average_future_price=15.0    
-        #     )
-
-        #     # Query yf
-        #     fundamental = Fundamental(
-        #         report = report.id,
-        #         substansvarde = 0,
-        #         revenue=0.0,
-        #         net_income=0.0,
-        #         total_assets=0.0,
-        #         total_equity=0.0,
-        #         depreciation=0.0, 
-        #         total_debt=0.0, 
-        #         short_term_debt=0.0,
-        #         long_term_debt=0.0,
-        #         current_assets=0.0, 
-        #         inventory=0.0, 
-        #         account_receiveables=0.0, 
-        #         cash=0.0,
-        #         fixed_assets=0.0, 
-        #         goodwill=0.0
-        #     )
-
-        #     db.session.add(report)
-        #     db.session.add(fundamental)
-
-        # db.session.commit()
-
-def seed_data():
+# === Main Seed Function ===
+def seed_data(): 
     app = create_app()
     with app.app_context():
-       # Recreate db
         db.drop_all()   
         db.create_all()
 
-        cleaned_tickers = clean_ticker_list(TICKERS) 
-
-        # ===== Loop for staging all companies ======
-        for ticker in cleaned_tickers:
+        for ticker in clean_ticker_list():
             print(f"Processing {ticker}...")
             ticker_data = yf.Ticker(ticker)
-            
+
             inc = ticker_data.income_stmt
             bal = ticker_data.balance_sheet
-        
-            if inc is None or bal is None or inc.empty or bal.empty:
-                print(f"  Skipping {ticker}: Missing Financials or Balance Sheet")
-                continue
 
-            sorted_dates = sorted(inc.columns)[-4:] #For recent years, not report date!!!!
-            if len(sorted_dates) < 4:
-                print(f"  SKIPPED: {ticker} - Not enough historical raw data")
-                continue
+            report_dates = sorted(inc.columns)[-4:] #For recent years, not report date!!!!
+
+            if inc_and_bal_exists(ticker, inc, bal) and four_reports_exists(ticker, report_dates): 
+                new_company = instance_company_entity(ticker, ticker_data)
+
+                for date in report_dates: 
+                    new_report = instance_report_entity(date, new_company)
+
+                    new_fundamental = instance_fundamental_entity(new_report)
+                    new_metric = instance_metric_entity(new_report)
             
-            stage_company(ticker = ticker, ticker_data = ticker_data)
-            
-       
+            db.session.add(new_report)
+            db.session.add(new_fundamental)
+            db.session.add(new_metric)
 
-        print("Seeding Fundementals in company.db... ")
-        
-        for ticker in TICKERS:
-            # Only save companies with all the data provided
-            temp_fundamentals = []
-            
-            
-            all_years_valid = True 
-            for i in range(1, len(sorted_dates)): #skips the first year since we need a base reveneue and profiit
-
-                report_date = sorted_dates[i] # to get data from reports
-                r_date = report_date.date() # to load the database
-                    
-                # 3. Manually get the previous report date
-                prev_report_date = sorted_dates[i - 1]
-
-                try:
-                    # ======= Fecth reveneue and profit =======
-                    # Get previous years revenue and profit 
-                    prev_rev = get_revenue(inc, prev_report_date)
-                    prev_profit = get_profit(inc, prev_report_date)
-
-                    # Get  current years revenue and profit 
-                    rev_raw = get_revenue(inc, report_date)
-                    net_income_raw = get_profit(inc, report_date)
-
-                    # Fetch current years data
-                    ebit_raw = get_ebit(inc, report_date)
-                    ebitda_raw =  get_ebitda(inc,  report_date)
-
-                    # ======== Calculations of x1, ... xn ========
-                    rev_growth = calc_growth_to_percent(rev_raw, prev_rev)
-                    profit_growth = calc_growth_to_percent(net_income_raw, prev_profit)
-                    ebit_margin = calc_margin_to_percent(ebit_raw, rev_raw)
-                    soliditet = calc_soliditet_to_percent(bal,report_date)
-                    #net_debt_ebitda = calc_net_debt_ebitda(bal, report_date, ebitda_raw)
-                    
-                    # ========= Add to database ==========
-                    new_year_fundementals = Fundamental(
-                        report_date=r_date,
-                        revenue=rev_raw / 1000000, #Convert to MSEK
-                        net_income=net_income_raw / 1000000, #Convert MSEK 
-                        revenue_growth_percent=rev_growth,
-                        profit_growth_percent=profit_growth,
-                        ebit_margin_percent=ebit_margin,
-                        soliditet_percent=soliditet,
-                        #net_debt_ebitda=net_debt_ebitda
-                    )
-                    temp_fundamentals.append(new_year_fundementals)
-
-                # Check if any year failed
-                # If so, skip the rest of the years
-                except Exception as e:
-                    print(f"  FAILED: Year {report_date.date()} had error: {e}")
-                    all_years_valid = False
-                    break  
-        
-            # Save only if EVERY year passed
-            if all_years_valid:
-                try:
-                    # check so the company not already exist in db
-                    # if not, create it
-                    company = Company.query.filter_by(ticker=ticker).first() 
-                    if not company:
-                        company = Company(ticker=ticker, name=ticker_data.info.get('shortName'))
-                        db.session.add(company)
-                    
-                    company.fundamentals = temp_fundamentals #add the fundementals to the company 
-                    
-                    db.session.add(company)
-                    db.session.commit()
-                    print(f"  SUCCESS: {ticker} saved with {len(temp_fundamentals)} years.")
-
-                #some dataabase error
-                except Exception as db_err: 
-                    db.session.rollback()
-                    print(f"  DATABASE ERROR for {ticker}: {db_err}")
-            else:
-                print(f"  SKIPPED: {ticker} due to incomplete data.")
-            
-            time.sleep(0.1)
+        db.session.commit()
 
 
 if __name__ == "__main__":
