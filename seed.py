@@ -170,13 +170,7 @@ def four_reports_exists(ticker, report_dates):
     
     return True
 
-# def instance_company_entity(): 
-#     return Company(
-#                 ticker = ticker, 
-#                 name = ticker_data.info.get('shortName')
-#             )
-
-# def instance_report_entitiy(): 
+# def instance_report_entity(report_date, company_obj, inc, bal): 
 #     return Report(
 #                     report_date = date, 
 #                     share_outstanding = get_shares_outstanding(), 
@@ -185,7 +179,7 @@ def four_reports_exists(ticker, report_dates):
 #                     company = new_company,
 #                 )
 
-# def instance_fundemental_entity(): 
+# def instance_fundamental_entity(report_obj, date, inc, bal): 
 #     return Fundamental(
 #                     report=new_report,
 #                     revenue=get_revenue(inc, r_date),
@@ -206,7 +200,7 @@ def four_reports_exists(ticker, report_dates):
 #                     goodwill=get_goodwill(bal, r_date)
 #                 )
 
-# def instance_metric_entity(): 
+# def instance_metric_entity(report_obj, date, inc, bal): 
 #     return Metric(
 #                     report=new_report,
 #                     revenue_growth_percent=get_rev_growth(inc, r_date),
@@ -227,22 +221,21 @@ def four_reports_exists(ticker, report_dates):
 def instance_company_entity(ticker, ticker_data): 
     return Company(
         ticker=ticker, 
-        # Using .get() with a default in case info is empty
         name=ticker_data.info.get('shortName', "Unknown Company")
     )
 
-def instance_report_entity(report_date, company_obj): 
+def instance_report_entity(report_date, company_obj, inc, bal): 
     return Report(
         report_date=report_date, 
         share_outstanding=0, 
         current_price=0.0,
         max_average_future_price=0.0,
-        company=company_obj  # Links to the Company object
+        company=company_obj  
     )
 
-def instance_fundamental_entity(report_obj): 
+def instance_fundamental_entity(report_obj, date, inc, bal): 
     return Fundamental(
-        report=report_obj, # Links to the Report object
+        report=report_obj, 
         substansvarde=0.0,
         revenue=0.0,
         depreciation=0.0,
@@ -262,9 +255,9 @@ def instance_fundamental_entity(report_obj):
         goodwill=0.0
     )
 
-def instance_metric_entity(report_obj): 
+def instance_metric_entity(report_obj, date, inc, bal): 
     return Metric(
-        report=report_obj, # Links to the Report object
+        report=report_obj,
         revenue_growth_percent=0.0,
         profit_growth_percent=0.0,
         quick_ratio_percent=0.0,
@@ -280,14 +273,18 @@ def instance_metric_entity(report_obj):
         profit_margin_percent=0.0
     )
 
-# === Main Seed Function ===
-def seed_data(): 
-    app = create_app()
-    with app.app_context():
-        db.drop_all()   
-        db.create_all()
+def instance_entities(new_company, date, inc, bal): 
+    new_report = instance_report_entity(date, new_company, inc, bal)
+    new_fundamental = instance_fundamental_entity(new_report, date, inc, bal)
+    new_metric = instance_metric_entity(new_report, date, inc, bal)
 
-        for ticker in clean_ticker_list():
+    db.session.add(new_report)
+    db.session.add(new_fundamental)
+    db.session.add(new_metric)
+
+# === Main Logic Function ===
+def run_seeding_engine(): 
+    for ticker in clean_ticker_list():
             print(f"Processing {ticker}...")
             ticker_data = yf.Ticker(ticker)
 
@@ -300,17 +297,25 @@ def seed_data():
                 new_company = instance_company_entity(ticker, ticker_data)
 
                 for date in report_dates: 
-                    new_report = instance_report_entity(date, new_company)
+                    instance_entities(
+                        new_company=new_company, 
+                        date=date, 
+                        inc=inc, 
+                        bal=bal
+                    )
 
-                    new_fundamental = instance_fundamental_entity(new_report)
-                    new_metric = instance_metric_entity(new_report)
-            
-            db.session.add(new_report)
-            db.session.add(new_fundamental)
-            db.session.add(new_metric)
+                db.session.add(new_company)
+                db.session.commit()
 
-        db.session.commit()
 
+# === Main Seeding Function ===
+def seed_data(): 
+    app = create_app()
+    with app.app_context():
+        db.drop_all()   
+        db.create_all()
+        
+        run_seeding_engine()
 
 if __name__ == "__main__":
     seed_data()
