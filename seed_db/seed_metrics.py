@@ -38,6 +38,9 @@ def calc_profit_margin(inc, report_date):
 def calc_growth(current, previous):
     return round(100 * ((current - previous) / previous), 2)
 
+# def get_rev_growth(inc, date): 
+#     return calc_growth()
+
 # ======== Calculare Liquidy Ratios =======
 def calc_current_assets(bal, prev_bal): 
     return 
