@@ -1,50 +1,50 @@
+from datetime import timedelta
+import pandas as pd
+import yfinance as yf
+
+def get_shares_outstanding(bal, date): 
+    shares = bal.loc['Ordinary Shares Number', date]
+
+    if pd.isna(shares) or shares == 0: 
+            raise ValueError("Abort!")
+    else: 
+        return shares
+
+def get_price_at_report_date(ticker_obj, date): 
+    end_date = date + timedelta(days=7) # handeling holidays
+
+    report_date_prices = ticker_obj.history(
+        start=date, 
+        end=end_date, 
+        interval="1d")
+    
+    if report_date_prices.empty:
+        raise ValueError(f"No price data found for {ticker_obj.ticker} around {date}")
+
+    price = report_date_prices['Close'].iloc[0]
+
+    if pd.isna(price):
+        raise ValueError(f"Price data is NaN for {ticker_obj.ticker}")
+    else:
+        return round(price, 2)
 
 
-def get_stage_report(new_company, report_dates, ticker_data, inc, bal): 
-    """ Stages one report in COMPANIES_TO_COMMIT list """
+def get_max_avarage_future_prices(ticker_obj, date): 
+    future_target_date = date + timedelta(days=90)
 
-    for date in report_dates:
-         # --- Calulcate price when report is published ---
-        end_date = date + timedelta(days=5) # handeling holidays
-        start_str = date.strftime('%Y-%m-%d')
-        end_str = end_date.strftime('%Y-%m-%d')
+    fetch_start = future_target_date - timedelta(days=80)
+    fetch_end = future_target_date + timedelta(days=7)
 
-        report_date_prices = ticker_obj.history(
-            start=start_str, 
-            end=end_str, 
-            interval="1d")
+    prices = ticker_obj.history(start=fetch_start, end=fetch_end, interval="1d")
+
+    if prices.empty or len(prices) < 50:
+        raise ValueError(f"Abort! Not enough price history to calculate MA50 for {future_target_date}")
+
+    ma50_series = prices['Close'].rolling(window=50).mean()
+    ma50_value = ma50_series.iloc[-1]
+
+    if pd.isna(ma50_value):
+        raise ValueError(f"Abort! MA50 calculation resulted in NaN at {future_target_date}")
+
+    return round(float(ma50_value), 2)
         
-        for price in report_date_prices:
-            if not(price is None or price == 'Nan'): 
-                close_price = price['Close']
-                break
-        
-        # --- Calculate max_avarage price ---
-        start_date  = date + timedelta(days = 90) # 3 months
-        end_date = start_date + timedelta(days = 5)
-
-        max_prices = ticker_obj.history(
-            start=start_str, 
-            end=end_str, 
-            interval="1d")
-        
-        prices_to_avarage = []
-        for price in max_prices:
-            if not(price is None or price == 'Nan'): 
-                prices_to_avarage.append(price['Close'])
-
-        sum_prices = 0
-        for price in prices_to_avarage: 
-            sum_prices = sum_prices + price
-        
-        avarage_prices = sum_prices / len(prices_to_avarage)
-
-        new_report = Report(
-            report_date = date,
-            share_outstanding = 10000000,
-            current_price = close_price,
-            max_average_future_price = avarage_prices,
-            company_id = new_company.id, 
-        )
-
-        return new_report

@@ -3,150 +3,150 @@ seed.py
 Purpose: Seeds the DB with 4 years of ANNUAL fundamental data from Yahoo Finance.
 Target: Swedish Mid-Cap stocks (.ST).
 """
-import yfinance as yf
+
 import pandas as pd
-from datetime import timedelta
 import time
 
 from app import create_app
 from app.server.database import db, Company, Report, Fundamental, Metric
+
+from seed_db.seed_reports import *
 from seed_db.seed_metrics import *
 from seed_db.seed_fundementals import *
 
 # Start with a small list to test, then add your full 200
 TICKERS = ["8TRA.ST", 
                     "VOLO.ST", 
-                    "PEAB-B.ST"]
-                    # "HUSQ-B.ST", 
-                    # "BUFAB.SR", 
-                    # "NCC-B.ST", 
-                    # "BRAV.ST", 
-                    # "AQ.ST", 
-                    # "OEM-B.ST", 
-                    # "STOR-B.ST", 
-                    # "BEIA-B.ST", 
-                    # "SYSR.ST", 
-                    # "EPRO-B.ST", 
-                    # "AFRY.ST", 
-                    # "LIAB.ST", 
-                    # "ALIG.ST", 
-                    # "RATO-B.ST", 
-                    # "PLEJD.ST", 
-                    # "VSURE.ST", 
-                    # "ENGCON-B.ST", 
-                    # "INSTAL.ST", 
-                    # "INWI.ST", 
-                    # "SPID-B.ST", 
-                    # "MILDEF.ST", 
-                    # "BERG-B.ST", 
-                    # "KAR.ST", 
-                    # "ALLIGO-B.ST", 
-                    # "MMGR-B.ST", 
-                    # "GOTL-B.ST", 
-                    # "TROAX.ST", 
-                    # "COOR.ST", 
-                    # "FAG.ST", 
-                    # "NYAB.ST", 
-                    # "ITAB.ST", 
-                    # "FMM-B.ST", 
-                    # "KARNEL-B.ST", 
-                    # "REJL-B.ST", 
-                    # "VESTUM.ST", 
-                    # "XANO-B.ST", 
-                    # "GOMX.ST", 
-                    # "SVED-B.ST", 
-                    # "BTS-B.ST", 
-                    # "TEQ.ST", 
-                    # "SVIK.ST", 
-                    # "GREEN.ST", 
-                    # "ARSO.ST", 
-                    # "BYGGP.ST", 
-                    # "FG.ST", 
-                    # "BERNER-B.ST", 
-                    # "VSSAB-B.ST", 
-                    # "CTT.ST", 
-                    # "ELAN-B.ST",
-                    # "CCC.ST", 
-                    # "PCELL.ST", 
-                    # "INISS-B.ST", 
-                    # "EWRK.ST", 
-                    # "FIRE.ST", 
-                    # "VPAB-B.ST", 
-                    # "CTEK.ST", 
-                    # "ACC.ST", 
-                    # "SALT-B.ST", 
-                    # "W5.ST", 
-                    # "PROF-B.ST", 
-                    # "RAIL.ST", 
-                    # "HAKI-B.ST", 
-                    # "NORB-B.ST", 
-                    # "SINT.ST", 
-                    # "FNM.ST", 
-                    # "GARO.ST", 
-                    # "CNCJO-B.ST", 
-                    # "CARE.ST", 
-                    # "PRIC-B.ST", 
-                    # "INFREA.ST", 
-                    # "SUMMAS.ST", 
-                    # "AVT-B.ST", 
-                    # "TERNOR.ST", 
-                    # "FLEXQ.ST", 
-                    # "WTW-A.ST", 
-                    # "DEDI.ST", 
-                    # "QAIR.ST", 
-                    # "SBOK.ST", 
-                    # "META.ST", 
-                    # "AGES-B.ST", 
-                    # "OCUN-B.ST", 
-                    # "SUSG.ST", 
-                    # "FERRO.ST", 
-                    # "FREEM.ST", 
-                    # "CALVIK.ST", 
-                    # "IMPC.ST", 
-                    # "TURA.ST", 
-                    # "PION-B.ST",
-                    # "WBGR-B.ST", 
-                    # "NETEL.ST", 
-                    # "STW.ST", 
-                    # "SES.ST", 
-                    # "ENVI-B.ST", 
-                    # "LYGRD.ST", 
-                    # "HULT-B.ST", 
-                    # "DRIL.ST", 
-                    # "OXE.ST", 
-                    # "NOTEK.ST", 
-                    # "OPTI.ST", 
-                    # "NEPA.ST", 
-                    # "WISE.ST", 
-                    # "STWK.ST", 
-                    # "BIOEX.ST", 
-                    # "LEVEL.ST", 
-                    # "TSEC.ST", 
-                    # "VIMAB.ST", 
-                    # "ESGR-B.ST", 
-                    # "AXOLOT.ST", 
-                    # "SAXG.ST", 
-                    # "GGEO.ST", 
-                    # "RAMSH.ST", 
-                    # "BAWAT.ST", 
-                    # "CI.ST", 
-                    # "HEXI.ST", 
-                    # "AERW-B.ST", 
-                    # "MBBAB.ST", 
-                    # "HELIO.ST", 
-                    # "NFGAB.ST", 
-                    # "BOMILL.ST", 
-                    # "BRILL.ST", 
-                    # "ABAS.ST", 
-                    # "IRIS.ST", 
-                    # "CIRCHE.ST", 
-                    # "EASY-B.ST", 
-                    # "HEGR.ST", 
-                    # "MANTEX.ST", 
-                    # "PCOM-B.ST", 
-                    # "ZENZIP-B.ST", 
-                    # "PADEL.ST"]
-
+                    "PEAB-B.ST", 
+                    "HUSQ-B.ST", 
+                    "BUFAB.SR", 
+                    "NCC-B.ST", 
+                    "BRAV.ST", 
+                    "AQ.ST", 
+                    "OEM-B.ST", 
+                    "STOR-B.ST", 
+                    "BEIA-B.ST", 
+                    "SYSR.ST", 
+                    "EPRO-B.ST", 
+                    "AFRY.ST", 
+                    "LIAB.ST", 
+                    "ALIG.ST", 
+                    "RATO-B.ST", 
+                    "PLEJD.ST", 
+                    "VSURE.ST", 
+                    "ENGCON-B.ST", 
+                    "INSTAL.ST", 
+                    "INWI.ST", 
+                    "SPID-B.ST", 
+                    "MILDEF.ST", 
+                    "BERG-B.ST", 
+                    "KAR.ST", 
+                    "ALLIGO-B.ST", 
+                    "MMGR-B.ST", 
+                    "GOTL-B.ST", 
+                    "TROAX.ST", 
+                    "COOR.ST", 
+                    "FAG.ST", 
+                    "NYAB.ST", 
+                    "ITAB.ST", 
+                    "FMM-B.ST", 
+                    "KARNEL-B.ST", 
+                    "REJL-B.ST", 
+                    "VESTUM.ST", 
+                    "XANO-B.ST", 
+                    "GOMX.ST", 
+                    "SVED-B.ST", 
+                    "BTS-B.ST", 
+                    "TEQ.ST", 
+                    "SVIK.ST", 
+                    "GREEN.ST", 
+                    "ARSO.ST", 
+                    "BYGGP.ST", 
+                    "FG.ST", 
+                    "BERNER-B.ST", 
+                    "VSSAB-B.ST", 
+                    "CTT.ST", 
+                    "ELAN-B.ST",
+                    "CCC.ST", 
+                    "PCELL.ST", 
+                    "INISS-B.ST", 
+                    "EWRK.ST", 
+                    "FIRE.ST", 
+                    "VPAB-B.ST", 
+                    "CTEK.ST", 
+                    "ACC.ST", 
+                    "SALT-B.ST", 
+                    "W5.ST", 
+                    "PROF-B.ST", 
+                    "RAIL.ST", 
+                    "HAKI-B.ST", 
+                    "NORB-B.ST", 
+                    "SINT.ST", 
+                    "FNM.ST", 
+                    "GARO.ST", 
+                    "CNCJO-B.ST", 
+                    "CARE.ST", 
+                    "PRIC-B.ST", 
+                    "INFREA.ST", 
+                    "SUMMAS.ST", 
+                    "AVT-B.ST", 
+                    "TERNOR.ST", 
+                    "FLEXQ.ST", 
+                    "WTW-A.ST", 
+                    "DEDI.ST", 
+                    "QAIR.ST", 
+                    "SBOK.ST", 
+                    "META.ST", 
+                    "AGES-B.ST", 
+                    "OCUN-B.ST", 
+                    "SUSG.ST", 
+                    "FERRO.ST", 
+                    "FREEM.ST", 
+                    "CALVIK.ST", 
+                    "IMPC.ST", 
+                    "TURA.ST", 
+                    "PION-B.ST",
+                    "WBGR-B.ST", 
+                    "NETEL.ST", 
+                    "STW.ST", 
+                    "SES.ST", 
+                    "ENVI-B.ST", 
+                    "LYGRD.ST", 
+                    "HULT-B.ST", 
+                    "DRIL.ST", 
+                    "OXE.ST", 
+                    "NOTEK.ST", 
+                    "OPTI.ST", 
+                    "NEPA.ST", 
+                    "WISE.ST", 
+                    "STWK.ST", 
+                    "BIOEX.ST", 
+                    "LEVEL.ST", 
+                    "TSEC.ST", 
+                    "VIMAB.ST", 
+                    "ESGR-B.ST", 
+                    "AXOLOT.ST", 
+                    "SAXG.ST", 
+                    "GGEO.ST", 
+                    "RAMSH.ST", 
+                    "BAWAT.ST", 
+                    "CI.ST", 
+                    "HEXI.ST", 
+                    "AERW-B.ST", 
+                    "MBBAB.ST", 
+                    "HELIO.ST", 
+                    "NFGAB.ST", 
+                    "BOMILL.ST", 
+                    "BRILL.ST", 
+                    "ABAS.ST", 
+                    "IRIS.ST", 
+                    "CIRCHE.ST", 
+                    "EASY-B.ST", 
+                    "HEGR.ST", 
+                    "MANTEX.ST", 
+                    "PCOM-B.ST", 
+                    "ZENZIP-B.ST", 
+                    "PADEL.ST"]
 
 def clean_ticker_list(): 
     """Convert all tickers to the correct format"""
@@ -157,18 +157,13 @@ def clean_ticker_list():
 
     return cleaned_list
 
-def inc_and_bal_exists(ticker, inc, bal): 
+def check_if_inc_bal_exists(inc, bal): 
     if inc is None or bal is None or inc.empty or bal.empty:
-        print(f"  Skipping {ticker}: Missing Financials or Balance Sheet")
-        return False
+        raise ValueError
 
-    return True
-
-def four_reports_exists(ticker, report_dates):
+def check_if_four_reports_exists(report_dates):
     if len(report_dates) < 4:
-        return False
-    
-    return True
+        raise ValueError
 
 # def instance_report_entity(report_date, company_obj, inc, bal): 
 #     return Report(
@@ -218,19 +213,28 @@ def four_reports_exists(ticker, report_dates):
 #                     profit_margin_percent=get_profit_margin(inc, r_date)
 #                 )
 
-def instance_company_entity(ticker, ticker_data): 
+def instance_company_entity(ticker, ticker_obj): 
     return Company(
         ticker=ticker, 
-        name=ticker_data.info.get('shortName', "Unknown Company")
+        name=ticker_obj.info.get('shortName', "Unknown Company")
     )
 
-def instance_report_entity(report_date, company_obj, inc, bal): 
+def instance_report_entity(ticker_obj, report_date, company_obj, inc, bal): 
     return Report(
-        report_date=report_date, 
-        share_outstanding=0, 
-        current_price=0.0,
-        max_average_future_price=0.0,
-        company=company_obj  
+        report_date = report_date, 
+        share_outstanding = get_shares_outstanding(
+            bal=bal, 
+            date=report_date), 
+
+        current_price = get_price_at_report_date(
+            ticker_obj=ticker_obj, 
+            date=report_date),
+
+        max_average_future_price = get_max_avarage_future_prices(
+            ticker_obj=ticker_obj, 
+            date=report_date),
+
+        company = company_obj,
     )
 
 def instance_fundamental_entity(report_obj, date, inc, bal): 
@@ -273,8 +277,8 @@ def instance_metric_entity(report_obj, date, inc, bal):
         profit_margin_percent=0.0
     )
 
-def instance_entities(new_company, date, inc, bal): 
-    new_report = instance_report_entity(date, new_company, inc, bal)
+def instance_entities(ticker_obj, new_company, date, inc, bal): 
+    new_report = instance_report_entity(ticker_obj, date, new_company, inc, bal)
     new_fundamental = instance_fundamental_entity(new_report, date, inc, bal)
     new_metric = instance_metric_entity(new_report, date, inc, bal)
 
@@ -285,27 +289,35 @@ def instance_entities(new_company, date, inc, bal):
 # === Main Logic Function ===
 def run_seeding_engine(): 
     for ticker in clean_ticker_list():
+        try:
             print(f"Processing {ticker}...")
-            ticker_data = yf.Ticker(ticker)
+            ticker_obj = yf.Ticker(ticker)
 
-            inc = ticker_data.income_stmt
-            bal = ticker_data.balance_sheet
+            inc = ticker_obj.income_stmt
+            bal = ticker_obj.balance_sheet
 
             report_dates = sorted(inc.columns)[-4:] #For recent years, not report date!!!!
 
-            if inc_and_bal_exists(ticker, inc, bal) and four_reports_exists(ticker, report_dates): 
-                new_company = instance_company_entity(ticker, ticker_data)
+            check_if_inc_bal_exists(inc, bal) #raise Value if not
+            check_if_four_reports_exists(report_dates) #raise Value if not
 
-                for date in report_dates: 
-                    instance_entities(
-                        new_company=new_company, 
-                        date=date, 
-                        inc=inc, 
-                        bal=bal
-                    )
+            new_company = instance_company_entity(ticker, ticker_obj)
 
-                db.session.add(new_company)
-                db.session.commit()
+            for date in report_dates: 
+                instance_entities(
+                    ticker_obj = ticker_obj,
+                    new_company=new_company, 
+                    date=date, 
+                    inc=inc, 
+                    bal=bal
+                )
+
+            db.session.add(new_company)
+            db.session.commit()
+            print(f"  Successfully seeded {ticker}")
+
+        except ValueError as e: 
+            print(f"  Skipping {ticker}: Missing Financials or Balance Sheet")
 
 
 # === Main Seeding Function ===
