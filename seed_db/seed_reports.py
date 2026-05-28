@@ -32,19 +32,19 @@ def get_price_at_report_date(ticker_obj, date):
 def get_max_avarage_future_prices(ticker_obj, date): 
     future_target_date = date + timedelta(days=90)
 
-    fetch_start = future_target_date - timedelta(days=80)
-    fetch_end = future_target_date + timedelta(days=7)
+    fetch_start = future_target_date - timedelta(days=30)
+    fetch_end = future_target_date + timedelta(days=30)
 
     prices = ticker_obj.history(start=fetch_start, end=fetch_end, interval="1d")
 
-    if prices.empty or len(prices) < 50:
+    if prices.empty or len(prices) < 30:
         raise ValueError(f"Abort! Not enough price history to calculate MA50 for {future_target_date}")
 
-    ma50_series = prices['Close'].rolling(window=50).mean()
-    ma50_value = ma50_series.iloc[-1]
+    ma30_series = prices['Close'].rolling(window=30).mean()
+    ma30_value = ma30_series.iloc[-1]
 
-    if pd.isna(ma50_value):
+    if pd.isna(ma30_value):
         raise ValueError(f"Abort! MA50 calculation resulted in NaN at {future_target_date}")
 
-    return round(float(ma50_value), 2)
+    return round(float(ma30_value), 2)
         

@@ -146,7 +146,8 @@ TICKERS = ["8TRA.ST",
                     "MANTEX.ST", 
                     "PCOM-B.ST", 
                     "ZENZIP-B.ST", 
-                    "PADEL.ST"]
+                    "PADEL.ST", 
+                    "NOTE.ST"]
 
 def clean_ticker_list(): 
     """Convert all tickers to the correct format"""
@@ -159,11 +160,11 @@ def clean_ticker_list():
 
 def check_if_inc_bal_exists(inc, bal): 
     if inc is None or bal is None or inc.empty or bal.empty:
-        raise ValueError
+        raise ValueError("Abort!")
 
 def check_if_four_reports_exists(report_dates):
     if len(report_dates) < 4:
-        raise ValueError
+        raise ValueError("Abort!")
 
 # def instance_report_entity(report_date, company_obj, inc, bal): 
 #     return Report(
