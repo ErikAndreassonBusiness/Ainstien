@@ -1,71 +1,85 @@
+from seed_db.seed_fundementals import *
 
-# Constants
-REVENUE_LIST = ['Total Revenue', 'Revenue', 'Operating Revenue']
-GROSS_PROFIT_LIST = ['Gross Profit', 'GrossProfit']
-OPERATING_INCOME_LIST = ['EBIT', 'Operating Income']
-NET_INCOME_LIST = ['Net Income']
-
-def get_inc_attribute(inc, key_list, report_date): 
-    for key in key_list:
-        if key in inc.index:
-            attribute = inc.loc[key, report_date]
-            if pd.notna(attribute) and attribute != 0:
-                return attribute
+def safe_div(numerator, denominator):
+    """Prevents ZeroDivisionError and handles NaN."""
+    if denominator == 0 or pd.isna(denominator) or pd.isna(numerator):
+        return 0.0
+    return float(numerator / denominator)
     
-    raise ValueError(f"Attributes {key_list} not found or zero for {report_date}")
+# == Growth Getters ===
 
+def get_revenue_growth(inc, date, prev_date):
+    current = get_revenue(inc, date)
+    previous = get_revenue(inc, prev_date)
+    return safe_div((current - previous), previous) * 100
 
-# ======= Calculate Profitablility Ratios ======
-def calc_gross_profit_margin(inc, report_date):
-    revenue = get_inc_attribute(inc, REVENUE_LIST, report_date)
-    gross_profit = get_inc_attribute(inc, GROSS_PROFIT_LIST, report_date)
+def get_profit_growth(inc, date, prev_date):
+    current = get_profit_growth(inc, date)
+    previous = get_profit_growth(inc, prev_date)
+    return safe_div((current - previous), previous) * 100
 
-    return round(100 * (gross_profit / revenue), 2)
+# === Efficiency & Returns ===
 
-def calc_operating_margin(inc, report_date):
-    revenue = get_inc_attribute(inc, REVENUE_LIST, report_date)
-    operating_income = get_inc_attribute(inc, OPERATING_INCOME_LIST, report_date)
+def get_roa(inc, bal, date):
+    net_income = get_net_income(inc, date)
+    total_assets = get_total_assets(bal, date)
+    return safe_div(net_income, total_assets) * 100
 
-    return round(100 * (operating_income / revenue), 2)
+def get_roe(inc, bal, date):
+    net_income = get_net_income(inc, date)
+    equity = get_total_equity(bal, date)
+    return safe_div(net_income, equity) * 100
 
-def calc_profit_margin(inc, report_date):
-    revenue = get_inc_attribute(inc, REVENUE_LIST, report_date)
-    net_income = get_inc_attribute(inc, NET_INCOME_LIST, report_date)
+def get_roi(inc, bal, date):
+    ebit = get_ebit(inc, date)
+    capital = get_total_equity(bal, date) + get_long_debt(bal, date)
+    return safe_div(ebit, capital) * 100
 
-    return round(100 * (net_income / revenue), 2)
+# === Liquidity & Solvency ===
 
-# ========= Calculate Growth ===========
-def calc_growth(current, previous):
-    return round(100 * ((current - previous) / previous), 2)
+def get_quick_ratio(bal, date):
+    current_assets = get_current_assets(bal, date)
+    inventory = get_inventory(bal, date)
+    current_liab = get_short_debt(bal, date) 
+    return safe_div((current_assets - inventory), current_liab) * 100
 
-# def get_rev_growth(inc, date): 
-#     return calc_growth()
+def get_equity_ratio(bal, date):
+    equity = get_total_equity(bal, date)
+    total_assets = get_total_assets(bal, date)
+    return safe_div(equity, total_assets) * 100
 
-# ======== Calculare Liquidy Ratios =======
-def calc_current_assets(bal, prev_bal): 
-    return 
+def get_net_debt_ebitda(inc, bal, date):
+    total_debt = get_total_debt(bal, date)
+    cash = get_cash(bal, date)
+    ebitda = get_ebitda(inc, date)
+    net_debt = total_debt - cash
+    return safe_div(net_debt, ebitda)
 
-def calc_quick_ratio(current_assets, inventory, wip, short_term_debt): #%
-    return round((current_assets - inventory - wip) / short_term_debt, 2) * 100
+# === Turnover ===
 
-def calc_net_debt_ebitda(net_debt, ebitda): #ggr
-    return round(net_debt / ebitda, 2)
+def get_asset_turnover(inc, bal, date):
+    revenue = get_revenue(inc, date)
+    total_assets = get_total_assets(bal, date)
+    return safe_div(revenue, total_assets)
 
-def calc_equity_ratio(total_equity, total_average_assets): #%
-    return round(total_equity / total_assets, 2) * 100
+def get_inventory_turnover(inc, bal, date):
+    revenue = get_revenue(inc, date)
+    inventory = get_inventory(bal, date)
+    return safe_div(revenue, inventory)
 
-# ======= Calculate Efficiancy Ratios ======
-def calc_turnover_ratio(sales, total_average_assets): #ggr
-    return round(sales / total_average_assets, 2)
+# --- Margins ---
 
-def calc_inventory_turnover_ratio(cost_of_goods_sold, average_inventory): #ggr
-    return round(cost_of_goods_sold / average_inventory, 2)
+# def get_gross_margin(inc, date):
+#     gross_profit = get_attribute(inc, ['Gross Profit'], date, fail_soft=True)
+#     revenue = get_revenue(inc, date)
+#     return safe_div(gross_profit, revenue) * 100
 
-def calc_ROA(net_income, total_average_assets): #%
-    return round(net_income / total_average_assets, 2) * 100
+def get_ebit_margin(inc, date):
+    ebit = get_ebit(inc, date)
+    revenue = get_revenue(inc, date)
+    return safe_div(ebit, revenue) * 100
 
-def calc_ROE(net_income, average_shareholders_equity): #%
-    return round(net_income / average_shareholders_equity, 2) * 100
-
-def calc_ROI(net_income, cost_of_investment): #%
-    return round(net_income / cost_of_investment, 2) * 100
+def get_profit_margin(inc, date):
+    net_income = get_net_income(inc, date)
+    revenue = get_revenue(inc, date)
+    return safe_div(net_income, revenue) * 100

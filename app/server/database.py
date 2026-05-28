@@ -44,7 +44,7 @@ class Fundamental(db.Model): #4 år bak
     report_id: Mapped[int] = mapped_column(ForeignKey('report.id'), nullable=False)
     report: Mapped["Report"] = relationship(back_populates='fundamental')
 
-    substansvarde: Mapped[float] = mapped_column(nullable=False)
+    # substansvarde: Mapped[float] = mapped_column(nullable=False)
 
     # ======== Income Statement (MSEK???) ========
     revenue: Mapped[float] = mapped_column(nullable=False)
@@ -72,6 +72,23 @@ class Fundamental(db.Model): #4 år bak
     fixed_assets: Mapped[float] = mapped_column()
     goodwill: Mapped[float] = mapped_column()
 
+    def to_dict(self):
+        return {
+            "revenue": self.revenue,
+            "depreciation": self.depreciation,
+            "ebitda": self.EBITDA,
+            "ebit": self.EBIT,
+            "net_income": self.net_income,
+            "total_assets": self.total_assets,
+            "total_equity": self.total_equity,
+            "total_debt": self.total_debt,
+            "current_assets": self.current_assets,
+            "fixed_assets": self.fixed_assets,
+            "cash": self.cash,
+            "inventory": self.inventory,
+            "account_receiveables": self.account_receiveables
+        }
+
 class Metric(db.Model):
     __tablename__ = "metric"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -81,10 +98,10 @@ class Metric(db.Model):
 
     """ ========================== Growth ratios ======================= """
     #Omsättningstillväxt (%)
-    revenue_growth_percent: Mapped[float] = mapped_column(nullable=False)
+    #revenue_growth_percent: Mapped[float] = mapped_column(nullable=False)
 
     #Vinsttillväxt (%)
-    profit_growth_percent: Mapped[float] = mapped_column(nullable=False)
+    #profit_growth_percent: Mapped[float] = mapped_column(nullable=False)
     
     """ ================ Liquidity ratios: Short-term payment ability =========== """
     # Kassalikviditet (%)
@@ -114,6 +131,6 @@ class Metric(db.Model):
     ROI : Mapped[float] = mapped_column(nullable=False) #Net Income from Investment / Cost of Investment
 
     """ ============== Profitability ratios: Profit relative to sales, assets, or equity ============= """
-    gross_profit_margin_percent: Mapped[float] = mapped_column(nullable=False)
+    #gross_profit_margin_percent: Mapped[float] = mapped_column(nullable=False)
     ebit_margin_percent: Mapped[float] = mapped_column(nullable=False)
     profit_margin_percent: Mapped[float] = mapped_column(nullable=False)

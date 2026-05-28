@@ -19,7 +19,7 @@ TICKERS = ["8TRA.ST",
                     "VOLO.ST", 
                     "PEAB-B.ST", 
                     "HUSQ-B.ST", 
-                    "BUFAB.SR", 
+                    "BUFAB.ST", 
                     "NCC-B.ST", 
                     "BRAV.ST", 
                     "AQ.ST", 
@@ -50,7 +50,7 @@ TICKERS = ["8TRA.ST",
                     "NYAB.ST", 
                     "ITAB.ST", 
                     "FMM-B.ST", 
-                    "KARNEL-B.ST", 
+                    "KARNEL.ST", #-B?
                     "REJL-B.ST", 
                     "VESTUM.ST", 
                     "XANO-B.ST", 
@@ -108,7 +108,7 @@ TICKERS = ["8TRA.ST",
                     "PION-B.ST",
                     "WBGR-B.ST", 
                     "NETEL.ST", 
-                    "STW.ST", 
+                    "STWK.ST", 
                     "SES.ST", 
                     "ENVI-B.ST", 
                     "LYGRD.ST", 
@@ -119,7 +119,6 @@ TICKERS = ["8TRA.ST",
                     "OPTI.ST", 
                     "NEPA.ST", 
                     "WISE.ST", 
-                    "STWK.ST", 
                     "BIOEX.ST", 
                     "LEVEL.ST", 
                     "TSEC.ST", 
@@ -166,36 +165,6 @@ def check_if_four_reports_exists(report_dates):
     if len(report_dates) < 4:
         raise ValueError("Abort!")
 
-# def instance_report_entity(report_date, company_obj, inc, bal): 
-#     return Report(
-#                     report_date = date, 
-#                     share_outstanding = get_shares_outstanding(), 
-#                     current_price = get_price_at_report_date(),
-#                     max_average_future_price = get_max_avarage_future_prices(),
-#                     company = new_company,
-#                 )
-
-# def instance_fundamental_entity(report_obj, date, inc, bal): 
-#     return Fundamental(
-#                     report=new_report,
-#                     revenue=get_revenue(inc, r_date),
-#                     depreciation=get_depreciation(inc, r_date),
-#                     EBITDA=get_ebitda(inc, r_date),
-#                     EBIT=get_ebit(inc, r_date),
-#                     net_income=get_net_income(inc, r_date),
-#                     total_assets=get_total_assets(bal, r_date),
-#                     total_equity=get_total_equity(bal, r_date),
-#                     total_debt=get_total_debt(bal, r_date),
-#                     short_term_debt=get_short_debt(bal, r_date),
-#                     long_term_debt=get_long_debt(bal, r_date),
-#                     current_assets=get_current_assets(bal, r_date),
-#                     inventory=get_inventory(bal, r_date),
-#                     account_receiveables=get_receivables(bal, r_date),
-#                     cash=get_cash(bal, r_date),
-#                     fixed_assets=get_fixed_assets(bal, r_date),
-#                     goodwill=get_goodwill(bal, r_date)
-#                 )
-
 # def instance_metric_entity(report_obj, date, inc, bal): 
 #     return Metric(
 #                     report=new_report,
@@ -240,42 +209,42 @@ def instance_report_entity(ticker_obj, report_date, company_obj, inc, bal):
 
 def instance_fundamental_entity(report_obj, date, inc, bal): 
     return Fundamental(
-        report=report_obj, 
-        substansvarde=0.0,
-        revenue=0.0,
-        depreciation=0.0,
-        EBITDA=0.0,
-        EBIT=0.0,
-        net_income=0.0,
-        total_assets=0.0,
-        total_equity=0.0,
-        total_debt=0.0,
-        short_term_debt=0.0,
-        long_term_debt=0.0,
-        current_assets=0.0,
-        inventory=0.0,
-        account_receiveables=0.0,
-        cash=0.0,
-        fixed_assets=0.0,
-        goodwill=0.0
+        report=report_obj,
+        #substansvarde = get_substansvarde(bal, date),
+        revenue=get_revenue(inc, date),
+        depreciation=get_depreciation(inc, date),
+        EBITDA=get_ebitda(inc, date),
+        EBIT=get_ebit(inc, date),
+        net_income=get_net_income(inc, date),
+        total_assets=get_total_assets(bal, date),
+        total_equity=get_total_equity(bal, date),
+        total_debt=get_total_debt(bal, date),
+        short_term_debt=get_short_debt(bal, date),
+        long_term_debt=get_long_debt(bal, date),
+        current_assets=get_current_assets(bal, date),
+        inventory=get_inventory(bal, date),
+        account_receiveables=get_receivables(bal, date),
+        cash=get_cash(bal, date),
+        fixed_assets=get_fixed_assets(bal, date),
+        goodwill=get_goodwill(bal, date)
     )
 
 def instance_metric_entity(report_obj, date, inc, bal): 
     return Metric(
         report=report_obj,
-        revenue_growth_percent=0.0,
-        profit_growth_percent=0.0,
-        quick_ratio_percent=0.0,
-        net_debt_ebitda_ratio=0.0,
-        equity_ratio_percent=0.0,
-        assets_turnover_ratio=0.0,
-        inventory_turnover_ratio=0.0,
-        ROA=0.0,
-        ROE=0.0,
-        ROI=0.0,
-        gross_profit_margin_percent=0.0,
-        ebit_margin_percent=0.0,
-        profit_margin_percent=0.0
+        #revenue_growth_percent=get_revenue_growth(inc, date, prev_date),
+        #profit_growth_percent=get_profit_growth(inc, date, prev_date),
+        quick_ratio_percent=get_quick_ratio(bal, date),
+        net_debt_ebitda_ratio=get_net_debt_ebitda(inc, bal, date),
+        equity_ratio_percent=get_equity_ratio(bal, date),
+        assets_turnover_ratio=get_asset_turnover(inc, bal, date),
+        inventory_turnover_ratio=get_inventory_turnover(inc, bal, date),
+        ROA=get_roa(inc, bal, date),
+        ROE=get_roe(inc, bal, date),
+        ROI=get_roi(inc, bal, date),
+        #gross_profit_margin_percent=get_gross_margin(inc, date),
+        ebit_margin_percent=get_ebit_margin(inc, date),
+        profit_margin_percent=get_profit_margin(inc, date)
     )
 
 def instance_entities(ticker_obj, new_company, date, inc, bal): 
@@ -304,14 +273,18 @@ def run_seeding_engine():
 
             new_company = instance_company_entity(ticker, ticker_obj)
 
+            #prev_date = report_dates[0]
             for date in report_dates: 
                 instance_entities(
                     ticker_obj = ticker_obj,
                     new_company=new_company, 
                     date=date, 
+                    #prev_date = prev_date,
                     inc=inc, 
                     bal=bal
                 )
+
+                #prev_date = date
 
             db.session.add(new_company)
             db.session.commit()
