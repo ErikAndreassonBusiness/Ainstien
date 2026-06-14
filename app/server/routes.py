@@ -6,7 +6,7 @@ from .db_queries import (
     sort_fundamentals_from_company
 )
 from .live_market import get_live_market_data
-from .db_queries import get_dashboard_market_data, get_company_by_ticker
+from .db_queries import get_dashboard_market_data, get_company_by_ticker, get_company_fundamentals_history
 
 @app.route('/api/market-summary', methods = ['GET'])
 def market_summary():
@@ -15,8 +15,7 @@ def market_summary():
 
 @app.route('/api/company-details/<ticker>')
 def api_company_details(ticker):
-    company = get_company_by_ticker(ticker)
-    return jsonify(company.serialize_company_and_fundementals())
+    return get_company_fundamentals_history(ticker)
 
 @app.route('/api/market-data/<ticker>', methods = ['GET'])
 def api_market_data(ticker = None):

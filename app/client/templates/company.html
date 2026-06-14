@@ -3,56 +3,87 @@ endblock %} {% block content %}
 <input type="hidden" id="companyTicker" value="{{ ticker }}" />
 
 <div class="container mt-4" id="companyContent">
-  <div id="headerContainer">
-    <!-- Displays a loading sign until the correct data is fetched. -->
-  </div>
+  <div id="headerContainer"></div>
 
-  <div id = "marketPerformaceChart">
-        <div class="row mb-5">
-            <div class="col-12">
-                <div class="card shadow-sm border-0">
-                <div class="card-header bg-white">
-                    <strong>Market Performance</strong>
-                </div>
-                <div class="card-body">
-                    <div style="position: relative; height: 300px; width: 100%">
-                    <canvas id="stockChart"></canvas>
-                    </div>
-                </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-      <div class="col-md-12 mb-4">
-        <div class="card">
-          <div class="card-header">Historical Fundamental Data</div>
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table class="table table-hover mb-0">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Revenue (M)</th>
-                    <th>Rev Growth</th>
-                    <th>Net Income (M)</th>
-                    <th>Profit Growth</th>
-                    <th>EBIT Margin</th>
-                    <th>Soliditet</th>
-                  </tr>
-                </thead>
-                <tbody id="fundamentalTableBody"></tbody>
-              </table>
+  <div id="marketPerformanceChart">
+    <div class="row mb-5">
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-white">
+            <strong>Market Performance</strong>
+          </div>
+          <div class="card-body">
+            <div style="position: relative; height: 300px; width: 100%">
+              <canvas id="stockChart"></canvas>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  {% endblock %} {% block scripts %}
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="{{ url_for('static', filename='js/api.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/company.js') }}"></script>
-  {% endblock %}
+
+  <div class="row mb-5">
+    <div class="col-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+          <strong>Income Statement (Resultaträkning)</strong>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 text-nowrap">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Revenue</th>
+                  <th>Depreciation</th>
+                  <th>EBITDA</th>
+                  <th>EBIT</th>
+                  <th>Net Income</th>
+                </tr>
+              </thead>
+              <tbody id="incomeTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-success text-white">
+          <strong>Balance Sheet (Balansräkning)</strong>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 text-nowrap">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Total Assets</th>
+                  <th>Current Assets</th>
+                  <th>Fixed Assets</th>
+                  <th>Cash</th>
+                  <th>Inventory</th>
+                  <th>Accounts Rec.</th>
+                  <th>Goodwill</th>
+                  <th>Total Equity</th>
+                  <th>Total Debt</th>
+                  <th>Short-Term Debt</th>
+                  <th>Long-Term Debt</th>
+                </tr>
+              </thead>
+              <tbody id="balanceTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+{% endblock %} {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/company.js') }}"></script>
+{% endblock %}

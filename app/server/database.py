@@ -33,6 +33,14 @@ class Report(db.Model):
     fundamental: Mapped["Fundamental"] = relationship(back_populates='report', cascade="all, delete-orphan")
     metric: Mapped["Metric"] = relationship(back_populates='report', cascade="all, delete-orphan")
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "report_date": self.report_date.isoformat(),  # Converts date object to "YYYY-MM-DD" string for frontend
+            # Safely fetch the fundamental dictionary if it exists, otherwise return None
+            "fundamentals": self.fundamental.to_dict() if self.fundamental else None
+        }
+
     #  KAN BLI DUBBELRELATIONER OM DESSA ÄR MED
     # fundamental_id: Mapped[int] = mapped_column(ForeignKey('fundamental.id'), nullable=False)
     # metric_id: Mapped[int] = mapped_column(ForeignKey('metric.id'), nullable=False)

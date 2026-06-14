@@ -5,9 +5,25 @@ from .database import Company, Fundamental, Report
 from sqlalchemy.orm import joinedload
 
 # ============== Companies ================
-def get_company_by_ticker(ticker): 
-    company = Comapny.query.filter_by(ticker).first()
-    return company.serialize_and_its_fundamentals()
+def get_company_fundamentals_history(ticker):
+    """
+    Fetches a specific company and all its historical reports with fundamental data.
+    Returns a clean dictionary tailored for frontend consumption.
+    """
+
+    company = Company.query.options(
+        joinedload(Company.reports).joinedload(Report.fundamental)
+    ).filter_by(ticker=ticker).first()
+    
+    # Sort reports from oldest to newest 
+    sorted_reports = sorted(company.reports, key=lambda r: r.report_date)
+
+    return {
+        "company_id": company.id,
+        "name": company.name,
+        "ticker": company.ticker,
+        "history": [report.to_dict() for report in sorted_reports]
+    }
 
 def get_dashboard_market_data():
     """

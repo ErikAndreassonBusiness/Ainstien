@@ -13,7 +13,7 @@ async function initCompanyPage() {
     const companyData = await fetchCompanyDetails(ticker);
     if (companyData) {
       displayHeader(companyData);
-      displayFundamentals(companyData.fundamentals);
+      displayFundamentals(companyData.history);
     }
   } catch (error) {
     console.error("Table failed to load:", error);
@@ -21,7 +21,7 @@ async function initCompanyPage() {
       "<h3>Error loading company details</h3>";
   }
 
-  // Fetch & Display Market Data (The Chart)
+  // Fetch & Display Market Data (The Chart)
   try {
     const marketData = await fetchMarketData(ticker);
     if (marketData) {
@@ -84,28 +84,31 @@ function displayHeader(company) {
   containerHeaderHTML.innerHTML = containerHeader;
 }
 
-function displayFundamentals(fundamentals) {
-  const tableBody = document.getElementById("fundamentalTableBody");
-  if (!tableBody) return;
-  tableBody.innerHTML = "";
+function displayFundamentals(history) {
+  const incomeBody = document.getElementById("incomeTableBody");
+  const balanceBody = document.getElementById("balanceTableBody");
 
-  if (!fundamentals || fundamentals.length === 0) {
-    tableBody.innerHTML =
-      '<tr><td colspan="7" class="text-center">No fundamental data available.</td></tr>';
+  if (!incomeBody || !balanceBody) return;
+
+  // Clear old entries
+  incomeBody.innerHTML = "";
+  balanceBody.innerHTML = "";
+
+  if (!history || history.length === 0) {
+    incomeBody.innerHTML =
+      '<tr><td colspan="6" class="text-center">No data available.</td></tr>';
+    balanceBody.innerHTML =
+      '<tr><td colspan="12" class="text-center">No data available.</td></tr>';
     return;
   }
 
-  // Sort descending by date
-  fundamentals.sort(
-    (a, b) => new Date(b.report_date) - new Date(a.report_date),
-  );
+  // Sort descending by date (newest first)
+  history.sort((a, b) => new Date(b.report_date) - new Date(a.report_date));
 
-  fundamentals.forEach((f) => {
-    const row = document.createElement("tr");
+  history.forEach((report) => {
+    const f = report.fundamentals || {};
 
-    // Helper to safely handle nulls and formatting
-    const fmt = (val) =>
-      val !== null && val !== undefined ? val.toFixed(2) : "0.00";
+    // Formatting helper
     const mil = (val) =>
       val !== null && val !== undefined
         ? val > 1000000
@@ -113,16 +116,35 @@ function displayFundamentals(fundamentals) {
           : val.toFixed(0)
         : "0";
 
-    row.innerHTML = `
-            <td>${f.report_date}</td>
-            <td>${mil(f.revenue)}M</td>
-            <td class="${f.revenue_growth_percent >= 0 ? "text-success" : "text-danger"}">${fmt(f.revenue_growth_percent)}%</td>
-            <td>${mil(f.net_income)}M</td>
-            <td class="${f.profit_growth_percent >= 0 ? "text-success" : "text-danger"}">${fmt(f.profit_growth_percent)}%</td>
-            <td>${fmt(f.ebit_margin_percent)}%</td>
-            <td>${fmt(f.soliditet_percent)}%</td>
-        `;
-    tableBody.appendChild(row);
+    // ---- Create Income Row ----
+    const incomeRow = document.createElement("tr");
+    incomeRow.innerHTML = `
+        <td class="fw-bold">${report.report_date}</td>
+        <td>${mil(f.revenue)}M</td>
+        <td>${mil(f.depreciation)}M</td>
+        <td>${mil(f.ebitda)}M</td>
+        <td>${mil(f.ebit)}M</td>
+        <td class="fw-bold text-primary">${mil(f.net_income)}M</td>
+    `;
+    incomeBody.appendChild(incomeRow);
+
+    // ---- Create Balance Sheet Row ----
+    const balanceRow = document.createElement("tr");
+    balanceRow.innerHTML = `
+        <td class="fw-bold">${report.report_date}</td>
+        <td>${mil(f.total_assets)}M</td>
+        <td>${mil(f.current_assets)}M</td>
+        <td>${mil(f.fixed_assets)}M</td>
+        <td>${mil(f.cash)}M</td>
+        <td>${mil(f.inventory)}M</td>
+        <td>${mil(f.account_receiveables)}M</td>
+        <td>${mil(f.goodwill)}M</td>
+        <td class="fw-bold text-success">${mil(f.total_equity)}M</td>
+        <td>${mil(f.total_debt)}M</td>
+        <td>${mil(f.short_term_debt)}M</td>
+        <td>${mil(f.long_term_debt)}M</td>
+    `;
+    balanceBody.appendChild(balanceRow);
   });
 }
 
