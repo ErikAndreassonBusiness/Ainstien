@@ -36,9 +36,9 @@ class Report(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
-            "report_date": self.report_date.isoformat(),  # Converts date object to "YYYY-MM-DD" string for frontend
-            # Safely fetch the fundamental dictionary if it exists, otherwise return None
-            "fundamentals": self.fundamental.to_dict() if self.fundamental else None
+            "report_date": self.report_date.isoformat(),  # Converts date object to "YYYY-MM-DD" string
+            "fundamentals": self.fundamental.to_dict() if self.fundamental else None,
+            "metrics": self.metric.to_dict() if self.metric else None
         }
 
     #  KAN BLI DUBBELRELATIONER OM DESSA ÄR MED
@@ -149,6 +149,8 @@ class Metric(db.Model):
         return {
             "id": self.id,
             "report_id": self.report_id,
+            "revenue_growth_percent": self.revenue_growth_percent, 
+            "profit_growth_percent": self.profit_growth_percent, 
             "quick_ratio_percent": self.quick_ratio_percent,
             "net_debt_ebitda_ratio": self.net_debt_ebitda_ratio,
             "equity_ratio_percent": self.equity_ratio_percent,

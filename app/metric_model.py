@@ -20,23 +20,26 @@ def metric_model():
 
     for company in db.session.query(Company).all():
         for report in company.reports:
-            data = report.metric.to_dict()
-                
-            feature_row = [
-                    data.get("quick_ratio_percent"),
-                    data.get("net_debt_ebitda_ratio"),
-                    data.get("equity_ratio_percent"),
-                    data.get("assets_turnover_ratio"),
-                    data.get("inventory_turnover_ratio"),
-                    data.get("roa"),  
-                    data.get("roe"), 
-                    data.get("roi"), 
-                    data.get("ebit_margin_percent"),
-                    data.get("profit_margin_percent")
-                ]
-                
-            features.append(feature_row)
-            target.append((report.max_average_future_price / report.current_price - 1) * 100) #future growth in %s
+            if report.metric: 
+                data = report.metric.to_dict()
+                    
+                feature_row = [
+                        data.get("revenue_growth_percent"),
+                        data.get("profit_growth_percent"),
+                        data.get("quick_ratio_percent"),
+                        data.get("net_debt_ebitda_ratio"),
+                        data.get("equity_ratio_percent"),
+                        data.get("assets_turnover_ratio"),
+                        data.get("inventory_turnover_ratio"),
+                        data.get("roa"),  
+                        data.get("roe"), 
+                        data.get("roi"), 
+                        data.get("ebit_margin_percent"),
+                        data.get("profit_margin_percent")
+                    ]
+                    
+                features.append(feature_row)
+                target.append((report.max_average_future_price / report.current_price - 1) * 100) #future growth in %s
     
     X = np.array(features)
     y = np.array(target)
@@ -53,6 +56,8 @@ def metric_model():
 
     # --- Print Model Coefficients Table ---
     feature_names = [
+        "Revenue Gworth (%)", 
+        "Profit Growth (%)",
         "Quick Ratio (%)",
         "Net Debt / EBITDA Ratio",
         "Equity Ratio (%)",

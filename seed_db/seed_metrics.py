@@ -4,7 +4,7 @@ def safe_div(numerator, denominator):
     """Prevents ZeroDivisionError and handles NaN."""
     if denominator == 0 or pd.isna(denominator) or pd.isna(numerator):
         return 0.0
-    return float(numerator / denominator)
+    return round((numerator / denominator),2)
     
 # == Growth Getters ===
 
@@ -14,8 +14,8 @@ def get_revenue_growth(inc, date, prev_date):
     return safe_div((current - previous), previous) * 100
 
 def get_profit_growth(inc, date, prev_date):
-    current = get_profit_growth(inc, date)
-    previous = get_profit_growth(inc, prev_date)
+    current = get_net_income(inc, date)
+    previous = get_net_income(inc, prev_date)
     return safe_div((current - previous), previous) * 100
 
 # === Efficiency & Returns ===
