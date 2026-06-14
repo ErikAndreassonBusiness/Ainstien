@@ -124,7 +124,7 @@ function displayFundamentals(history) {
         <td>${mil(f.depreciation)}M</td>
         <td>${mil(f.ebitda)}M</td>
         <td>${mil(f.ebit)}M</td>
-        <td class="fw-bold text-primary">${mil(f.net_income)}M</td>
+        <td>${mil(f.net_income)}M</td>
     `;
     incomeBody.appendChild(incomeRow);
 
@@ -139,7 +139,7 @@ function displayFundamentals(history) {
         <td>${mil(f.inventory)}M</td>
         <td>${mil(f.account_receiveables)}M</td>
         <td>${mil(f.goodwill)}M</td>
-        <td class="fw-bold text-success">${mil(f.total_equity)}M</td>
+        <td>${mil(f.total_equity)}M</td>
         <td>${mil(f.total_debt)}M</td>
         <td>${mil(f.short_term_debt)}M</td>
         <td>${mil(f.long_term_debt)}M</td>

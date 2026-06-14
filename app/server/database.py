@@ -89,6 +89,8 @@ class Fundamental(db.Model): #4 år bak
             "net_income": self.net_income,
             "total_assets": self.total_assets,
             "total_equity": self.total_equity,
+            "short_term_debt": self.short_term_debt, 
+            "long_term_debt": self.long_term_debt,
             "total_debt": self.total_debt,
             "current_assets": self.current_assets,
             "fixed_assets": self.fixed_assets,
