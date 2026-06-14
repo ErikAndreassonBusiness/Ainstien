@@ -14,7 +14,25 @@ from seed_db.seed_reports import *
 from seed_db.seed_metrics import *
 from seed_db.seed_fundementals import *
 
-# Start with a small list to test, then add your full 200
+goodTICKERS = [
+    "NMAN.ST",      # Nederman Holding
+    "VBG-B.ST",     # VBG Group
+    "BERG-B.ST",     # Bergman & Beving
+    "XANO-B.ST",    # XANO Industri
+    "CTTS.ST",      # CTT Systems
+    "INSTAL.ST",    # Instalco
+    "SDIP-B.ST",      # Sdiptech
+    "EPEN.ST",     # Ependion
+    "REJL-B.ST",    # Rejlers
+    "HANZA.ST",     # Hanza
+    "INWI.ST",      # Inwido
+    "FG.ST",        # Fasadgruppen
+    "GREEN.ST",    # Green Landscaping Group
+    "VOLO.ST",      # Volati
+    "COOR.ST",      # Coor Service Management
+    "ALLIGO-B.ST"   # Alligo
+]
+
 TICKERS = ["8TRA.ST", 
                     "VOLO.ST", 
                     "PEAB-B.ST", 
@@ -146,14 +164,32 @@ TICKERS = ["8TRA.ST",
                     "PCOM-B.ST", 
                     "ZENZIP-B.ST", 
                     "PADEL.ST", 
-                    "NOTE.ST"]
+                    "NOTE.ST", 
+                    "NMAN.ST",      # Nederman Holding
+                    "VBG-B.ST",     # VBG Group
+                    "BERG-B.ST",     # Bergman & Beving
+                    "XANO-B.ST",    # XANO Industri
+                    "CTTS.ST",      # CTT Systems
+                    "INSTAL.ST",    # Instalco
+                    "SDIP-B.ST",      # Sdiptech
+                    "EPEN.ST",     # Ependion
+                    "REJL-B.ST",    # Rejlers
+                    "HANZA.ST",     # Hanza
+                    "INWI.ST",      # Inwido
+                    "FG.ST",        # Fasadgruppen
+                    "GREEN.ST",    # Green Landscaping Group
+                    "VOLO.ST",      # Volati
+                    "COOR.ST",      # Coor Service Management
+                    "ALLIGO-B.ST"]   # Alligo
 
 def clean_ticker_list(): 
     """Convert all tickers to the correct format"""
     cleaned_list = []
+    
     for ticker in TICKERS: 
-        ticker = ticker.strip().replace(",", "")
-        cleaned_list.append(ticker)
+        if ticker not in cleaned_list:
+            ticker = ticker.strip().replace(",", "")
+            cleaned_list.append(ticker)
 
     return cleaned_list
 
@@ -164,24 +200,6 @@ def check_if_inc_bal_exists(inc, bal):
 def check_if_four_reports_exists(report_dates):
     if len(report_dates) < 4:
         raise ValueError("Abort!")
-
-# def instance_metric_entity(report_obj, date, inc, bal): 
-#     return Metric(
-#                     report=new_report,
-#                     revenue_growth_percent=get_rev_growth(inc, r_date),
-#                     profit_growth_percent=get_profit_growth(inc, r_date),
-#                     quick_ratio_percent=get_quick_ratio(bal, r_date),
-#                     net_debt_ebitda_ratio=get_net_debt_ebitda(inc, bal, r_date),
-#                     equity_ratio_percent=get_equity_ratio(bal, r_date),
-#                     assets_turnover_ratio=get_asset_turnover(inc, bal, r_date),
-#                     inventory_turnover_ratio=get_inv_turnover(inc, bal, r_date),
-#                     ROA=get_roa(inc, bal, r_date),
-#                     ROE=get_roe(inc, bal, r_date),
-#                     ROI=get_roi(inc, bal, r_date),
-#                     gross_profit_margin_percent=get_gross_margin(inc, r_date),
-#                     ebit_margin_percent=get_ebit_margin(inc, r_date),
-#                     profit_margin_percent=get_profit_margin(inc, r_date)
-#                 )
 
 def instance_company_entity(ticker, ticker_obj): 
     return Company(
@@ -229,11 +247,11 @@ def instance_fundamental_entity(report_obj, date, inc, bal):
         goodwill=get_goodwill(bal, date)
     )
 
-def instance_metric_entity(report_obj, date, inc, bal): 
+def instance_metric_entity(report_obj, date, prev_date, inc, bal): 
     return Metric(
         report=report_obj,
-        #revenue_growth_percent=get_revenue_growth(inc, date, prev_date),
-        #profit_growth_percent=get_profit_growth(inc, date, prev_date),
+        revenue_growth_percent=get_revenue_growth(inc, date, prev_date),
+        profit_growth_percent=get_profit_growth(inc, date, prev_date),
         quick_ratio_percent=get_quick_ratio(bal, date),
         net_debt_ebitda_ratio=get_net_debt_ebitda(inc, bal, date),
         equity_ratio_percent=get_equity_ratio(bal, date),
@@ -247,14 +265,18 @@ def instance_metric_entity(report_obj, date, inc, bal):
         profit_margin_percent=get_profit_margin(inc, date)
     )
 
-def instance_entities(ticker_obj, new_company, date, inc, bal): 
+def instance_entities(ticker_obj, new_company, date, prev_date, inc, bal): 
     new_report = instance_report_entity(ticker_obj, date, new_company, inc, bal)
     new_fundamental = instance_fundamental_entity(new_report, date, inc, bal)
-    new_metric = instance_metric_entity(new_report, date, inc, bal)
+
+    if prev_date != date:
+        new_metric = instance_metric_entity(new_report, date, prev_date, inc, bal)
 
     db.session.add(new_report)
     db.session.add(new_fundamental)
-    db.session.add(new_metric)
+
+    if prev_date != date:
+        db.session.add(new_metric)
 
 # === Main Logic Function ===
 def run_seeding_engine(): 
@@ -273,18 +295,18 @@ def run_seeding_engine():
 
             new_company = instance_company_entity(ticker, ticker_obj)
 
-            #prev_date = report_dates[0]
+            prev_date = report_dates[0]
             for date in report_dates: 
                 instance_entities(
                     ticker_obj = ticker_obj,
                     new_company=new_company, 
                     date=date, 
-                    #prev_date = prev_date,
+                    prev_date = prev_date,
                     inc=inc, 
                     bal=bal
                 )
 
-                #prev_date = date
+                prev_date = date
 
             db.session.add(new_company)
             db.session.commit()

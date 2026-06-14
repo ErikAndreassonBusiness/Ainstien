@@ -108,10 +108,10 @@ class Metric(db.Model):
 
     """ ========================== Growth ratios ======================= """
     #Omsättningstillväxt (%)
-    #revenue_growth_percent: Mapped[float] = mapped_column(nullable=False)
+    revenue_growth_percent: Mapped[float] = mapped_column(nullable=False)
 
     #Vinsttillväxt (%)
-    #profit_growth_percent: Mapped[float] = mapped_column(nullable=False)
+    profit_growth_percent: Mapped[float] = mapped_column(nullable=False)
     
     """ ================ Liquidity ratios: Short-term payment ability =========== """
     # Kassalikviditet (%)
@@ -144,3 +144,19 @@ class Metric(db.Model):
     #gross_profit_margin_percent: Mapped[float] = mapped_column(nullable=False)
     ebit_margin_percent: Mapped[float] = mapped_column(nullable=False)
     profit_margin_percent: Mapped[float] = mapped_column(nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "report_id": self.report_id,
+            "quick_ratio_percent": self.quick_ratio_percent,
+            "net_debt_ebitda_ratio": self.net_debt_ebitda_ratio,
+            "equity_ratio_percent": self.equity_ratio_percent,
+            "assets_turnover_ratio": self.assets_turnover_ratio,
+            "inventory_turnover_ratio": self.inventory_turnover_ratio,
+            "roa": self.ROA,
+            "roe": self.ROE,
+            "roi": self.ROI,
+            "ebit_margin_percent": self.ebit_margin_percent,
+            "profit_margin_percent": self.profit_margin_percent
+        }
