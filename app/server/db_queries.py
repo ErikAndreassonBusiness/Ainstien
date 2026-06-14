@@ -1,7 +1,7 @@
 # app/server/db_queries.py
 
 from app import db
-from .database import Company, Fundamental
+from .database import Company, Fundamental, Report
 from sqlalchemy.orm import joinedload
 
 # ============== Companies ================
@@ -11,28 +11,37 @@ def get_company_by_ticker(ticker):
 
 def get_dashboard_market_data():
     """
-    Fetches all companies and their most recent fundamental report data.
-    Uses joinedload to prevent the N+1 query performance problem.
+    Fetches all companies, their latest reports, and associated fundamental/metric data.
+    Uses nested joinedload to efficiently fetch related data in a single query.
     """
-    # 1. Fetch all companies and their fundamentals
-    companies = Company.query.options(joinedload(Company.fundamentals)).all()
+    # 1. Fetch all companies and eager-load nested reports, fundamentals, and metrics
+    companies = Company.query.options(
+        joinedload(Company.reports).joinedload(Report.fundamental),
+    ).all()
     
     dashboard_list = []
 
-    #Get latest report
     for company in companies:
-        latest_report = None
-        if company.fundamentals:
-            latest_report = max(company.fundamentals, key=lambda fundamental: fundamental.report_date)
+        # Default values if no report or metrics exist
+        revenue = 0.0
+        ebit = 0.0
 
-        # 3. Build a lightweight dictionary for the Dashboard table
-        # If no report exists, we default to 0 to prevent the frontend from breaking
+        # 2. Get the latest report based on report_date
+        if company.reports:
+            latest_report = max(company.reports, key=lambda r: r.report_date)
+            
+            # Access the connected metric row safely
+            fundamental = latest_report.fundamental
+            if fundamental:
+                revenue = fundamental.revenue
+                ebit = fundamental.EBIT
+
+        # 3. Build the lightweight dictionary for the dashboard
         company_data = {
             "name": company.name,
             "ticker": company.ticker,
-            "revenue_growth": latest_report.revenue_growth_percent,
-            "ebit_margin": latest_report.ebit_margin_percent,
-            "soliditet": latest_report.soliditet_percent,
+            "revenue": revenue,
+            "ebit": ebit,
         }
         
         dashboard_list.append(company_data)
