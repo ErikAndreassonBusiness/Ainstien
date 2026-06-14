@@ -10,6 +10,8 @@ lassoCV_model = LassoCV(
     random_state=42, 
     positive=True) # Algorithm chooses the best alpha
 
+
+
 scaler = StandardScaler()
 
 def fundamental_model(): 
@@ -26,14 +28,14 @@ def fundamental_model():
                     data.get("ebitda"),
                     data.get("ebit"),
                     data.get("net_income"),
-                    data.get("total_assets"),
+                    #data.get("total_assets"),
                     data.get("total_equity"),
                     data.get("total_debt"),
-                    data.get("current_assets"),
-                    data.get("fixed_assets"),
-                    data.get("cash"),
-                    data.get("inventory"),
-                    data.get("account_receiveables")
+                    #data.get("current_assets"),
+                    #data.get("fixed_assets"),
+                    #data.get("cash"),
+                    #data.get("inventory"),
+                    #data.get("account_receiveables")
                 ]
                 
             features.append(feature_row)
@@ -54,14 +56,14 @@ def fundamental_model():
     print("EBITDA: ",                 lassoCV_model.coef_[2])
     print("EBIT: ",                   lassoCV_model.coef_[3])
     print("Net Income: ",             lassoCV_model.coef_[4])
-    print("Total Assets: ",           lassoCV_model.coef_[5])
-    print("Total Equity: ",           lassoCV_model.coef_[6])
-    print("Total Debt: ",             lassoCV_model.coef_[7])
-    print("Current Assets: ",         lassoCV_model.coef_[8])
-    print("Fixed Assets: ",           lassoCV_model.coef_[9])
-    print("Cash: ",                   lassoCV_model.coef_[10])
-    print("Inventory: ",              lassoCV_model.coef_[11])
-    print("Account Receivables: ",    lassoCV_model.coef_[12])
+    #print("Total Assets: ",           lassoCV_model.coef_[5])
+    print("Total Equity: ",           lassoCV_model.coef_[5])
+    print("Total Debt: ",             lassoCV_model.coef_[6])
+    #print("Current Assets: ",         lassoCV_model.coef_[8])
+   # print("Fixed Assets: ",           lassoCV_model.coef_[9])
+    #print("Cash: ",                   lassoCV_model.coef_[10])
+    #print("Inventory: ",              lassoCV_model.coef_[11])
+    #print("Account Receivables: ",    lassoCV_model.coef_[12])
 
     #print(lasso_model.coef_)
     #print(lassoCV_model.coef_)

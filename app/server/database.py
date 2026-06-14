@@ -33,6 +33,14 @@ class Report(db.Model):
     fundamental: Mapped["Fundamental"] = relationship(back_populates='report', cascade="all, delete-orphan")
     metric: Mapped["Metric"] = relationship(back_populates='report', cascade="all, delete-orphan")
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "report_date": self.report_date.isoformat(),  # Converts date object to "YYYY-MM-DD" string for frontend
+            # Safely fetch the fundamental dictionary if it exists, otherwise return None
+            "fundamentals": self.fundamental.to_dict() if self.fundamental else None
+        }
+
     #  KAN BLI DUBBELRELATIONER OM DESSA ÄR MED
     # fundamental_id: Mapped[int] = mapped_column(ForeignKey('fundamental.id'), nullable=False)
     # metric_id: Mapped[int] = mapped_column(ForeignKey('metric.id'), nullable=False)
@@ -81,6 +89,8 @@ class Fundamental(db.Model): #4 år bak
             "net_income": self.net_income,
             "total_assets": self.total_assets,
             "total_equity": self.total_equity,
+            "short_term_debt": self.short_term_debt, 
+            "long_term_debt": self.long_term_debt,
             "total_debt": self.total_debt,
             "current_assets": self.current_assets,
             "fixed_assets": self.fixed_assets,

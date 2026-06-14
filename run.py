@@ -5,6 +5,6 @@ from app.fundamental_model import fundamental_model
 app = create_app()
 
 if __name__ == "__main__":
-    with app.app_context():
-        fundamental_model()
+    #with app.app_context():
+        #fundamental_model()
     app.run(port=5001, debug=True)

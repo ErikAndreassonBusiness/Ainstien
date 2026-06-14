@@ -45,16 +45,11 @@ function createTableRow(company) {
   const row = document.createElement("tr");
   row.className = "stock-row cursor-pointer";
 
-  // Color coding logic
-  const growthClass =
-    company.revenue_growth >= 0 ? "text-success" : "text-danger";
-
   row.innerHTML = `
         <td><strong>${company.ticker}</strong></td>
         <td>${company.name || "N/A"}</td>
-        <td class="${growthClass}">${company.revenue_growth.toFixed(2)}%</td>
-        <td>${company.ebit_margin.toFixed(2)}%</td>
-        <td>${company.soliditet.toFixed(2)}%</td>
+        <td>${company.revenue.toFixed(2)}</td>
+        <td>${company.ebit.toFixed(2)}</td>
         <td class="text-end">
             <a href="/company/${company.ticker}" class="btn btn-sm btn-outline-dark">Analysis</a>
         </td>
