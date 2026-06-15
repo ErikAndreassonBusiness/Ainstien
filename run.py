@@ -9,4 +9,4 @@ if __name__ == "__main__":
     with app.app_context():
         #fundamental_model()
         metric_model()
-    #app.run(port=5001, debug=True)
+    app.run(port=5001, debug=True)

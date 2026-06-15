@@ -1,0 +1,341 @@
+{% extends "base.html" %} {% block title %}Run Models | Ainstien{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12 mb-4">
+      <h2 class="fw-bold text-dark">Run Quant Models</h2>
+      <p class="text-muted text-sm">
+        Configure, train, and benchmark regularized linear regressions on Nasdaq
+        Stockholm data.
+      </p>
+      <hr />
+    </div>
+
+    <div class="col-lg-4 col-md-12 mb-4">
+      <form id="model-config-form" method="POST" action="">
+        <div class="card p-4 mb-4 border-0 shadow-sm">
+          <h5
+            class="card-title fw-bold mb-3 text-secondary text-uppercase fs-6"
+          >
+            1. Target Dataset
+          </h5>
+          <div
+            class="btn-group w-100"
+            role="group"
+            aria-label="Data Source Selection"
+          >
+            <input
+              type="radio"
+              class="btn-check"
+              name="data_source"
+              id="data_metrics"
+              value="metrics"
+              checked
+            />
+            <label class="btn btn-outline-dark py-2" for="data_metrics"
+              >Company Metrics</label
+            >
+
+            <input
+              type="radio"
+              class="btn-check"
+              name="data_source"
+              id="data_fundamentals"
+              value="fundamentals"
+            />
+            <label class="btn btn-outline-dark py-2" for="data_fundamentals"
+              >Raw Fundamentals</label
+            >
+          </div>
+          <small class="text-muted mt-2 d-block text-xs"
+            >Metrics uses ratios (ROE, Margins); Fundamentals uses raw dollar
+            figures.</small
+          >
+        </div>
+
+        <div class="card p-4 mb-4 border-0 shadow-sm">
+          <h5
+            class="card-title fw-bold mb-3 text-secondary text-uppercase fs-6"
+          >
+            2. Select Algorithms
+          </h5>
+
+          <div class="form-check mb-2">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="models"
+              value="lasso"
+              id="model_lasso"
+              checked
+            />
+            <label class="form-check-label fw-semibold" for="model_lasso"
+              >Lasso (L1 Regularization)</label
+            >
+          </div>
+          <div class="form-check mb-2">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="models"
+              value="ridge"
+              id="model_ridge"
+            />
+            <label class="form-check-label fw-semibold" for="model_ridge"
+              >Ridge (L2 Regularization)</label
+            >
+          </div>
+          <div class="form-check mb-3">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              name="models"
+              value="elasticnet"
+              id="model_elasticnet"
+            />
+            <label class="form-check-label fw-semibold" for="model_elasticnet"
+              >Elastic-Net (Mixed L1/L2)</label
+            >
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-secondary w-100"
+            id="btn-select-all"
+          >
+            Select All Models
+          </button>
+        </div>
+
+        <div class="card p-4 mb-4 border-0 shadow-sm">
+          <h5
+            class="card-title fw-bold mb-3 text-secondary text-uppercase fs-6"
+          >
+            3. Hyperparameters & Settings
+          </h5>
+
+          <div class="mb-3">
+            <label for="cv_folds" class="form-label fw-semibold text-sm"
+              >Cross-Validation Folds (CV)</label
+            >
+            <input
+              type="number"
+              class="form-control"
+              id="cv_folds"
+              name="cv_folds"
+              value="5"
+              min="2"
+              max="10"
+            />
+          </div>
+
+          <div class="form-check form-switch mb-3">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="param_positive"
+              name="positive_coefficients"
+            />
+            <label class="form-check-label fw-semibold" for="param_positive"
+              >Enforce Positive Coefficients</label
+            >
+            <div class="form-text text-xs">
+              Forces model coefficients to be non-negative (useful for raw
+              layouts).
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <label for="test_size" class="form-label fw-semibold text-sm"
+              >Train/Test Split</label
+            >
+            <select class="form-select" id="test_size" name="test_split">
+              <option value="0.8" selected>80% Train / 20% Test</option>
+              <option value="0.7">70% Train / 30% Test</option>
+            </select>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary btn-run w-100 py-3 fw-bold text-uppercase tracking-wider shadow-sm"
+        >
+          Run Analysis Engine
+        </button>
+      </form>
+    </div>
+
+    <div class="col-lg-8 col-md-12">
+      <div class="card border-0 shadow-sm mb-4">
+        <div
+          class="card-header bg-white py-3 d-flex justify-content-between align-items-center"
+        >
+          <span class="fw-bold text-dark m-0">Performance Matrix</span>
+          <span class="badge bg-success text-xs">Active Runs</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Model Name</th>
+                <th class="text-end">R² Score</th>
+                <th class="text-end">MAPE</th>
+                <th class="text-end">MAE</th>
+                <th class="text-end">RMSE</th>
+              </tr>
+            </thead>
+            <tbody class="financial-data">
+              <tr>
+                <td class="fw-bold text-dark">
+                  LassoCV
+                  <span class="badge bg-light text-dark text-xs p-1"
+                    >Metrics</span
+                  >
+                </td>
+                <td class="text-end text-success">0.4521</td>
+                <td class="text-end">12.40%</td>
+                <td class="text-end">4.12</td>
+                <td class="text-end">5.84</td>
+              </tr>
+              <tr class="table-light">
+                <td class="fw-bold text-dark">
+                  Ridge
+                  <span class="badge bg-light text-dark text-xs p-1"
+                    >Metrics</span
+                  >
+                </td>
+                <td class="text-end text-success">0.4190</td>
+                <td class="text-end">14.15%</td>
+                <td class="text-end">4.89</td>
+                <td class="text-end">6.12</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+          <h5 class="m-0 fw-bold text-dark fs-6 text-uppercase tracking-wide">
+            Feature Coefficients Matrix
+          </h5>
+        </div>
+        <div class="card-body p-0">
+          <ul
+            class="nav nav-tabs px-3 pt-2 bg-light border-bottom-0"
+            id="coefficientTabs"
+            role="tablist"
+          >
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link active fw-bold text-xs text-uppercase"
+                id="lasso-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#tab-lasso"
+                type="button"
+                role="tab"
+              >
+                LassoCV
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link fw-bold text-xs text-uppercase"
+                id="ridge-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#tab-ridge"
+                type="button"
+                role="tab"
+              >
+                Ridge
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content p-3" id="coefficientTabsContent">
+            <div
+              class="tab-pane fade show active"
+              id="tab-lasso"
+              role="tabpanel"
+            >
+              <div class="table-responsive">
+                <table class="table table-sm table-striped mb-0 text-sm">
+                  <thead>
+                    <tr>
+                      <th>Feature Attribute</th>
+                      <th class="text-end">Weight</th>
+                    </tr>
+                  </thead>
+                  <tbody class="financial-data">
+                    <tr>
+                      <td>Revenue Growth (%)</td>
+                      <td class="text-end text-success fw-bold">1.2450</td>
+                    </tr>
+                    <tr>
+                      <td>Profit Growth (%)</td>
+                      <td class="text-end text-success fw-bold">0.8920</td>
+                    </tr>
+                    <tr>
+                      <td>Net Debt / EBITDA Ratio</td>
+                      <td class="text-end text-danger fw-bold">-0.4120</td>
+                    </tr>
+                    <tr>
+                      <td>Quick Ratio (%)</td>
+                      <td class="text-end text-muted">0.0000</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-ridge" role="tabpanel">
+              <div class="table-responsive">
+                <table class="table table-sm table-striped mb-0 text-sm">
+                  <thead>
+                    <tr>
+                      <th>Feature Attribute</th>
+                      <th class="text-end">Weight</th>
+                    </tr>
+                  </thead>
+                  <tbody class="financial-data">
+                    <tr>
+                      <td>Revenue Growth (%)</td>
+                      <td class="text-end text-success fw-bold">1.0911</td>
+                    </tr>
+                    <tr>
+                      <td>Profit Growth (%)</td>
+                      <td class="text-end text-success fw-bold">0.7145</td>
+                    </tr>
+                    <tr>
+                      <td>Net Debt / EBITDA Ratio</td>
+                      <td class="text-end text-danger fw-bold">-0.5512</td>
+                    </tr>
+                    <tr>
+                      <td>Quick Ratio (%)</td>
+                      <td class="text-end text-success fw-bold">0.0125</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  document
+    .getElementById("btn-select-all")
+    .addEventListener("click", function () {
+      const checkboxes = document.querySelectorAll('input[name="models"]');
+      const allChecked = Array.from(checkboxes).every((cb) => cb.checked);
+      checkboxes.forEach((cb) => (cb.checked = !allChecked));
+      this.textContent = allChecked
+        ? "Select All Models"
+        : "Deselect All Models";
+    });
+</script>
+{% endblock %}

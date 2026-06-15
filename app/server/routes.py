@@ -32,8 +32,12 @@ def index():
 def dashboard():
     return render_template('dashboard.html')
 
+@app.route('/run-models')
+def run_models():
+    return render_template('run_models.html')
+
 @app.route('/company/<ticker>')
-def company_page(ticker):
+def company(ticker):
     return render_template('company.html', ticker=ticker)
 
 
