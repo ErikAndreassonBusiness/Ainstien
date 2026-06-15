@@ -104,9 +104,16 @@ body {
 /* ==========================================================================
    5. Typography & Quant Utilities
    ========================================================================== */
+
 .financial-data {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-family: inherit;
   font-weight: 500;
+  font-size: 0.9rem;
+  letter-spacing: -0.2px;
+
+  font-variant-numeric: tabular-nums;
+  -moz-font-feature-settings: "tnum";
+  -webkit-font-feature-settings: "tnum";
 }
 
 /* Use these semantic classes instead of fight-styling Bootstrap utilities */
