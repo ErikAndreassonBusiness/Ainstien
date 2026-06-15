@@ -129,9 +129,9 @@ function displayFundamentals(history) {
     incomeRow.innerHTML = `
       <td class="fw-bold text-dark">${report.report_date}</td>
       <td class="text-end">${mil(f.revenue)}M</td>
-      <td class="text-end text-muted">${mil(f.depreciation)}M</td>
+      <td class="text-end">${mil(f.depreciation)}M</td>
       <td class="text-end">${mil(f.ebitda)}M</td>
-      <td class="text-end fw-semibold">${mil(f.ebit)}M</td>
+      <td class="text-end">${mil(f.ebit)}M</td>
       <td class="text-end ${f.net_income >= 0 ? "quant-up" : "quant-down"}">${mil(f.net_income)}M</td>
     `;
     incomeBody.appendChild(incomeRow);
@@ -146,11 +146,9 @@ function displayFundamentals(history) {
       <td class="text-end">${mil(f.cash)}M</td>
       <td class="text-end">${mil(f.inventory)}M</td>
       <td class="text-end">${mil(f.account_receiveables)}M</td>
-      <td class="text-end">${mil(f.goodwill)}M</td>
       <td class="text-end fw-semibold">${mil(f.total_equity)}M</td>
-      <td class="text-end">${mil(f.total_debt)}M</td>
-      <td class="text-end text-muted">${mil(f.short_term_debt)}M</td>
-      <td class="text-end text-muted">${mil(f.long_term_debt)}M</td>
+      <td class="text-end">${mil(f.short_term_debt)}M</td>
+      <td class="text-end">${mil(f.long_term_debt)}M</td>
     `;
     balanceBody.appendChild(balanceRow);
   });

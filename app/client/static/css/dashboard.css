@@ -2,6 +2,20 @@
    Dashboard Custom Component Styling
    ========================================================================== */
 
+/* 1. Ticker Header Rule: Forces the first column header text to be crisp white */
+.table thead th:nth-child(1) {
+  color: #ffffff;
+}
+
+/* 2. Ticker Column Data Rule: Overrides any inherited links or variations 
+      to make tickers bold, black, and perfectly tracking */
+.table td:nth-child(1),
+.table td:nth-child(1) strong {
+  color: #000000;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
 /* Unique layout rules for your real-time API sync indicator badge */
 .status-fetching {
   background-color: #6c757d;
@@ -18,12 +32,4 @@
 
 .status-error {
   background-color: var(--ainstien-danger);
-}
-
-/* Custom column sizing alignments */
-.table th:nth-child(1),
-.table td:nth-child(1) {
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: var(--ainstien-blue);
 }

@@ -14,22 +14,65 @@
   background-color: #ffffff;
   font-weight: 700;
   color: var(--ainstien-dark);
-  border-bottom: 2px solid #f1f3f5;
+  border-bottom: 1px solid #e9ecef;
 }
 
-/* Subtle, sophisticated top borders to categorize financial statements */
-.income-header {
-  border-top: 4px solid var(--ainstien-blue);
+/* 1. Income Statement Header (Deep Brand Blue) */
+#incomeTableBody ~ before,
+.table:has(#incomeTableBody) thead tr {
+  background-color: var(--ainstien-blue) !important;
 }
 
-.balance-header {
-  border-top: 4px solid var(--ainstien-success);
+.table:has(#incomeTableBody) thead th {
+  color: #ffffff !important;
+}
+
+/* 2. Balance Sheet Header (Deep Brand Green) */
+#balanceTableBody ~ before,
+.table:has(#balanceTableBody) thead tr {
+  background-color: var(--ainstien-success) !important;
+}
+
+.table:has(#balanceTableBody) thead th {
+  color: #ffffff !important;
 }
 
 /* Ensure clean vertical layout alignment for financial numerical columns */
 .table th.text-end,
 .table td.text-end {
   padding-left: 1.5rem;
+}
+
+/* ==========================================================================
+   Sticky Table Column Layout (Pinning the Date Column)
+   ========================================================================== */
+
+.table-responsive {
+  position: relative;
+}
+
+/* Pin the first body column (Date) in place */
+.table tbody.financial-data td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background-color: #ffffff;
+  border-right: 2px solid #e9ecef;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.02);
+}
+
+/* Pin the header column (Date) and ensure it inherits the blue/green background */
+.table thead th:nth-child(1) {
+  position: sticky;
+  left: 0;
+  z-index: 4; /* Higher z-index to stay above the body cells */
+  background-color: inherit !important;
+  border-right: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Ensure the body hover state looks clean and doesn't break background continuity */
+.table-hover tbody tr:hover td:nth-child(1) {
+  background-color: #f8f9fa;
 }
 
 /* Printable PDF View Optimization */
