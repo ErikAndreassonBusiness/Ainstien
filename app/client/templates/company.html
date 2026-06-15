@@ -1,5 +1,10 @@
 {% extends "base.html" %} {% block title %}Company Analysis | Ainstien{%
-endblock %} {% block content %}
+endblock %} {% block page_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/company.css') }}"
+/>
+{% endblock %} {% block content %}
 <input type="hidden" id="companyTicker" value="{{ ticker }}" />
 
 <div class="container mt-4" id="companyContent">
@@ -8,12 +13,14 @@ endblock %} {% block content %}
   <div id="marketPerformanceChart">
     <div class="row mb-5">
       <div class="col-12">
-        <div class="card shadow-sm border-0">
-          <div class="card-header bg-white">
-            <strong>Market Performance</strong>
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white py-3">
+            <strong class="text-uppercase text-secondary tracking-wider text-xs"
+              >Market Performance</strong
+            >
           </div>
           <div class="card-body">
-            <div style="position: relative; height: 300px; width: 100%">
+            <div class="chart-container">
               <canvas id="stockChart"></canvas>
             </div>
           </div>
@@ -24,24 +31,29 @@ endblock %} {% block content %}
 
   <div class="row mb-5">
     <div class="col-12">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-primary text-white">
-          <strong>Income Statement (Resultaträkning)</strong>
+      <div class="card border-0 shadow-sm">
+        <div class="card-header custom-card-header income-header py-3">
+          <strong
+            >Income Statement
+            <span class="text-xs fw-normal text-muted"
+              >(Resultaträkning)</span
+            ></strong
+          >
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover mb-0 text-nowrap">
-              <thead class="table-light">
+            <table class="table table-hover align-middle mb-0 text-nowrap">
+              <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Revenue</th>
-                  <th>Depreciation</th>
-                  <th>EBITDA</th>
-                  <th>EBIT</th>
-                  <th>Net Income</th>
+                  <th class="text-end">Revenue</th>
+                  <th class="text-end">Depreciation</th>
+                  <th class="text-end">EBITDA</th>
+                  <th class="text-end">EBIT</th>
+                  <th class="text-end">Net Income</th>
                 </tr>
               </thead>
-              <tbody id="incomeTableBody"></tbody>
+              <tbody id="incomeTableBody" class="financial-data"></tbody>
             </table>
           </div>
         </div>
@@ -51,30 +63,35 @@ endblock %} {% block content %}
 
   <div class="row mb-4">
     <div class="col-12">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-success text-white">
-          <strong>Balance Sheet (Balansräkning)</strong>
+      <div class="card border-0 shadow-sm">
+        <div class="card-header custom-card-header balance-header py-3">
+          <strong
+            >Balance Sheet
+            <span class="text-xs fw-normal text-muted"
+              >(Balansräkning)</span
+            ></strong
+          >
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover mb-0 text-nowrap">
-              <thead class="table-light">
+            <table class="table table-hover align-middle mb-0 text-nowrap">
+              <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Total Assets</th>
-                  <th>Current Assets</th>
-                  <th>Fixed Assets</th>
-                  <th>Cash</th>
-                  <th>Inventory</th>
-                  <th>Accounts Rec.</th>
-                  <th>Goodwill</th>
-                  <th>Total Equity</th>
-                  <th>Total Debt</th>
-                  <th>Short-Term Debt</th>
-                  <th>Long-Term Debt</th>
+                  <th class="text-end">Total Assets</th>
+                  <th class="text-end">Current Assets</th>
+                  <th class="text-end">Fixed Assets</th>
+                  <th class="text-end">Cash</th>
+                  <th class="text-end">Inventory</th>
+                  <th class="text-end">Accounts Rec.</th>
+                  <th class="text-end">Goodwill</th>
+                  <th class="text-end">Total Equity</th>
+                  <th class="text-end">Total Debt</th>
+                  <th class="text-end">Short-Term Debt</th>
+                  <th class="text-end">Long-Term Debt</th>
                 </tr>
               </thead>
-              <tbody id="balanceTableBody"></tbody>
+              <tbody id="balanceTableBody" class="financial-data"></tbody>
             </table>
           </div>
         </div>

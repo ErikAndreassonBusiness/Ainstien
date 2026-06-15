@@ -1,0 +1,45 @@
+/* ==========================================================================
+   Company Profile Layout Elements
+   ========================================================================== */
+
+/* Replaces old inline layout constraints */
+.chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+/* Custom Table Header Configurations */
+.custom-card-header {
+  background-color: #ffffff;
+  font-weight: 700;
+  color: var(--ainstien-dark);
+  border-bottom: 2px solid #f1f3f5;
+}
+
+/* Subtle, sophisticated top borders to categorize financial statements */
+.income-header {
+  border-top: 4px solid var(--ainstien-blue);
+}
+
+.balance-header {
+  border-top: 4px solid var(--ainstien-success);
+}
+
+/* Ensure clean vertical layout alignment for financial numerical columns */
+.table th.text-end,
+.table td.text-end {
+  padding-left: 1.5rem;
+}
+
+/* Printable PDF View Optimization */
+@media print {
+  body {
+    background-color: #fff;
+  }
+  .btn,
+  .breadcrumb,
+  #marketPerformanceChart {
+    display: none !important;
+  }
+}

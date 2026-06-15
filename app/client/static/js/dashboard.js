@@ -5,21 +5,25 @@
  */
 async function initDashboard() {
   const tableBody = document.getElementById("companyTableBody");
-  const statusIndicator = document.getElementById("statusIndicator");
 
   // 1. Fetch data from the API (defined in api.js)
   const marketData = await fetchMarketSummary();
 
   // 2. Error Handling
   if (!marketData || marketData.length === 0) {
-    tableBody.innerHTML =
-      '<tr><td colspan="6" class="text-center">No data found.</td></tr>';
-    updateStatus("Error", "bg-danger");
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-muted py-4">
+          No Swedish Mid-Cap market data found.
+        </td>
+      </tr>
+    `;
+    updateStatus("Error loading data", "error");
     return;
   }
 
   // 3. Success: Update status and render the UI
-  updateStatus(`${marketData.length} Companies`, "bg-dark");
+  updateStatus(`${marketData.length} Companies`, "success");
   displayCompanies(marketData);
 }
 
@@ -29,7 +33,7 @@ async function initDashboard() {
  */
 function displayCompanies(companies) {
   const tableBody = document.getElementById("companyTableBody");
-  tableBody.innerHTML = ""; // Clear existing content
+  tableBody.innerHTML = ""; // Clear existing content / fallback loading states
 
   companies.forEach((company) => {
     const row = createTableRow(company);
@@ -38,26 +42,29 @@ function displayCompanies(companies) {
 }
 
 /**
- * UI function: Creates a single <tr> element
+ * UI function: Creates a single <tr> element representing a stock row
  * @param {Object} company - Individual company data
  */
 function createTableRow(company) {
   const row = document.createElement("tr");
-  row.className = "stock-row cursor-pointer";
+  row.className = "stock-row"; // Hover states and transitions handled cleanly by base.css
 
+  // Determine financial performance styling dynamically using our new semantic tokens
+  const ebitClass = company.ebit >= 0 ? "quant-up" : "quant-down";
+
+  // Aligned numerical columns to 'text-end' to cleanly match the table head hierarchy
   row.innerHTML = `
-        <td><strong>${company.ticker}</strong></td>
-        <td>${company.name || "N/A"}</td>
-        <td>${company.revenue.toFixed(2)}</td>
-        <td>${company.ebit.toFixed(2)}</td>
-        <td class="text-end">
-            <a href="/company/${company.ticker}" class="btn btn-sm btn-outline-dark">Analysis</a>
-        </td>
-    `;
+    <td><strong>${company.ticker}</strong></td>
+    <td>${company.name || "N/A"}</td>
+    <td class="text-end">${company.revenue.toFixed(2)}</td>
+    <td class="text-end ${ebitClass}">${company.ebit.toFixed(2)}</td>
+    <td class="text-end">
+      <a href="/company/${company.ticker}" class="btn btn-dark btn-sm">Analysis</a>
+    </td>
+  `;
 
-  // Click handler for the whole row
+  // Click handler for the whole row (excluding direct anchor triggers)
   row.addEventListener("click", (e) => {
-    // Don't trigger if the user specifically clicks the "Analysis" button
     if (e.target.tagName !== "A") {
       window.location.href = `/company/${company.ticker}`;
     }
@@ -67,14 +74,18 @@ function createTableRow(company) {
 }
 
 /**
- * Helper function: Updates the status badge
+ * Helper function: Updates the status badge using our decoupled CSS tokens
+ * @param {string} text - The narrative indicator text
+ * @param {'fetching' | 'success' | 'error'} state - Core application states
  */
-function updateStatus(text, colorClass) {
+function updateStatus(text, state) {
   const statusIndicator = document.getElementById("statusIndicator");
-  if (statusIndicator) {
-    statusIndicator.textContent = text;
-    statusIndicator.className = `badge ${colorClass}`;
-  }
+  if (!statusIndicator) return;
+
+  statusIndicator.textContent = text;
+
+  // Wipe old variations and apply clean, isolated design language classes
+  statusIndicator.className = `badge status-${state}`;
 }
 
 // Start the app when the DOM is ready
