@@ -1,7 +1,7 @@
 from app import create_app
-from app.model import model
-from app.fundamental_model import fundamental_model
-from app.metric_model import metric_model
+from app.models.model import model
+from app.models.fundamental_model import fundamental_model
+from app.models.metric_model import metric_model
 
 app = create_app()
 

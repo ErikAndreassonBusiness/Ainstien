@@ -3,7 +3,7 @@ from seed_db.seed_fundementals import *
 def safe_div(numerator, denominator):
     """Prevents ZeroDivisionError and handles NaN."""
     if denominator == 0 or pd.isna(denominator) or pd.isna(numerator):
-        return 0.0
+        raise ValueError
     return round((numerator / denominator),2)
     
 # == Growth Getters ===

@@ -1,0 +1,130 @@
+/* ==========================================================================
+   1. Design Tokens & Variables
+   ========================================================================== */
+:root {
+  --ainstien-dark: #1a1d20;
+  --ainstien-blue: #0056b3;
+  --ainstien-success: #28a745;
+  --ainstien-danger: #dc3545;
+  --bg-global: #f4f7f6;
+}
+
+/* ==========================================================================
+   2. Global Resets & Elements
+   ========================================================================== */
+body {
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  background-color: var(--bg-global);
+  color: #333;
+}
+
+/* ==========================================================================
+   3. Main Header / Navigation (Clean Overrides)
+   ========================================================================== */
+.custom-navbar {
+  background-color: var(--ainstien-dark);
+}
+
+.custom-navbar .navbar-brand {
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #fff;
+}
+
+.custom-navbar .nav-link:hover {
+  color: var(--ainstien-blue);
+}
+
+/* ==========================================================================
+   4. Shared Components (Cards, Tables, Buttons)
+   ========================================================================== */
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card-header {
+  background-color: white;
+  border-bottom: 1px solid #eee;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.table thead th {
+  background-color: var(--ainstien-dark);
+  color: white;
+  border: none;
+  font-size: 0.8rem;
+}
+
+.table-hover tbody tr:hover,
+.stock-row:hover {
+  background-color: #f0f4f8;
+  cursor: pointer;
+}
+
+.stock-row {
+  transition: background-color 0.2s ease;
+}
+
+.btn-dark {
+  background-color: var(--ainstien-dark);
+  border: none;
+  padding: 0.4rem 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.btn-dark:hover {
+  background-color: var(--ainstien-blue);
+}
+
+.badge {
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  padding: 0.5em 1em;
+}
+
+/* ==========================================================================
+   5. Typography & Quant Utilities
+   ========================================================================== */
+.financial-data {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-weight: 500;
+}
+
+/* Use these semantic classes instead of fight-styling Bootstrap utilities */
+.quant-up {
+  color: var(--ainstien-success);
+  font-weight: 600;
+}
+
+.quant-down {
+  color: var(--ainstien-danger);
+  font-weight: 600;
+}
+
+p.quant-muted {
+  font-size: 1.05rem;
+  color: #495057;
+}
+
+.table-responsive {
+  scrollbar-width: thin;
+}

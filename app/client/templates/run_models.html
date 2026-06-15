@@ -1,10 +1,15 @@
 {% extends "base.html" %} {% block title %}Run Models | Ainstien{% endblock %}
-{% block content %}
+{% block page_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/run_models.css') }}"
+/>
+{% endblock %} {% block content %}
 <div class="container mt-4">
   <div class="row">
     <div class="col-12 mb-4">
       <h2 class="fw-bold text-dark">Run Quant Models</h2>
-      <p class="text-muted text-sm">
+      <p class="quant-muted text-sm">
         Configure, train, and benchmark regularized linear regressions on Nasdaq
         Stockholm data.
       </p>
@@ -47,10 +52,10 @@
               >Raw Fundamentals</label
             >
           </div>
-          <small class="text-muted mt-2 d-block text-xs"
-            >Metrics uses ratios (ROE, Margins); Fundamentals uses raw dollar
-            figures.</small
-          >
+          <small class="text-muted mt-2 d-block text-xs">
+            Metrics uses ratios (ROE, Margins); Fundamentals uses raw dollar
+            figures.
+          </small>
         </div>
 
         <div class="card p-4 mb-4 border-0 shadow-sm">
@@ -159,7 +164,7 @@
 
         <button
           type="submit"
-          class="btn btn-primary btn-run w-100 py-3 fw-bold text-uppercase tracking-wider shadow-sm"
+          class="btn btn-run w-100 py-3 fw-bold text-uppercase tracking-wider shadow-sm"
         >
           Run Analysis Engine
         </button>
@@ -193,7 +198,7 @@
                     >Metrics</span
                   >
                 </td>
-                <td class="text-end text-success">0.4521</td>
+                <td class="text-end quant-up">0.4521</td>
                 <td class="text-end">12.40%</td>
                 <td class="text-end">4.12</td>
                 <td class="text-end">5.84</td>
@@ -205,7 +210,7 @@
                     >Metrics</span
                   >
                 </td>
-                <td class="text-end text-success">0.4190</td>
+                <td class="text-end quant-up">0.4190</td>
                 <td class="text-end">14.15%</td>
                 <td class="text-end">4.89</td>
                 <td class="text-end">6.12</td>
@@ -270,15 +275,15 @@
                   <tbody class="financial-data">
                     <tr>
                       <td>Revenue Growth (%)</td>
-                      <td class="text-end text-success fw-bold">1.2450</td>
+                      <td class="text-end quant-up">1.2450</td>
                     </tr>
                     <tr>
                       <td>Profit Growth (%)</td>
-                      <td class="text-end text-success fw-bold">0.8920</td>
+                      <td class="text-end quant-up">0.8920</td>
                     </tr>
                     <tr>
                       <td>Net Debt / EBITDA Ratio</td>
-                      <td class="text-end text-danger fw-bold">-0.4120</td>
+                      <td class="text-end quant-down">-0.4120</td>
                     </tr>
                     <tr>
                       <td>Quick Ratio (%)</td>
@@ -301,19 +306,19 @@
                   <tbody class="financial-data">
                     <tr>
                       <td>Revenue Growth (%)</td>
-                      <td class="text-end text-success fw-bold">1.0911</td>
+                      <td class="text-end quant-up">1.0911</td>
                     </tr>
                     <tr>
                       <td>Profit Growth (%)</td>
-                      <td class="text-end text-success fw-bold">0.7145</td>
+                      <td class="text-end quant-up">0.7145</td>
                     </tr>
                     <tr>
                       <td>Net Debt / EBITDA Ratio</td>
-                      <td class="text-end text-danger fw-bold">-0.5512</td>
+                      <td class="text-end quant-down">-0.5512</td>
                     </tr>
                     <tr>
                       <td>Quick Ratio (%)</td>
-                      <td class="text-end text-success fw-bold">0.0125</td>
+                      <td class="text-end quant-up">0.0125</td>
                     </tr>
                   </tbody>
                 </table>
