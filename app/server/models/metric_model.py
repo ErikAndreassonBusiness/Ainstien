@@ -44,6 +44,12 @@ def metric_model():
     X = np.array(features)
     y = np.array(target)
 
+    # Mix up the rows so train/test sets have a mix of all companies
+    indices = np.arange(X.shape[0])
+    np.random.seed(42)
+    np.random.shuffle(indices)
+    X, y = X[indices], y[indices]
+
     test_cutoff = int(0.8 * len(X))
 
     X_train, X_test = X[:test_cutoff], X[test_cutoff:]
