@@ -173,7 +173,7 @@ function renderStockChart(labels, prices) {
         {
           label: "Price Evolution",
           data: prices,
-          borderColor: "#0056b3", // Synchronized cleanly with your core --ainstien-blue token
+          borderColor: "#0056b3",
           backgroundColor: "rgba(0, 86, 179, 0.04)",
           fill: true,
           tension: 0.15,
