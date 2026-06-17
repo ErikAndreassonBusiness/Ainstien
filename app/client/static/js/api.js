@@ -98,11 +98,11 @@ async function fetchCorrelationMatrix(features) {
 /**
  * Dispatches core payload for Machine Learning algorithms
  */
-async function runModelingEngine(payload) {
+async function runModels(modelSettings) {
   const response = await fetch("/api/run-models", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(modelSettings),
   });
 
   if (!response.ok) {

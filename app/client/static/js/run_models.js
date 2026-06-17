@@ -19,20 +19,20 @@ function initRunModelsPage() {
   // --- Multicollinearity Button ---
   const btnLoadCorrelation = document.getElementById("btn-load-correlation");
   if (btnLoadCorrelation) {
-    btnLoadCorrelation.addEventListener("click", handleCorrelationPipeline);
+    btnLoadCorrelation.addEventListener("click", handleCorrelationMatrix);
   }
 
   // --- Modeling Button ---
   const form = document.getElementById("model-config-form");
   if (form) {
-    form.addEventListener("submit", handleModelPipeline);
+    form.addEventListener("submit", getModelResults);
   }
 }
 
 /**
  * Get Multicollinearity Correlation Matrix
  */
-async function handleCorrelationPipeline() {
+async function getCorrelationMatrix() {
   const selectedFeatures = getCheckedValues('input[name="features"]');
   if (selectedFeatures.length === 0) return;
 
@@ -49,16 +49,16 @@ async function handleCorrelationPipeline() {
 /**
  * Get the models results
  */
-async function handleModelPipeline(event) {
+async function getModelResults(event) {
   event.preventDefault(); // Prevent standard form postback
 
   const form = event.target;
-  const formData = new FormData(form);
-  const payload = Object.fromEntries(formData.entries());
 
-  // Manually map array data for checkboxes
-  payload.features = getCheckedValues('input[name="features"]');
-  payload.models = getCheckedValues('input[name="models"]');
+  // --- Collect data via form and present in in JSON format for backend ---
+  const formData = new FormData(form);
+  const modelSettings = Object.fromEntries(formData.entries());
+  modelSettings.features = getCheckedValues('input[name="features"]');
+  modelSettings.models = getCheckedValues('input[name="models"]');
 
   // Change button state to show loading
   const submitBtn = form.querySelector('button[type="submit"]');
@@ -67,9 +67,9 @@ async function handleModelPipeline(event) {
   submitBtn.disabled = true;
 
   try {
-    const results = await runModelingEngine(payload);
+    const results = await runModels(modelSettings);
     if (results) {
-      renderPerformanceMatrix(results.metrics);
+      renderPerformanceMatrix(results.performance);
       renderCoefficientsMatrix(results.coefficients);
     }
   } catch (error) {
@@ -93,7 +93,6 @@ function renderCorrelationMatrix(data) {
   thead.innerHTML = "<th>Feature</th>";
   tbody.innerHTML = "";
 
-  // Assuming 'data' is an object with { features: [], matrix: [[]] }
   data.features.forEach((feat) => {
     thead.innerHTML += `<th>${feat}</th>`;
   });
@@ -126,14 +125,14 @@ function renderCorrelationMatrix(data) {
 /**
  * Renders the primary performance metric tables (R2, MAPE, etc.)
  */
-function renderPerformanceMatrix(metrics) {
+function renderPerformanceMatrix(performanceData) {
   const tbody = document.getElementById("performanceTableBody");
   if (!tbody) return;
 
   tbody.innerHTML = "";
 
-  // Assuming 'metrics' is an array of objects: { model_name, r2, mape, mae, rmse }
-  metrics.forEach((metric, index) => {
+  // Assuming 'performanceData' is an object with a 'metrics' property containing the array of metric objects
+  performanceData.metrics.forEach((metric, index) => {
     const tr = document.createElement("tr");
     if (index % 2 !== 0) tr.classList.add("table-light");
 

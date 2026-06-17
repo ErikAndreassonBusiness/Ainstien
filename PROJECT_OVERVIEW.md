@@ -50,7 +50,6 @@
 Ainstien/
 ├── pyproject.toml          # Project configuration (uv)
 ├── uv.lock                 # Exact package versions (DO NOT EDIT MANUALLY)
-├── requirements.txt        # Dependencies snapshot
 ├── README.md              # Setup instructions
 ├── run.py                 # Application entry point
 ├── seed.py                # Database seeding script
@@ -68,34 +67,33 @@ app/
 ├── __init__.py            # Flask app factory (create_app function)
 ├── client/                # Frontend (templates + static assets)
 │   ├── static/
-│   │   ├── css/          # Page-specific stylesheets
-│   │   │   ├── base.css              # Global styles, design tokens, shared components
-│   │   │   ├── dashboard.css         # Dashboard-specific styles
-│   │   │   ├── company.css           # Company detail page styles
-│   │   │   ├── run_models.css        # ML models page styles
-│   │   │   └── style.css             # Additional global styles
-│   │   └── js/           # Frontend logic (API calls + DOM manipulation)
-│   │       ├── api.js                # API client functions (fetch wrappers)
-│   │       ├── dashboard.js          # Dashboard initialization & rendering
-│   │       ├── company.js            # Company page initialization & rendering
-│   │       └── run_models.js         # ML models page logic
+│   │   ├── css/
+│   │   │   ├── base.css              # Global styles
+│   │   │   ├── dashboard.css
+│   │   │   ├── company.css
+│   │   │   ├── run_models.css
+│   │   └── js/
+│   │       ├── api.js                # Backend caller
+│   │       ├── dashboard.js
+│   │       ├── company.js
+│   │       └── run_models.js
 │   └── templates/        # HTML templates (Jinja2)
 │       ├── base.html             # Master layout (navigation, footer)
-│       ├── dashboard.html        # Dashboard/market screener view
-│       ├── company.html          # Company analysis detail view
-│       ├── run_models.html       # ML models execution interface
-│       └── trades.html           # (Placeholder) Trading recommendations
+│       ├── dashboard.html
+│       ├── company.html
+│       ├── run_models.html
+│       └── trades.html
 └── server/                # Backend API & business logic
     ├── database.py        # SQLAlchemy database initialization
     ├── db_queries.py      # Database query functions
     ├── live_market.py     # yfinance integration for real-time market data
     ├── routes.py          # Flask route handlers (endpoints)
     └── models/            # Machine learning models
-        ├── fundamental_model.py        # Fundamental analysis ML model
-        ├── fundamental_ridge_model.py  # Ridge regression variant
-        ├── metric_model.py             # Metric-based analysis model
-        ├── metric_ridge_model.py       # Ridge regression variant
-        └── run_models.py               # Model execution orchestrator
+        ├── fundamental_model.py
+        ├── fundamental_ridge_model.py
+        ├── metric_model.py
+        ├── metric_ridge_model.py
+        └── run_models.py               # Model executer
 ```
 
 ### `/data` - Database Storage
@@ -106,7 +104,7 @@ app/
 
 ### `/seed_db` - Database Seeding
 
-- **seed_fundamentals.py:** Fetches and stores fundamental data (SimFin API)
+- **seed_fundamentals.py:** Fetches and stores fundamental data
 - **seed_metrics.py:** Calculates and stores financial metrics
 - **seed_reports.py:** Generates historical reports
 
@@ -118,7 +116,7 @@ app/
 
 The frontend follows a **layered, decoupled architecture**:
 
-1. **API Layer (`api.js`):** Abstracts all HTTP communication
+1. **API Layer (`api.js`):** Abstracts all HTTP communication to backend
 2. **Logic Layer (`*.js`):** Page-specific business logic and DOM orchestration
 3. **Presentation Layer (Templates + CSS):** View rendering and styling
 4. **Design System (CSS tokens):** Consistent visual language across pages
@@ -388,9 +386,6 @@ uv sync
 
 # Activate environment
 source .venv/bin/activate
-
-# Create .env file with SimFin API key
-echo "SIMFIN_API_KEY=your_actual_key_here" > .env
 
 # Seed the database
 python seed.py
