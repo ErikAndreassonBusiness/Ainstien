@@ -76,3 +76,5 @@ def sort_fundamentals_from_company(company):
         key=lambda fundamental: fundamental.report_date, 
         reverse=True)
 
+
+

@@ -2,7 +2,7 @@ const host = "/api";
 /**
  * Fetches summary metrics for the dashboard table.
  */
-async function fetchMarketSummary() {
+async function fetchCompaniesSummary() {
   try {
     const route = `${host}/market-summary`;
 
@@ -83,7 +83,7 @@ async function fetchCompanyDetails(ticker) {
  * Dispatches request for multidimensional variance (Correlation Matrix)
  */
 async function fetchCorrelationMatrix(features) {
-  const response = await fetch("/api/correlation", {
+  const response = await fetch("/api/correlation-matrix", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ features }),

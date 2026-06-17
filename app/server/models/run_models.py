@@ -49,16 +49,15 @@ def get_target(chosen_target):
 
     return targets
     
-    
-def run_model(chosen_features, chosen_target, settings): 
-    features = get_features(chosen_features)
-    target = get_target(chosen_target)
+def run_model(settings): 
+    features = get_features(settings.get("chosen_features"))
+    target = get_target(settings.get("chosen_target"))
 
     X = np.array(features)
 
     # --- Optionally log-transform the target variable ---
-    if settings.get("log_transform_target"):
-        y = np.array(np.log(target)) #great to do when the target vaires a lot //Erik
+    if settings.get("log_transform_target") == "on":
+        y = np.array(np.log(target)) 
     else:
         y = np.array(target)
 
@@ -70,40 +69,51 @@ def run_model(chosen_features, chosen_target, settings):
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    model.fit(X_train_scaled, y_train)
-    
-    print("\n" + "="*43)
-    print(f"{'Feature':<25} | {'Coefficient'}")
-    print("="*43)
-    
-    for name, coef in zip(feature_names, model.coef_):
-        coef_str = f"{coef:,.4f}" if coef != 0 else "0.00"
-        print(f"{name:<25} | {coef_str}")
-        
-    print("="*43)
-    print(f"Winning alpha: {model.alpha_:,.4f}\n")
+    performance_list = []
+    coefficients_dict = {}
 
-    # --- Compare against test data ---
-    predictions = model.predict(X_test_scaled)
+    for model in settings.get("chosen_models"):
+        if model == "Ridge":
+            model = RidgeCV(cv=settings.get("cv_folds"))
+        elif model == "Lasso":
+            model = LassoCV(
+                cv=settings.get("cv_folds"), 
+                random_state=42, 
+                positive=settings.get("positive_coefficients") == "on")
 
-    actual_y_test = np.exp(y_test)
+        model.fit(X_train_scaled, y_train)
 
-    if settings.get("log_transform_target"):
-        actual_predictions = np.exp(predictions)
-    else:
-        actual_predictions = predictions
+        # --- Compare against test data ---
+        predictions = model.predict(X_test_scaled)
 
-    r2 = r2_score(actual_y_test, actual_predictions)
-    mape = mean_absolute_percentage_error(actual_y_test, actual_predictions)
-    mae = mean_absolute_error(actual_y_test, actual_predictions)
-    rmse = np.sqrt(mean_squared_error(actual_y_test, actual_predictions))
+        actual_y_test = np.exp(y_test)
 
-    # --- Print Test Evaluation Metrics Table ---
-    print("="*60)
-    print(f"{'Metric':<38} | {'Value'}")
-    print("="*60)
-    print(f"{'R-squared (R2) Score':<38} | {r2:.4f}")
-    print(f"{'Mean Absolute Percentage Error (MAPE)':<38} | {mape * 100:,.2f}%")
-    print(f"{'Mean Absolute Error (MAE)':<38} | {mae:,.2f}")
-    print(f"{'Root Mean Squared Error (RMSE)':<38} | {rmse:,.2f}")
-    print("="*60 + "\n")
+        if settings.get("log_transform_target"):
+            actual_predictions = np.exp(predictions)
+        else:
+            actual_predictions = predictions
+
+        r2 = r2_score(actual_y_test, actual_predictions)
+        mape = mean_absolute_percentage_error(actual_y_test, actual_predictions)
+        mae = mean_absolute_error(actual_y_test, actual_predictions)
+        rmse = np.sqrt(mean_squared_error(actual_y_test, actual_predictions))
+
+        performance_list.append({
+            "model_name": model.__class__.__name__,
+            "r2": round(r2, 4),
+            "mape": round(mape, 4),
+            "mae": round(mae, 4),
+            "rmse": round(rmse, 4)
+        })
+
+        coefficients_dict[model.__class__.__name__] = model.coef_.tolist()
+
+        return {
+            "performance": performance_list,
+            "coefficients": coefficients_dict
+        }
+
+def get_correlation_matrix(data):
+    features = data.get('features')
+    #matrix = fetchCorrelationMatrix(features) SKA BYGGAS
+    return jsonify({'matrix': matrix})

@@ -8,11 +8,15 @@ from .db_queries import (
 from .live_market import get_live_market_data
 from .db_queries import get_dashboard_market_data, get_company_by_ticker, get_company_fundamentals_history
 
+# ========== API routes ============
+
+# --- Dashboard Page---
 @app.route('/api/market-summary', methods = ['GET'])
 def market_summary():
     data = get_dashboard_market_data()
     return jsonify(data)
 
+# --- Company Page ---
 @app.route('/api/company-details/<ticker>')
 def api_company_details(ticker):
     return get_company_fundamentals_history(ticker)
@@ -22,6 +26,25 @@ def api_market_data(ticker = None):
     data = get_live_market_data(ticker)
     return jsonify(data)
     
+# --- Run Models Page ---
+@app.route('/api/correlation-matrix', methods = ['POST'])
+def correlation_matrix():
+    data = request.get_json()
+    return get_correlation_matrix(data)
+
+@app.route('/api/run-models', methods = ['POST'])
+def run_models():
+    data = request.get_json()
+    settings = {
+        "chosen_models": data.get('models'),
+        "chosen_features": data.get('features'),
+        "chosen_target": data.get('target_variable'),
+        "log_transform_target": data.get('log_transform'),
+        "cv_folds": data.get('cv_folds'), 
+        "positive_coefficients": data.get('positive_coefficients')
+    }
+    
+    return jsonify(run_model(settings))
 # ===== Standard routes =======
 
 @app.route('/')

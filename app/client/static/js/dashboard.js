@@ -7,7 +7,7 @@ async function initDashboard() {
   const tableBody = document.getElementById("companyTableBody");
 
   // 1. Fetch data from the API (defined in api.js)
-  const marketData = await fetchMarketSummary();
+  const marketData = await fetchCompaniesSummary();
 
   // 2. Error Handling
   if (!marketData || marketData.length === 0) {
