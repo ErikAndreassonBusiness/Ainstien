@@ -17,7 +17,7 @@ import numpy as np
 
 scaler = StandardScaler()
 
-def get_features(chosen_features, features):
+def get_features_from_db(chosen_features, features):
 
     # --- Build feature matrix vector ---
     features = []
@@ -34,7 +34,7 @@ def get_features(chosen_features, features):
     
     return features
 
-def get_target(chosen_target):
+def get_target_from_db(chosen_target):
     # --- Build target vector --
     targets = []
     if chosen_target == "future_price":
@@ -50,8 +50,8 @@ def get_target(chosen_target):
     return targets
     
 def run_model(settings): 
-    features = get_features(settings.get("chosen_features"))
-    target = get_target(settings.get("chosen_target"))
+    features = get_features_from_db(settings.get("chosen_features"), settings.get("features"))
+    target = get_target_from_db(settings.get("chosen_target"))
 
     X = np.array(features)
 
