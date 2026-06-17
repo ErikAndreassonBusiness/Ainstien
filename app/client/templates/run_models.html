@@ -10,7 +10,7 @@
     <div class="col-12 mb-4">
       <h2 class="fw-bold text-dark">Run Quant Models</h2>
       <p class="quant-muted text-sm">
-        Configure, train, and benchmark regularized linear regressions on Nasdaq
+        Configure, train, and test regularized linear regressions on Nasdaq
         Stockholm data.
       </p>
       <hr />
@@ -20,49 +20,529 @@
       <form id="model-config-form" method="POST" action="">
         <div class="card p-4 mb-4 border-0 shadow-sm">
           <h5
-            class="card-title fw-bold mb-3 text-secondary text-uppercase fs-6"
+            class="card-title fw-bold mb-1 text-secondary text-uppercase fs-6"
           >
-            1. Target Dataset
+            1. Feature Selection
           </h5>
-          <div
-            class="btn-group w-100"
-            role="group"
-            aria-label="Data Source Selection"
-          >
-            <input
-              type="radio"
-              class="btn-check"
-              name="data_source"
-              id="data_metrics"
-              value="metrics"
-              checked
-            />
-            <label class="btn btn-outline-dark py-2" for="data_metrics"
-              >Company Metrics</label
-            >
+          <p class="text-muted text-xs mb-3">
+            Choose the specific features to incorporate into the model.
+          </p>
 
-            <input
-              type="radio"
-              class="btn-check"
-              name="data_source"
-              id="data_fundamentals"
-              value="fundamentals"
-            />
-            <label class="btn btn-outline-dark py-2" for="data_fundamentals"
-              >Raw Fundamentals</label
+          <div
+            class="p-3 mb-3 border border-secondary rounded bg-dark text-white"
+          >
+            <h6 class="fw-bold mb-1 text-uppercase text-info diag-title">
+              Multicollinearity Diagnostics
+            </h6>
+            <p class="text-white-50 text-xs mb-2">
+              Analyze multicollinearity exclusively among selected features.
+            </p>
+            <button
+              type="button"
+              id="btn-load-correlation"
+              class="btn btn-info btn-sm w-100 fw-bold text-uppercase py-1 text-dark text-xs"
             >
+              Compute Correlation Matrix
+            </button>
           </div>
-          <small class="text-muted mt-2 d-block text-xs">
-            Metrics uses ratios (ROE, Margins); Fundamentals uses raw dollar
-            figures.
-          </small>
+
+          <div class="mb-3">
+            <h6
+              class="fw-bold text-dark text-xs text-uppercase border-bottom pb-1 mb-2 text-success"
+            >
+              Fundamentals
+            </h6>
+            <div class="pe-1 feature-scroll">
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="revenue"
+                  id="feat_revenue"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_revenue"
+                  >Revenue</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="depreciation"
+                  id="feat_depreciation"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_depreciation"
+                  >Depreciation</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="ebitda"
+                  id="feat_ebitda"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_ebitda"
+                  >EBITDA</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="ebit"
+                  id="feat_ebit"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_ebit"
+                  >EBIT</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="net_income"
+                  id="feat_net_income"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_net_income"
+                  >Net Income</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="total_assets"
+                  id="feat_total_assets"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_total_assets"
+                  >Total Assets</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="total_equity"
+                  id="feat_total_equity"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_total_equity"
+                  >Total Equity</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="short_term_debt"
+                  id="feat_short_term_debt"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_short_term_debt"
+                  >Short Term Debt</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="long_term_debt"
+                  id="feat_long_term_debt"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_long_term_debt"
+                  >Long Term Debt</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="total_debt"
+                  id="feat_total_debt"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_total_debt"
+                  >Total Debt</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="current_assets"
+                  id="feat_current_assets"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_current_assets"
+                  >Current Assets</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="fixed_assets"
+                  id="feat_fixed_assets"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_fixed_assets"
+                  >Fixed Assets</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="cash"
+                  id="feat_cash"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_cash"
+                  >Cash</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="inventory"
+                  id="feat_inventory"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_inventory"
+                  >Inventory</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="account_receiveables"
+                  id="feat_account_receivables"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_account_receivables"
+                  >Account Receivables</label
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <h6
+              class="fw-bold text-dark text-xs text-uppercase border-bottom pb-1 mb-2 text-primary"
+            >
+              Metrics
+            </h6>
+            <div class="pe-1 feature-scroll">
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="revenue_growth_percent"
+                  id="feat_rev_growth"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_rev_growth"
+                  >Revenue Growth (%)</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="profit_growth_percent"
+                  id="feat_prof_growth"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_prof_growth"
+                  >Profit Growth (%)</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="quick_ratio_percent"
+                  id="feat_quick_ratio"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_quick_ratio"
+                  >Quick Ratio (%)</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="net_debt_ebitda_ratio"
+                  id="feat_net_debt_ebitda"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_net_debt_ebitda"
+                  >Net Debt / EBITDA</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="equity_ratio_percent"
+                  id="feat_equity_ratio"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_equity_ratio"
+                  >Equity Ratio (%)</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="assets_turnover_ratio"
+                  id="feat_assets_turnover"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_assets_turnover"
+                  >Assets Turnover Ratio</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="inventory_turnover_ratio"
+                  id="feat_inv_turnover"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_inv_turnover"
+                  >Inventory Turnover Ratio</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="roa"
+                  id="feat_roa"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_roa"
+                  >ROA</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="roe"
+                  id="feat_roe"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_roe"
+                  >ROE</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="roi"
+                  id="feat_roi"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_roi"
+                  >ROI</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="ebit_margin_percent"
+                  id="feat_ebit_margin"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_ebit_margin"
+                  >EBIT Margin (%)</label
+                >
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="features"
+                  value="profit_margin_percent"
+                  id="feat_profit_margin"
+                  checked
+                />
+                <label
+                  class="form-check-label fw-semibold text-sm"
+                  for="feat_profit_margin"
+                  >Profit Margin (%)</label
+                >
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-secondary w-100 mt-2"
+            id="btn-select-all-features"
+          >
+            Deselect All Features
+          </button>
         </div>
 
         <div class="card p-4 mb-4 border-0 shadow-sm">
           <h5
             class="card-title fw-bold mb-3 text-secondary text-uppercase fs-6"
           >
-            2. Select Algorithms
+            2. Target Selection
+          </h5>
+
+          <div class="form-check mb-2">
+            <input
+              type="radio"
+              class="form-check-input"
+              name="target_variable"
+              id="target_future_price"
+              value="future_price"
+              checked
+            />
+            <label
+              class="form-check-label fw-semibold text-sm"
+              for="target_future_price"
+              >Future Price Target</label
+            >
+          </div>
+          <div class="form-check mb-3">
+            <input
+              type="radio"
+              class="form-check-input"
+              name="target_variable"
+              id="target_future_growth"
+              value="future_growth"
+            />
+            <label
+              class="form-check-label fw-semibold text-sm"
+              for="target_future_growth"
+              >Future Growth Target</label
+            >
+          </div>
+
+          <hr />
+
+          <div class="form-check form-switch mt-2">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="log_transform"
+              name="log_transform"
+            />
+            <label
+              class="form-check-label fw-semibold text-sm"
+              for="log_transform"
+              >Apply Logarithmic Transformation</label
+            >
+            <div class="form-text text-xs">
+              Reduces large variations in the target variable.
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-4 mb-4 border-0 shadow-sm">
+          <h5
+            class="card-title fw-bold mb-3 text-secondary text-uppercase fs-6"
+          >
+            3. Select Algorithms
           </h5>
 
           <div class="form-check mb-2">
@@ -106,7 +586,7 @@
           <button
             type="button"
             class="btn btn-sm btn-outline-secondary w-100"
-            id="btn-select-all"
+            id="btn-select-all-models"
           >
             Select All Models
           </button>
@@ -116,7 +596,7 @@
           <h5
             class="card-title fw-bold mb-3 text-secondary text-uppercase fs-6"
           >
-            3. Hyperparameters & Settings
+            4. Hyperparameters & Settings
           </h5>
 
           <div class="mb-3">
@@ -145,17 +625,13 @@
             <label class="form-check-label fw-semibold" for="param_positive"
               >Enforce Positive Coefficients</label
             >
-            <div class="form-text text-xs">
-              Forces model coefficients to be non-negative (useful for raw
-              layouts).
-            </div>
           </div>
 
           <div class="mb-2">
             <label for="test_size" class="form-label fw-semibold text-sm"
               >Train/Test Split</label
             >
-            <select class="form-select" id="test_size" name="test_split">
+            <select class="select form-select" id="test_size" name="test_split">
               <option value="0.8" selected>80% Train / 20% Test</option>
               <option value="0.7">70% Train / 30% Test</option>
             </select>
@@ -172,6 +648,46 @@
     </div>
 
     <div class="col-lg-8 col-md-12">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body py-3">
+          <h6 class="fw-bold text-dark mb-0">
+            Feature Multicollinearity Audit Matrix
+          </h6>
+          <small class="text-muted text-xs">
+            Loaded real-time variance mappings calculated from feature variables
+            selected on the panel.
+          </small>
+        </div>
+
+        <div
+          id="correlationMatrixContainer"
+          class="table-responsive border-top d-none"
+        >
+          <table
+            class="table table-bordered table-sm text-center align-middle mb-0 text-xs text-nowrap"
+          >
+            <thead>
+              <tr id="correlationHeaderRow"></tr>
+            </thead>
+            <tbody id="correlationTableBody" class="financial-data"></tbody>
+          </table>
+          <div
+            class="p-2 bg-light d-flex justify-content-end gap-3 text-xs text-muted border-top"
+          >
+            <span
+              ><i class="square-legend legend-inverse"></i>Inverse (-1.0)</span
+            >
+            <span
+              ><i class="square-legend legend-none"></i>No Correlation
+              (0.0)</span
+            >
+            <span
+              ><i class="square-legend legend-positive"></i>Positive (1.0)</span
+            >
+          </div>
+        </div>
+      </div>
+
       <div class="card border-0 shadow-sm mb-4">
         <div
           class="card-header bg-white py-3 d-flex justify-content-between align-items-center"
@@ -190,32 +706,7 @@
                 <th class="text-end">RMSE</th>
               </tr>
             </thead>
-            <tbody class="financial-data">
-              <tr>
-                <td class="fw-bold text-dark">
-                  LassoCV
-                  <span class="badge bg-light text-dark text-xs p-1"
-                    >Metrics</span
-                  >
-                </td>
-                <td class="text-end quant-up">0.4521</td>
-                <td class="text-end">12.40%</td>
-                <td class="text-end">4.12</td>
-                <td class="text-end">5.84</td>
-              </tr>
-              <tr class="table-light">
-                <td class="fw-bold text-dark">
-                  Ridge
-                  <span class="badge bg-light text-dark text-xs p-1"
-                    >Metrics</span
-                  >
-                </td>
-                <td class="text-end quant-up">0.4190</td>
-                <td class="text-end">14.15%</td>
-                <td class="text-end">4.89</td>
-                <td class="text-end">6.12</td>
-              </tr>
-            </tbody>
+            <tbody id="performanceTableBody" class="financial-data"></tbody>
           </table>
         </div>
       </div>
@@ -231,116 +722,14 @@
             class="nav nav-tabs px-3 pt-2 bg-light border-bottom-0"
             id="coefficientTabs"
             role="tablist"
-          >
-            <li class="nav-item" role="presentation">
-              <button
-                class="nav-link active fw-bold text-xs text-uppercase"
-                id="lasso-tab"
-                data-bs-toggle="tab"
-                data-bs-target="#tab-lasso"
-                type="button"
-                role="tab"
-              >
-                LassoCV
-              </button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button
-                class="nav-link fw-bold text-xs text-uppercase"
-                id="ridge-tab"
-                data-bs-toggle="tab"
-                data-bs-target="#tab-ridge"
-                type="button"
-                role="tab"
-              >
-                Ridge
-              </button>
-            </li>
-          </ul>
-
-          <div class="tab-content p-3" id="coefficientTabsContent">
-            <div
-              class="tab-pane fade show active"
-              id="tab-lasso"
-              role="tabpanel"
-            >
-              <div class="table-responsive">
-                <table class="table table-sm table-striped mb-0 text-sm">
-                  <thead>
-                    <tr>
-                      <th>Feature Attribute</th>
-                      <th class="text-end">Weight</th>
-                    </tr>
-                  </thead>
-                  <tbody class="financial-data">
-                    <tr>
-                      <td>Revenue Growth (%)</td>
-                      <td class="text-end quant-up">1.2450</td>
-                    </tr>
-                    <tr>
-                      <td>Profit Growth (%)</td>
-                      <td class="text-end quant-up">0.8920</td>
-                    </tr>
-                    <tr>
-                      <td>Net Debt / EBITDA Ratio</td>
-                      <td class="text-end quant-down">-0.4120</td>
-                    </tr>
-                    <tr>
-                      <td>Quick Ratio (%)</td>
-                      <td class="text-end text-muted">0.0000</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="tab-pane fade" id="tab-ridge" role="tabpanel">
-              <div class="table-responsive">
-                <table class="table table-sm table-striped mb-0 text-sm">
-                  <thead>
-                    <tr>
-                      <th>Feature Attribute</th>
-                      <th class="text-end">Weight</th>
-                    </tr>
-                  </thead>
-                  <tbody class="financial-data">
-                    <tr>
-                      <td>Revenue Growth (%)</td>
-                      <td class="text-end quant-up">1.0911</td>
-                    </tr>
-                    <tr>
-                      <td>Profit Growth (%)</td>
-                      <td class="text-end quant-up">0.7145</td>
-                    </tr>
-                    <tr>
-                      <td>Net Debt / EBITDA Ratio</td>
-                      <td class="text-end quant-down">-0.5512</td>
-                    </tr>
-                    <tr>
-                      <td>Quick Ratio (%)</td>
-                      <td class="text-end quant-up">0.0125</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+          ></ul>
+          <div class="tab-content p-3" id="coefficientTabsContent"></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 {% endblock %} {% block scripts %}
-<script>
-  document
-    .getElementById("btn-select-all")
-    .addEventListener("click", function () {
-      const checkboxes = document.querySelectorAll('input[name="models"]');
-      const allChecked = Array.from(checkboxes).every((cb) => cb.checked);
-      checkboxes.forEach((cb) => (cb.checked = !allChecked));
-      this.textContent = allChecked
-        ? "Select All Models"
-        : "Deselect All Models";
-    });
-</script>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/run_models.js') }}"></script>
 {% endblock %}

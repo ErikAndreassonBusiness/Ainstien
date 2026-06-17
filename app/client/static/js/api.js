@@ -76,3 +76,37 @@ async function fetchCompanyDetails(ticker) {
     return null;
   }
 }
+
+// ========================= Model Engine API Calls =========================
+
+/**
+ * Dispatches request for multidimensional variance (Correlation Matrix)
+ */
+async function fetchCorrelationMatrix(features) {
+  const response = await fetch("/api/correlation", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ features }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return await response.json();
+}
+
+/**
+ * Dispatches core payload for Machine Learning algorithms
+ */
+async function runModelingEngine(payload) {
+  const response = await fetch("/api/run-models", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return await response.json();
+}
