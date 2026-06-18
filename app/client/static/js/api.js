@@ -2,7 +2,7 @@ const host = "/api";
 /**
  * Fetches summary metrics for the dashboard table.
  */
-async function fetchMarketSummary() {
+async function fetchCompaniesSummary() {
   try {
     const route = `${host}/market-summary`;
 
@@ -75,4 +75,38 @@ async function fetchCompanyDetails(ticker) {
     console.error("API Error (Company Details):", error);
     return null;
   }
+}
+
+// ========================= Model Engine API Calls =========================
+
+/**
+ * Dispatches request for multidimensional variance (Correlation Matrix)
+ */
+async function fetchCorrelationMatrix(features) {
+  const response = await fetch("/api/correlation-matrix", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ features }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return await response.json();
+}
+
+/**
+ * Dispatches core payload for Machine Learning algorithms
+ */
+async function runModels(modelSettings) {
+  const response = await fetch("/api/run-models", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(modelSettings),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return await response.json();
 }

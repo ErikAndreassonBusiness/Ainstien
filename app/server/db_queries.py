@@ -76,3 +76,17 @@ def sort_fundamentals_from_company(company):
         key=lambda fundamental: fundamental.report_date, 
         reverse=True)
 
+def get_all_companies(): 
+    return Company.query.all()
+
+def get_all_reports(company):
+    return company.reports
+
+# ============== Models ================
+def get_fundamentals_attrbiute_names():
+    return Fundamental.get_attribute_names()
+
+def get_metrics_attrbiute_names():
+    return Metric.query.first().get_attribute_names()
+
+

@@ -37,10 +37,6 @@ We are using **`uv`** for this project. It is a modern, high-performance Python 
 
 #### 3. Database & API Setup
 
-- **Environment Variables**: Create a `.env` file in the root directory and add your SimFin API key:
-  ```text
-  SIMFIN_API_KEY=your_actual_key_here
-  ```
 - **Seed the Database**: To fetch fundamental data from SimFin and populate your local SQLite database, run:
   ```bash
   python seed.py

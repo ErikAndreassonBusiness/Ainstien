@@ -5,13 +5,32 @@
 .tracking-wider {
   letter-spacing: 0.05em;
 }
-
 .text-xs {
   font-size: 0.75rem;
 }
-
 .text-sm {
   font-size: 0.875rem;
+}
+
+/* Diagnostic Box Styling */
+.diag-box {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #6c757d;
+  border-radius: 0.375rem;
+  background-color: #212529;
+  color: #fff;
+}
+.diag-title {
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+/* Scrollable Container for Checkboxes */
+.feature-scroll {
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
 }
 
 /* Slick Quant Theme Form Adjustments */
@@ -20,7 +39,6 @@
   border-color: var(--ainstien-blue);
 }
 
-/* Chained selector to cleanly override Bootstrap's native button colors */
 .btn.btn-run {
   background-color: var(--ainstien-blue);
   color: #fff;
@@ -36,7 +54,6 @@
   box-shadow: 0 6px 12px rgba(0, 86, 179, 0.2);
 }
 
-/* Multi-Model Navigation Tabs Styling */
 .nav-tabs .nav-link {
   color: #6c757d;
   border: none;
@@ -52,5 +69,23 @@
 
 .btn-outline-dark:hover {
   background-color: var(--ainstien-dark);
-  color: #fff;
+}
+
+/* Legend Item for Correlation Table */
+.square-legend {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 3px;
+}
+
+/* Correlation Legend Colors */
+.legend-inverse {
+  background-color: #00008b;
+}
+.legend-none {
+  background-color: #f8f9fa;
+}
+.legend-positive {
+  background-color: #006400;
 }
