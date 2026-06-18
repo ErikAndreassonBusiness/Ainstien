@@ -181,4 +181,17 @@ class Metric(db.Model):
         return list(self.attribute_dict.keys())
 
     def to_dict(self):
-        return {attr_name: getattr(self, attr_name) for attr_name in self.get_attribute_names()}
+        return {
+            "revenue_growth_percent": self.revenue_growth_percent, 
+            "profit_growth_percent": self.profit_growth_percent, 
+            "quick_ratio_percent": self.quick_ratio_percent,
+            "net_debt_ebitda_ratio": self.net_debt_ebitda_ratio,
+            "equity_ratio_percent": self.equity_ratio_percent,
+            "assets_turnover_ratio": self.assets_turnover_ratio,
+            "inventory_turnover_ratio": self.inventory_turnover_ratio,
+            "roa": self.ROA,
+            "roe": self.ROE,
+            "roi": self.ROI,
+            "ebit_margin_percent": self.ebit_margin_percent,
+            "profit_margin_percent": self.profit_margin_percent
+        }
