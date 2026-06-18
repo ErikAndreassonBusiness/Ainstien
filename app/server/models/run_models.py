@@ -30,15 +30,15 @@ def get_features_from_db(chosen_features, features):
     # --- Build feature matrix vector ---
     features = []
     for company in db.session.query(Company).all():
-        for report in company.reports:
+        for report in company.reports: 
 
             fundamental_data = report.fundamental.to_dict()
             for feature in chosen_features:
                 features.append(fundamental_data.get(feature))
             
-            metric_data = report.metric.to_dict()
-            for feature in chosen_features:
-                features.append(metric_data.get(feature))
+            # metric_data = report.metric.to_dict()
+            # for feature in chosen_features:
+            #     features.append(metric_data.get(feature))
     
     return features
 
@@ -83,6 +83,7 @@ def run_model(settings):
     for model in settings.get("chosen_models"):
         if model == "Ridge":
             model = RidgeCV(cv=settings.get("cv_folds"))
+
         elif model == "Lasso":
             model = LassoCV(
                 cv=settings.get("cv_folds"), 

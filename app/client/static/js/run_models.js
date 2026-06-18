@@ -109,7 +109,7 @@ function renderCorrelationMatrix(data, selectedFeatures) {
         bgColor = "#006400";
         textColor = "white";
       } else if (value < -0.7) {
-        bgColor = "#00008b";
+        bgColor = "var(--ainstien-blue)";
         textColor = "white";
       }
 
@@ -131,20 +131,18 @@ function renderPerformanceMatrix(performanceData) {
 
   tbody.innerHTML = "";
 
-  // Assuming 'performanceData' is an object with a 'metrics' property containing the array of metric objects
-  performanceData.metrics.forEach((metric, index) => {
+  performanceData.model_name.forEach(() => {
     const tr = document.createElement("tr");
-    if (index % 2 !== 0) tr.classList.add("table-light");
 
     tr.innerHTML = `
       <td class="fw-bold text-dark">
-        ${metric.model_name}
+        ${model_name}
         <span class="badge bg-light text-dark text-xs p-1">Metrics</span>
       </td>
-      <td class="text-end ${metric.r2 > 0 ? "quant-up" : "quant-down"}">${metric.r2.toFixed(4)}</td>
-      <td class="text-end">${metric.mape}%</td>
-      <td class="text-end">${metric.mae.toFixed(2)}</td>
-      <td class="text-end">${metric.rmse.toFixed(2)}</td>
+      <td class="text-end ${performanceData.r2 > 0 ? "quant-up" : "quant-down"}">${performanceData.r2.toFixed(4)}</td>
+      <td class="text-end">${performanceData.mape}%</td>
+      <td class="text-end">${performanceData.mae.toFixed(2)}</td>
+      <td class="text-end">${performanceData.rmse.toFixed(2)}</td>
     `;
     tbody.appendChild(tr);
   });
