@@ -1,12 +1,27 @@
 # app/server/routes.py
-from flask import render_template, current_app as app, jsonify, redirect, url_for
-from .db_queries import (
-    get_all_tickers_in_order, 
-    get_company_by_ticker, 
-    sort_fundamentals_from_company
+from flask import (
+    render_template, 
+    current_app as app, 
+    jsonify, 
+    redirect, 
+    url_for, 
+    request
 )
+
 from .live_market import get_live_market_data
-from .db_queries import get_dashboard_market_data, get_company_by_ticker, get_company_fundamentals_history
+
+from .db_queries import (
+    get_dashboard_market_data, 
+    get_company_fundamentals_history, 
+    get_fundamentals_attrbiute_names, 
+    get_metrics_attrbiute_names, 
+    get_metrics_attrbiute_names
+)
+
+from .models.run_models import (
+    run_model, 
+    get_correlation_matrix
+)
 
 # ========== API routes ============
 
@@ -29,8 +44,7 @@ def api_market_data(ticker = None):
 # --- Run Models Page ---
 @app.route('/api/correlation-matrix', methods = ['POST'])
 def correlation_matrix():
-    data = request.get_json()
-    return get_correlation_matrix(data)
+    return get_correlation_matrix(request.get_json())
 
 @app.route('/api/run-models', methods = ['POST'])
 def run_models():
@@ -45,6 +59,14 @@ def run_models():
     }
     
     return jsonify(run_model(settings))
+
+@app.route('/api/feature-names', methods = ['GET'])
+def feature_names():
+    return jsonify({
+        "fundamental_features": get_fundamentals_attrbiute_names(),
+        "metric_features": get_metrics_attrbiute_names()
+    })
+
 # ===== Standard routes =======
 
 @app.route('/')

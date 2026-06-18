@@ -4,8 +4,16 @@ from sklearn.linear_model import LassoCV, RidgeCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, mean_absolute_percentage_error
 
+from flask import jsonify
+
 import yfinance as yf
 import numpy as np
+import pandas as pd
+
+from app.server.db_queries import (
+    get_all_companies, 
+    get_all_reports
+)
 
 # model = RidgeCV(
 #     cv=5)
@@ -114,6 +122,27 @@ def run_model(settings):
         }
 
 def get_correlation_matrix(data):
-    features = data.get('features')
-    #matrix = fetchCorrelationMatrix(features) SKA BYGGAS
-    return jsonify({'matrix': matrix})
+    attributes_to_calc = []
+
+    for company in get_all_companies():
+        for report in get_all_reports(company):
+            fundamental_data = report.fundamental.to_dict()
+            #metric_data = report.metric.to_dict()
+
+            feature_row = {}
+            for feature in data.get("features"):
+                feature_row[feature] = fundamental_data[feature]
+                #metrics = metric_data.get(feature)
+                #attributes_to_calc.append(metrics)
+
+            attributes_to_calc.append(feature_row)
+
+    # Build correlation matrix
+    df = pd.DataFrame(attributes_to_calc)  # Transpose to get features as columns
+    matrix = df.corr().values.tolist()
+
+    matrix_dict = {
+        "matrix": matrix
+    }
+    
+    return jsonify(matrix_dict)

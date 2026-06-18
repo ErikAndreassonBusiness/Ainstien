@@ -41,10 +41,6 @@ class Report(db.Model):
             "metrics": self.metric.to_dict() if self.metric else None
         }
 
-    #  KAN BLI DUBBELRELATIONER OM DESSA ÄR MED
-    # fundamental_id: Mapped[int] = mapped_column(ForeignKey('fundamental.id'), nullable=False)
-    # metric_id: Mapped[int] = mapped_column(ForeignKey('metric.id'), nullable=False)
-
 class Fundamental(db.Model): #4 år bak
     __tablename__ = "fundamental"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -79,6 +75,27 @@ class Fundamental(db.Model): #4 år bak
     # Anläggsningstillgångar
     fixed_assets: Mapped[float] = mapped_column()
     goodwill: Mapped[float] = mapped_column()
+
+    attribute_dict= {
+        "revenue": revenue,
+        "depreciation": depreciation,
+        "ebitda": EBITDA,
+        "ebit": EBIT,
+        "net_income": net_income,
+        "total_assets": total_assets,
+        "total_equity": total_equity,
+        "short_term_debt": short_term_debt, 
+        "long_term_debt": long_term_debt,
+        "total_debt": total_debt,
+        "current_assets": current_assets,
+        "fixed_assets": fixed_assets,
+        "cash": cash,
+        "inventory": inventory,
+        "account_receiveables": account_receiveables
+    }
+
+    def get_attribute_names(self):
+        return list(self.attribute_dict.keys())
 
     def to_dict(self):
         return {
@@ -145,20 +162,23 @@ class Metric(db.Model):
     ebit_margin_percent: Mapped[float] = mapped_column(nullable=False)
     profit_margin_percent: Mapped[float] = mapped_column(nullable=False)
 
+    attribute_dict = {
+        "revenue_growth_percent": revenue_growth_percent, 
+        "profit_growth_percent": profit_growth_percent, 
+        "quick_ratio_percent": quick_ratio_percent,
+        "net_debt_ebitda_ratio": net_debt_ebitda_ratio,
+        "equity_ratio_percent": equity_ratio_percent,
+        "assets_turnover_ratio": assets_turnover_ratio,
+        "inventory_turnover_ratio": inventory_turnover_ratio,
+        "roa": ROA,
+        "roe": ROE,
+        "roi": ROI,
+        "ebit_margin_percent": ebit_margin_percent,
+        "profit_margin_percent": profit_margin_percent
+    }
+
+    def get_attribute_names(self):
+        return list(self.attribute_dict.keys())
+
     def to_dict(self):
-        return {
-            "id": self.id,
-            "report_id": self.report_id,
-            "revenue_growth_percent": self.revenue_growth_percent, 
-            "profit_growth_percent": self.profit_growth_percent, 
-            "quick_ratio_percent": self.quick_ratio_percent,
-            "net_debt_ebitda_ratio": self.net_debt_ebitda_ratio,
-            "equity_ratio_percent": self.equity_ratio_percent,
-            "assets_turnover_ratio": self.assets_turnover_ratio,
-            "inventory_turnover_ratio": self.inventory_turnover_ratio,
-            "roa": self.ROA,
-            "roe": self.ROE,
-            "roi": self.ROI,
-            "ebit_margin_percent": self.ebit_margin_percent,
-            "profit_margin_percent": self.profit_margin_percent
-        }
+        return {attr_name: getattr(self, attr_name) for attr_name in self.get_attribute_names()}

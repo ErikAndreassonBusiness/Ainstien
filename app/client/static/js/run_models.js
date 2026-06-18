@@ -19,7 +19,7 @@ function initRunModelsPage() {
   // --- Multicollinearity Button ---
   const btnLoadCorrelation = document.getElementById("btn-load-correlation");
   if (btnLoadCorrelation) {
-    btnLoadCorrelation.addEventListener("click", handleCorrelationMatrix);
+    btnLoadCorrelation.addEventListener("click", getCorrelationMatrix);
   }
 
   // --- Modeling Button ---
@@ -39,7 +39,7 @@ async function getCorrelationMatrix() {
   try {
     const correlationData = await fetchCorrelationMatrix(selectedFeatures);
     if (correlationData) {
-      renderCorrelationMatrix(correlationData);
+      renderCorrelationMatrix(correlationData, selectedFeatures);
     }
   } catch (error) {
     console.error("Correlation dataset engine failure:", error);
@@ -83,7 +83,7 @@ async function getModelResults(event) {
 /**
  * Renders the multidimensional correlation grid
  */
-function renderCorrelationMatrix(data) {
+function renderCorrelationMatrix(data, selectedFeatures) {
   const container = document.getElementById("correlationMatrixContainer");
   const thead = document.getElementById("correlationHeaderRow");
   const tbody = document.getElementById("correlationTableBody");
@@ -93,13 +93,13 @@ function renderCorrelationMatrix(data) {
   thead.innerHTML = "<th>Feature</th>";
   tbody.innerHTML = "";
 
-  data.features.forEach((feat) => {
-    thead.innerHTML += `<th>${feat}</th>`;
+  selectedFeatures.forEach((feature) => {
+    thead.innerHTML += `<th>${feature}</th>`;
   });
 
   data.matrix.forEach((row, i) => {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td class="fw-bold text-start">${data.features[i]}</td>`;
+    tr.innerHTML = `<td class="fw-bold text-start">${selectedFeatures[i]}</td>`;
 
     row.forEach((value) => {
       // Color coding logic based on correlation value
