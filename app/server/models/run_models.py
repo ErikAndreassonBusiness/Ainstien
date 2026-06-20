@@ -26,19 +26,17 @@ from app.server.db_queries import (
 scaler = StandardScaler()
 
 def get_features_from_db(chosen_features, features):
-
-    # --- Build feature matrix vector ---
     features = []
     for company in db.session.query(Company).all():
         for report in company.reports: 
-
             fundamental_data = report.fundamental.to_dict()
-            for feature in chosen_features:
-                features.append(fundamental_data.get(feature))
             
-            # metric_data = report.metric.to_dict()
-            # for feature in chosen_features:
-            #     features.append(metric_data.get(feature))
+            report_features = []
+            for feature in chosen_features:
+                report_features.append(fundamental_data.get(feature))
+            
+            #add metrcis as well
+            features.append(report_features)
     
     return features
 
@@ -58,6 +56,7 @@ def get_target_from_db(chosen_target):
     return targets
     
 def run_model(settings): 
+    print("Running model with settings:", settings)
     features = get_features_from_db(settings.get("chosen_features"), settings.get("features"))
     target = get_target_from_db(settings.get("chosen_target"))
 
@@ -81,25 +80,25 @@ def run_model(settings):
     coefficients_dict = {}
 
     for model in settings.get("chosen_models"):
-        if model == "Ridge":
-            model = RidgeCV(cv=settings.get("cv_folds"))
+        if model == "ridge":
+            model = RidgeCV(cv=int(settings.get("cv_folds")))
 
-        elif model == "Lasso":
+        elif model == "lasso":
             model = LassoCV(
-                cv=settings.get("cv_folds"), 
+                cv=int(settings.get("cv_folds")), 
                 random_state=42, 
-                positive=settings.get("positive_coefficients") == "on")
+                positive=True)
 
         model.fit(X_train_scaled, y_train)
 
         # --- Compare against test data ---
         predictions = model.predict(X_test_scaled)
 
-        actual_y_test = np.exp(y_test)
-
-        if settings.get("log_transform_target"):
+        if settings.get("log_transform_target") == "on":
+            actual_y_test = np.exp(y_test)
             actual_predictions = np.exp(predictions)
         else:
+            actual_y_test = y_test
             actual_predictions = predictions
 
         r2 = r2_score(actual_y_test, actual_predictions)

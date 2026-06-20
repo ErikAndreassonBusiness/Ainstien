@@ -131,18 +131,18 @@ function renderPerformanceMatrix(performanceData) {
 
   tbody.innerHTML = "";
 
-  performanceData.model_name.forEach(() => {
+  performanceData.forEach((model) => {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
       <td class="fw-bold text-dark">
-        ${model_name}
+        ${model.model_name}
         <span class="badge bg-light text-dark text-xs p-1">Metrics</span>
       </td>
-      <td class="text-end ${performanceData.r2 > 0 ? "quant-up" : "quant-down"}">${performanceData.r2.toFixed(4)}</td>
-      <td class="text-end">${performanceData.mape}%</td>
-      <td class="text-end">${performanceData.mae.toFixed(2)}</td>
-      <td class="text-end">${performanceData.rmse.toFixed(2)}</td>
+      <td class="text-end ${model.r2 > 0 ? "quant-up" : "quant-down"}">${model.r2.toFixed(4)}</td>
+      <td class="text-end">${model.mape}%</td>
+      <td class="text-end">${model.mae.toFixed(2)}</td>
+      <td class="text-end">${model.rmse.toFixed(2)}</td>
     `;
     tbody.appendChild(tr);
   });
