@@ -12,21 +12,51 @@ import pandas as pd
 
 from app.server.db_queries import (
     get_all_companies, 
-    get_all_reports
+    get_all_reports, 
+    get_metrics_attrbiute_names
 )
 
-def get_features_from_db(chosen_features):
+def select_fundamental_features(report, chosen_features, features):
+    fundamental_data = report.fundamental.to_dict()
+    
+    report_features = []
+    for feature in chosen_features:
+        if feature in fundamental_data:
+            report_features.append(fundamental_data.get(feature))
+    
+    features.append(report_features)
+
+def select_all_features(report, chosen_features, features):
+    fundamental_data = report.fundamental.to_dict()
+    metric_data = report.metric.to_dict()
+    
+    report_features = []
+    for feature in chosen_features:
+        if feature in fundamental_data:
+            report_features.append(fundamental_data.get(feature))
+
+        elif feature in metric_data:
+            report_features.append(metric_data.get(feature))
+    
+    features.append(report_features)
+
+def get_features_from_db(chosen_features, contains_metrics):
     features = []
-    for company in db.session.query(Company).all():
-        for report in company.reports: 
-            fundamental_data = report.fundamental.to_dict()
-            
-            report_features = []
-            for feature in chosen_features:
-                report_features.append(fundamental_data.get(feature))
-            
-            #add metrcis as well
-            features.append(report_features)
+
+    for company in get_all_companies():
+        if contains_metrics:
+            for report in get_all_reports(company)[1:]: 
+                select_all_features(
+                    report=report, 
+                    chosen_features=chosen_features, 
+                    features=features)
+
+        else: 
+            for report in get_all_reports(company): 
+                select_fundamental_features(
+                    report=report, 
+                    chosen_features=chosen_features, 
+                    features=features)
     
     return features
 
@@ -46,7 +76,7 @@ def get_target_from_db(chosen_target):
     return targets
 
 def get_features_and_target(settings): 
-    features = get_features_from_db(settings.get("chosen_features"))
+    features = get_features_from_db(settings.get("chosen_features"), settings.get("contains_metrics"))
     target = get_target_from_db(settings.get("chosen_target"))
 
     return features, target
@@ -112,14 +142,18 @@ def calc_errors(actual_y_test, actual_predictions):
     return r2, mape, mae, rmse
 
 def get_settings(data):
+    chosen_features = data.get('features')
+    all_metrics = get_metrics_attrbiute_names()
+
     return {
         "chosen_models": data.get('models'),
-        "chosen_features": data.get('features'),
+        "chosen_features": chosen_features,
+        "contains_metrics": set(chosen_features).isdisjoint(all_metrics), #True if overlapps
         "chosen_target": data.get('target_variable'),
         "log_transform_target": data.get('log_transform'),
         "cv_folds": data.get('cv_folds'), 
         "positive_coef": data.get('positive_coefficients'),
-        "split": data.get('test_split')
+        "split": data.get('test_split'), 
     }
 
 def config_data(settings, features, target):
@@ -164,8 +198,9 @@ def calc_all_models(settings, X_train_scaled, X_test_scaled, y_train, y_test):
     return performance_list, coefficients_dict
 
 def run_models(data): 
+    print(data)
     settings = get_settings(data)
-    print("My settings: ", settings)
+
     # --- Feature and Target selection ---
     features, target = get_features_and_target(settings=settings)
 

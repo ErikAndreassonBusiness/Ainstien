@@ -152,11 +152,29 @@ function renderTargets(targetArray, containerId) {
  * Get Multicollinearity Correlation Matrix
  */
 async function getCorrelationMatrix() {
-  const selectedFeatures = getCheckedValues('input[name="features"]');
+  const fundamentalFeatures = Array.from(
+    document.querySelectorAll(
+      '#fundamentals-container input[type="checkbox"]:checked',
+    ),
+  ).map((cb) => cb.value);
+
+  const metricFeatures = Array.from(
+    document.querySelectorAll(
+      '#metrics-container input[type="checkbox"]:checked',
+    ),
+  ).map((cb) => cb.value);
+
+  // Combine
+  const selectedFeatures = [...fundamentalFeatures, ...metricFeatures];
   if (selectedFeatures.length === 0) return;
 
+  const data = {
+    fundamental_features: fundamentalFeatures,
+    metric_features: metricFeatures,
+  };
+
   try {
-    const correlationData = await fetchCorrelationMatrix(selectedFeatures);
+    const correlationData = await fetchCorrelationMatrix(data);
     if (correlationData) {
       renderCorrelationMatrix(correlationData, selectedFeatures);
     }
@@ -166,27 +184,58 @@ async function getCorrelationMatrix() {
 }
 
 /**
- * Get the models results
+ * Get the models results with robust feature type separation
  */
 async function getModelResults(event) {
-  event.preventDefault(); // Prevent standard form postback
+  event.preventDefault();
 
   const form = event.target;
-
-  // --- Collect data via form and present in JSON format from backend ---
   const formData = new FormData(form);
   const modelSettings = Object.fromEntries(formData.entries());
-  modelSettings.features = getCheckedValues('input[name="features"]');
+
+  const allCheckedElements = Array.from(
+    document.querySelectorAll('input[name="features"]:checked'),
+  );
+
+  const masterFeatures = await fetchFeatureNames();
+
+  if (masterFeatures) {
+    const fundamentalSet = new Set(masterFeatures.fundamental_features);
+    const metricSet = new Set(masterFeatures.metric_features);
+
+    // 3. Map values precisely by validating their existence in the master lists
+    modelSettings.fundamental_features = allCheckedElements
+      .map((cb) => cb.value)
+      .filter((val) => fundamentalSet.has(val));
+
+    modelSettings.metric_features = allCheckedElements
+      .map((cb) => cb.value)
+      .filter((val) => metricSet.has(val));
+  } else {
+    // Fallback if the network request fails: default to an empty array setup
+    modelSettings.fundamental_features = [];
+    modelSettings.metric_features = [];
+  }
+
+  // 4. Set the combined features list that scikit-learn expects
+  modelSettings.features = allCheckedElements.map((cb) => cb.value);
   modelSettings.models = getCheckedValues('input[name="models"]');
 
-  // Change button state to show loading
+  // Guard Clause: Prevent submission if nothing is checked to stop sklearn crashes
+  if (modelSettings.features.length === 0) {
+    alert(
+      "Please select at least one feature before running the modeling engine.",
+    );
+    return;
+  }
+
   const submitBtn = form.querySelector('button[type="submit"]');
   const originalText = submitBtn.textContent;
   submitBtn.textContent = "Running Engine...";
   submitBtn.disabled = true;
 
   try {
-    console.log(modelSettings);
+    console.log("Payload sent to backend:", modelSettings);
     const results = await runModels(modelSettings);
     if (results) {
       renderPerformanceMatrix(results.performance);

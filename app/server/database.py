@@ -78,7 +78,7 @@ class Fundamental(db.Model): #4 år bak
 
     def get_attribute_dict(self): 
         return {
-          "revenue": self.revenue,
+            "revenue": self.revenue,
             "depreciation": self.depreciation,
             "ebitda": self.EBITDA,
             "ebit": self.EBIT,
@@ -95,8 +95,10 @@ class Fundamental(db.Model): #4 år bak
             "account_receiveables": self.account_receiveables
         }
 
-    def get_attribute_names(self):
-        return list(self.get_attribute_dict().keys())
+    @classmethod
+    def get_attribute_names(cls):
+        ignored_keys = {'id', 'report_id'}
+        return [col.key for col in cls.__table__.columns if col.key not in ignored_keys]
 
     def to_dict(self):
         return self.get_attribute_dict()
@@ -163,8 +165,10 @@ class Metric(db.Model):
             "profit_margin_percent": self.profit_margin_percent
         }
 
-    def get_attribute_names(self):
-        return list(self.get_attribute_dict().keys())
+    @classmethod
+    def get_attribute_names(cls):
+        ignored_keys = {'id', 'report_id'}
+        return [col.key for col in cls.__table__.columns if col.key not in ignored_keys]
 
     def to_dict(self):
         return self.get_attribute_dict()

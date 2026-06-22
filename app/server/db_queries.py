@@ -1,7 +1,7 @@
 # app/server/db_queries.py
 
 from app import db
-from .database import Company, Fundamental, Report
+from .database import Company, Fundamental, Metric, Report
 from sqlalchemy.orm import joinedload
 
 # ============== Companies ================
@@ -87,6 +87,6 @@ def get_fundamentals_attrbiute_names():
     return Fundamental.get_attribute_names()
 
 def get_metrics_attrbiute_names():
-    return Metric.query.first().get_attribute_names()
+    return Metric.get_attribute_names()
 
 
