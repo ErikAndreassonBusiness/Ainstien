@@ -54,7 +54,7 @@ async function getModelResults(event) {
 
   const form = event.target;
 
-  // --- Collect data via form and present in in JSON format for backend ---
+  // --- Collect data via form and present in in JSON format from backend ---
   const formData = new FormData(form);
   const modelSettings = Object.fromEntries(formData.entries());
   modelSettings.features = getCheckedValues('input[name="features"]');
@@ -67,6 +67,7 @@ async function getModelResults(event) {
   submitBtn.disabled = true;
 
   try {
+    console.log(modelSettings);
     const results = await runModels(modelSettings);
     if (results) {
       renderPerformanceMatrix(results.performance);
@@ -131,6 +132,8 @@ function renderPerformanceMatrix(performanceData) {
 
   tbody.innerHTML = "";
 
+  console.log("Performance rendering initialized", performanceData);
+
   performanceData.forEach((model) => {
     const tr = document.createElement("tr");
 
@@ -152,8 +155,6 @@ function renderPerformanceMatrix(performanceData) {
  * Renders the coefficient tabs and internal tables
  */
 function renderCoefficientsMatrix(coefficientsData) {
-  // Dynamic generation logic for tabs and tables goes here
-  // based on your exact JSON response format from the backend.
   console.log("Coefficients rendering initialized", coefficientsData);
 }
 
