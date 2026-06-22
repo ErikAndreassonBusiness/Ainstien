@@ -110,3 +110,45 @@ async function runModels(modelSettings) {
   }
   return await response.json();
 }
+
+/**
+ * Fetches the available fundamental and metric feature lists from the database.
+ */
+async function fetchFeatureNames() {
+  try {
+    const response = await fetch(`${host}/feature-names`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch feature configurations. Status: ${response.status}`,
+      );
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("API Error (Feature Names):", error);
+    return null;
+  }
+}
+
+/**
+ * Fetches the registered valid predictive objective target settings.
+ */
+async function fetchTargetNames() {
+  try {
+    const response = await fetch(`${host}/target-names`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch target parameters. Status: ${response.status}`,
+      );
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("API Error (Target Names):", error);
+    return null;
+  }
+}

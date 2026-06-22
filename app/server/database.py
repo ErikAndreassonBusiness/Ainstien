@@ -76,30 +76,9 @@ class Fundamental(db.Model): #4 år bak
     fixed_assets: Mapped[float] = mapped_column()
     goodwill: Mapped[float] = mapped_column()
 
-    attribute_dict= {
-        "revenue": revenue,
-        "depreciation": depreciation,
-        "ebitda": EBITDA,
-        "ebit": EBIT,
-        "net_income": net_income,
-        "total_assets": total_assets,
-        "total_equity": total_equity,
-        "short_term_debt": short_term_debt, 
-        "long_term_debt": long_term_debt,
-        "total_debt": total_debt,
-        "current_assets": current_assets,
-        "fixed_assets": fixed_assets,
-        "cash": cash,
-        "inventory": inventory,
-        "account_receiveables": account_receiveables
-    }
-
-    def get_attribute_names(self):
-        return list(self.attribute_dict.keys())
-
-    def to_dict(self):
+    def get_attribute_dict(self): 
         return {
-            "revenue": self.revenue,
+          "revenue": self.revenue,
             "depreciation": self.depreciation,
             "ebitda": self.EBITDA,
             "ebit": self.EBIT,
@@ -115,6 +94,12 @@ class Fundamental(db.Model): #4 år bak
             "inventory": self.inventory,
             "account_receiveables": self.account_receiveables
         }
+
+    def get_attribute_names(self):
+        return list(self.get_attribute_dict().keys())
+
+    def to_dict(self):
+        return self.get_attribute_dict()
 
 class Metric(db.Model):
     __tablename__ = "metric"
@@ -162,25 +147,7 @@ class Metric(db.Model):
     ebit_margin_percent: Mapped[float] = mapped_column(nullable=False)
     profit_margin_percent: Mapped[float] = mapped_column(nullable=False)
 
-    attribute_dict = {
-        "revenue_growth_percent": revenue_growth_percent, 
-        "profit_growth_percent": profit_growth_percent, 
-        "quick_ratio_percent": quick_ratio_percent,
-        "net_debt_ebitda_ratio": net_debt_ebitda_ratio,
-        "equity_ratio_percent": equity_ratio_percent,
-        "assets_turnover_ratio": assets_turnover_ratio,
-        "inventory_turnover_ratio": inventory_turnover_ratio,
-        "roa": ROA,
-        "roe": ROE,
-        "roi": ROI,
-        "ebit_margin_percent": ebit_margin_percent,
-        "profit_margin_percent": profit_margin_percent
-    }
-
-    def get_attribute_names(self):
-        return list(self.attribute_dict.keys())
-
-    def to_dict(self):
+    def get_attribute_dict(self):
         return {
             "revenue_growth_percent": self.revenue_growth_percent, 
             "profit_growth_percent": self.profit_growth_percent, 
@@ -195,3 +162,9 @@ class Metric(db.Model):
             "ebit_margin_percent": self.ebit_margin_percent,
             "profit_margin_percent": self.profit_margin_percent
         }
+
+    def get_attribute_names(self):
+        return list(self.get_attribute_dict().keys())
+
+    def to_dict(self):
+        return self.get_attribute_dict()

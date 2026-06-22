@@ -18,10 +18,8 @@ from .db_queries import (
     get_metrics_attrbiute_names
 )
 
-from .models.run_models import (
-    run_models, 
-    get_correlation_matrix
-)
+from .models.run_models import run_models
+from .models.model_extras import get_correlation_matrix, get_target_names
 
 # ========== API routes ============
 
@@ -44,11 +42,17 @@ def api_market_data(ticker = None):
 # --- Run Models Page ---
 @app.route('/api/correlation-matrix', methods = ['POST'])
 def correlation_matrix():
-    return get_correlation_matrix(request.get_json())
+    return jsonify(get_correlation_matrix(request.get_json()))
 
 @app.route('/api/run-models', methods = ['POST'])
 def model():
     return jsonify(run_models(request.get_json()))
+
+from flask import jsonify
+
+@app.route('/api/model-features', methods=['GET'])
+def get_model_features():
+    return jsonify(get_)
 
 @app.route('/api/feature-names', methods = ['GET'])
 def feature_names():
@@ -56,6 +60,10 @@ def feature_names():
         "fundamental_features": get_fundamentals_attrbiute_names(),
         "metric_features": get_metrics_attrbiute_names()
     })
+
+@app.route('/api/target-names', methods = ['GET'])
+def target_names(): 
+    return jsonify(get_target_names())
 
 # ===== Standard routes =======
 

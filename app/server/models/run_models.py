@@ -185,31 +185,3 @@ def run_models(data):
         "performance": performance_list,
         "coefficients": coefficients_dict
     }
-
-
-# ======= Run Models Extra features ========
-def get_correlation_matrix(data):
-    attributes_to_calc = []
-
-    for company in get_all_companies():
-        for report in get_all_reports(company):
-            fundamental_data = report.fundamental.to_dict()
-            #metric_data = report.metric.to_dict()
-
-            feature_row = {}
-            for feature in data.get("features"):
-                feature_row[feature] = fundamental_data[feature]
-                #metrics = metric_data.get(feature)
-                #attributes_to_calc.append(metrics)
-
-            attributes_to_calc.append(feature_row)
-
-    # Build correlation matrix
-    df = pd.DataFrame(attributes_to_calc)  # Transpose to get features as columns
-    matrix = df.corr().values.tolist()
-
-    matrix_dict = {
-        "matrix": matrix
-    }
-    
-    return jsonify(matrix_dict)

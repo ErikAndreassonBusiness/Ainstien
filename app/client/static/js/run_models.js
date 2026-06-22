@@ -1,9 +1,86 @@
 // app/static/js/run_models.js
 
+const FEATURE_LABEL_MAP = {
+  // Fundamentals
+  revenue: "Revenue",
+  depreciation: "Depreciation",
+  ebitda: "EBITDA",
+  ebit: "EBIT",
+  net_income: "Net Income",
+  total_assets: "Total Assets",
+  total_equity: "Total Equity",
+  short_term_debt: "Short Term Debt",
+  long_term_debt: "Long Term Debt",
+  total_debt: "Total Debt",
+  current_assets: "Current Assets",
+  fixed_assets: "Fixed Assets",
+  cash: "Cash",
+  inventory: "Inventory",
+  account_receiveables: "Account Receivables",
+
+  // Metrics
+  revenue_growth_percent: "Revenue Growth (%)",
+  profit_growth_percent: "Profit Growth (%)",
+  quick_ratio_percent: "Quick Ratio (%)",
+  net_debt_ebitda_ratio: "Net Debt / EBITDA",
+  equity_ratio_percent: "Equity Ratio (%)",
+  assets_turnover_ratio: "Assets Turnover Ratio",
+  inventory_turnover_ratio: "Inventory Turnover Ratio",
+  roa: "ROA",
+  roe: "ROE",
+  roi: "ROI",
+  ebit_margin_percent: "EBIT Margin (%)",
+  profit_margin_percent: "Profit Margin (%)",
+
+  // Targets
+  future_price: "Future Price Target",
+  future_growth: "Future Growth Target",
+};
+
+// Fallback function
+function formatFeatureLabel(featureKey) {
+  if (FEATURE_LABEL_MAP[featureKey]) {
+    return FEATURE_LABEL_MAP[featureKey];
+  }
+
+  return featureKey
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 /**
  * Main function: Runs the page setup
  */
-function initRunModelsPage() {
+async function initRunModelsPage() {
+  try {
+    const [featuresData, targetsData] = await Promise.all([
+      fetchFeatureNames(),
+      fetchTargetNames(),
+    ]);
+
+    if (featuresData) {
+      renderCheckboxes(
+        featuresData.fundamental_features,
+        "fundamentals-container",
+        "features",
+      );
+      renderCheckboxes(
+        featuresData.metric_features,
+        "metrics-container",
+        "features",
+      );
+    }
+    if (targetsData && targetsData.targets) {
+      renderTargets(targetsData.targets, "targets-container");
+    }
+  } catch (error) {
+    console.error(
+      "Initialization failure during runtime layout creation:",
+      error,
+    );
+  }
+
   // Setup interface toggles
   setupCheckboxToggle(
     "btn-select-all-models",
@@ -27,6 +104,48 @@ function initRunModelsPage() {
   if (form) {
     form.addEventListener("submit", getModelResults);
   }
+}
+
+/**
+ * Helper function to inject checkboxes into scrolling features viewport panels
+ */
+function renderCheckboxes(featureArray, containerId, inputName) {
+  const container = document.getElementById(containerId);
+  if (!container || !featureArray) return;
+  container.innerHTML = "";
+
+  featureArray.forEach((feature) => {
+    const cleanLabel = formatFeatureLabel(feature);
+    const div = document.createElement("div");
+    div.className = "form-check mb-2";
+    div.innerHTML = `
+      <input class="form-check-input" type="checkbox" name="${inputName}" value="${feature}" id="feat_${feature}" checked />
+      <label class="form-check-label fw-semibold text-sm" for="feat_${feature}">${cleanLabel}</label>
+    `;
+    container.appendChild(div);
+  });
+}
+
+/**
+ * Helper function to inject targets radio options
+ */
+function renderTargets(targetArray, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container || !targetArray) return;
+  container.innerHTML = "";
+
+  targetArray.forEach((target, index) => {
+    const cleanLabel = FEATURE_LABEL_MAP[target.value] || target.label_fallback;
+    const isChecked = index === 0 ? "checked" : "";
+
+    const div = document.createElement("div");
+    div.className = "form-check mb-2";
+    div.innerHTML = `
+      <input type="radio" class="form-check-input" name="target_variable" id="target_${target.value}" value="${target.value}" ${isChecked} />
+      <label class="form-check-label fw-semibold text-sm" for="target_${target.value}">${cleanLabel}</label>
+    `;
+    container.appendChild(div);
+  });
 }
 
 /**
@@ -54,7 +173,7 @@ async function getModelResults(event) {
 
   const form = event.target;
 
-  // --- Collect data via form and present in in JSON format from backend ---
+  // --- Collect data via form and present in JSON format from backend ---
   const formData = new FormData(form);
   const modelSettings = Object.fromEntries(formData.entries());
   modelSettings.features = getCheckedValues('input[name="features"]');
@@ -95,12 +214,14 @@ function renderCorrelationMatrix(data, selectedFeatures) {
   tbody.innerHTML = "";
 
   selectedFeatures.forEach((feature) => {
-    thead.innerHTML += `<th>${feature}</th>`;
+    // Translate technical name into title string
+    thead.innerHTML += `<th>${formatFeatureLabel(feature)}</th>`;
   });
 
   data.matrix.forEach((row, i) => {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td class="fw-bold text-start">${selectedFeatures[i]}</td>`;
+    // Translate row title technical name into clean text
+    tr.innerHTML = `<td class="fw-bold text-start">${formatFeatureLabel(selectedFeatures[i])}</td>`;
 
     row.forEach((value) => {
       // Color coding logic based on correlation value
@@ -140,7 +261,6 @@ function renderPerformanceMatrix(performanceData) {
     tr.innerHTML = `
       <td class="fw-bold text-dark">
         ${model.model_name}
-        <span class="badge bg-light text-dark text-xs p-1">Metrics</span>
       </td>
       <td class="text-end ${model.r2 > 0 ? "quant-up" : "quant-down"}">${model.r2.toFixed(4)}</td>
       <td class="text-end">${model.mape}%</td>
@@ -152,10 +272,119 @@ function renderPerformanceMatrix(performanceData) {
 }
 
 /**
+ * Helper: Maps selected feature values to their corresponding UI text labels
+ */
+function getFeatureLabels(selector) {
+  return Array.from(document.querySelectorAll(`${selector}:checked`)).map(
+    (cb) => {
+      const label = document.querySelector(`label[for="${cb.id}"]`);
+      return {
+        value: cb.value,
+        label: label ? label.textContent.trim() : cb.value,
+      };
+    },
+  );
+}
+
+/**
  * Renders the coefficient tabs and internal tables
  */
 function renderCoefficientsMatrix(coefficientsData) {
-  console.log("Coefficients rendering initialized", coefficientsData);
+  const tabsList = document.getElementById("coefficientTabs");
+  const tabContent = document.getElementById("coefficientTabsContent");
+
+  if (!tabsList || !tabContent) return;
+
+  // Clear previous states cleanly
+  tabsList.innerHTML = "";
+  tabContent.innerHTML = "";
+
+  // Pull both the technical names and clean UI text labels using our helper
+  const featureMeta = getFeatureLabels('input[name="features"]');
+
+  Object.entries(coefficientsData).forEach(
+    ([modelName, coefficients], index) => {
+      const safeId = `tab-${modelName.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`;
+      const isActive = index === 0;
+
+      // 1. Render and append Navigation Tab
+      const navItem = document.createElement("li");
+      navItem.className = "nav-item";
+      navItem.role = "presentation";
+      navItem.innerHTML = `
+      <button 
+        class="nav-link fw-semibold text-xs text-uppercase ${isActive ? "active" : ""}" 
+        id="${safeId}-nav" 
+        data-bs-toggle="tab" 
+        data-bs-target="#${safeId}-pane" 
+        type="button" 
+        role="tab" 
+        aria-controls="${safeId}-pane" 
+        aria-selected="${isActive}">
+        ${modelName}
+      </button>
+    `;
+      tabsList.appendChild(navItem);
+
+      // 2. Normalize 2D output vectors from sklearn shapes (e.g. [[c1, c2]] vs [c1, c2])
+      const flatCoeffs = Array.isArray(coefficients[0])
+        ? coefficients[0]
+        : coefficients;
+
+      // 3. Render Content Pane Container
+      const pane = document.createElement("div");
+      pane.className = `tab-pane fade ${isActive ? "show active" : ""}`;
+      pane.id = `${safeId}-pane`;
+      pane.role = "tabpanel";
+      pane.setAttribute("aria-labelledby", `${safeId}-nav`);
+
+      // 4. Map coefficients directly into HTML table rows array
+      const rowsHTML = flatCoeffs
+        .map((coef, i) => {
+          const featureName = featureMeta[i]
+            ? featureMeta[i].label
+            : `Feature Ref [${i + 1}]`;
+
+          // Dynamic scaling for small floating-point quant signals
+          const formattedCoef =
+            Math.abs(coef) < 0.0001 && coef !== 0
+              ? coef.toExponential(4)
+              : coef.toFixed(5);
+
+          // Quant signal styling matched to your design tokens
+          let colorClass = "text-muted";
+          if (coef > 0) colorClass = "quant-up fw-semibold"; // Reused your project token
+          if (coef < 0) colorClass = "quant-down fw-semibold"; // Reused your project token
+
+          return `
+        <tr>
+          <td class="text-dark fw-medium">${featureName}</td>
+          <td class="text-end font-monospace ${colorClass}">${formattedCoef}</td>
+        </tr>
+      `;
+        })
+        .join("");
+
+      // 5. Construct final markup structure and mount to DOM
+      pane.innerHTML = `
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 text-sm">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" style="width: 60%">Feature Attribute</th>
+              <th scope="col" class="text-end" style="width: 40%">Coefficient Weight</th>
+            </tr>
+          </thead>
+          <tbody class="financial-data">
+            ${rowsHTML}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+      tabContent.appendChild(pane);
+    },
+  );
 }
 
 /**
