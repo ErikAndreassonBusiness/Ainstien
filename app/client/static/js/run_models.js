@@ -54,7 +54,7 @@ async function getModelResults(event) {
 
   const form = event.target;
 
-  // --- Collect data via form and present in in JSON format for backend ---
+  // --- Collect data via form and present in in JSON format from backend ---
   const formData = new FormData(form);
   const modelSettings = Object.fromEntries(formData.entries());
   modelSettings.features = getCheckedValues('input[name="features"]');
@@ -67,6 +67,7 @@ async function getModelResults(event) {
   submitBtn.disabled = true;
 
   try {
+    console.log(modelSettings);
     const results = await runModels(modelSettings);
     if (results) {
       renderPerformanceMatrix(results.performance);
@@ -109,7 +110,7 @@ function renderCorrelationMatrix(data, selectedFeatures) {
         bgColor = "#006400";
         textColor = "white";
       } else if (value < -0.7) {
-        bgColor = "#00008b";
+        bgColor = "var(--ainstien-blue)";
         textColor = "white";
       }
 
@@ -131,20 +132,20 @@ function renderPerformanceMatrix(performanceData) {
 
   tbody.innerHTML = "";
 
-  // Assuming 'performanceData' is an object with a 'metrics' property containing the array of metric objects
-  performanceData.metrics.forEach((metric, index) => {
+  console.log("Performance rendering initialized", performanceData);
+
+  performanceData.forEach((model) => {
     const tr = document.createElement("tr");
-    if (index % 2 !== 0) tr.classList.add("table-light");
 
     tr.innerHTML = `
       <td class="fw-bold text-dark">
-        ${metric.model_name}
+        ${model.model_name}
         <span class="badge bg-light text-dark text-xs p-1">Metrics</span>
       </td>
-      <td class="text-end ${metric.r2 > 0 ? "quant-up" : "quant-down"}">${metric.r2.toFixed(4)}</td>
-      <td class="text-end">${metric.mape}%</td>
-      <td class="text-end">${metric.mae.toFixed(2)}</td>
-      <td class="text-end">${metric.rmse.toFixed(2)}</td>
+      <td class="text-end ${model.r2 > 0 ? "quant-up" : "quant-down"}">${model.r2.toFixed(4)}</td>
+      <td class="text-end">${model.mape}%</td>
+      <td class="text-end">${model.mae.toFixed(2)}</td>
+      <td class="text-end">${model.rmse.toFixed(2)}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -154,8 +155,6 @@ function renderPerformanceMatrix(performanceData) {
  * Renders the coefficient tabs and internal tables
  */
 function renderCoefficientsMatrix(coefficientsData) {
-  // Dynamic generation logic for tabs and tables goes here
-  // based on your exact JSON response format from the backend.
   console.log("Coefficients rendering initialized", coefficientsData);
 }
 

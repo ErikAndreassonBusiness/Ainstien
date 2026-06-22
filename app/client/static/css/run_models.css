@@ -2,9 +2,8 @@
    Run Models Custom Layout Additions
    ========================================================================== */
 
-.tracking-wider {
-  letter-spacing: 0.05em;
-}
+@import url("base.css");
+
 .text-xs {
   font-size: 0.75rem;
 }
@@ -19,7 +18,7 @@
   border: 1px solid #6c757d;
   border-radius: 0.375rem;
   background-color: #212529;
-  color: #fff;
+  color: var(--bg-global);
 }
 .diag-title {
   font-size: 0.75rem;
@@ -81,7 +80,7 @@
 
 /* Correlation Legend Colors */
 .legend-inverse {
-  background-color: #00008b;
+  background-color: var(--ainstien-blue);
 }
 .legend-none {
   background-color: #f8f9fa;

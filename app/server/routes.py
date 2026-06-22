@@ -19,7 +19,7 @@ from .db_queries import (
 )
 
 from .models.run_models import (
-    run_model, 
+    run_models, 
     get_correlation_matrix
 )
 
@@ -47,18 +47,8 @@ def correlation_matrix():
     return get_correlation_matrix(request.get_json())
 
 @app.route('/api/run-models', methods = ['POST'])
-def run_models():
-    data = request.get_json()
-    settings = {
-        "chosen_models": data.get('models'),
-        "chosen_features": data.get('features'),
-        "chosen_target": data.get('target_variable'),
-        "log_transform_target": data.get('log_transform'),
-        "cv_folds": data.get('cv_folds'), 
-        "positive_coefficients": data.get('positive_coefficients')
-    }
-    
-    return jsonify(run_model(settings))
+def model():
+    return jsonify(run_models(request.get_json()))
 
 @app.route('/api/feature-names', methods = ['GET'])
 def feature_names():
