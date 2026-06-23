@@ -5,54 +5,37 @@ from app.server.db_queries import (
 
 import pandas as pd
 
+import pandas as pd
+
 # ======= Run Models Extra features ========
-def select_features(report, attributes_to_calc, fundamentals, metrics):
-    fundamental_data = report.fundamental.to_dict()
-    metric_data = report.metric.to_dict()
 
-    feature_row = {}
-    for feature in fundamentals + metrics:
-        if feature in fundamental_data:
-            feature_row[feature] = fundamental_data[feature]
+def extract_features_from_report(report, features):
+    fundamental_dict = report.fundamental.to_dict() if report.fundamental else {}
+    metric_dict = report.metric.to_dict() if report.metric else {}
+    
+    all_data = {**fundamental_dict, **metric_dict}
+    return {feat: all_data[feat] for feat in features if feat in all_data}
 
-        elif feature in metric_data:
-            feature_row[feature] = metric_data[feature]
-
-        attributes_to_calc.append(feature_row)
 
 def get_correlation_matrix(data):
-    print("Data: ", data)
     fundamentals = data.get('fundamental_features', [])
     metrics = data.get('metric_features', [])
+    combined_features = fundamentals + metrics
 
     attributes_to_calc = []
-    for company in get_all_companies():
-
-        if metrics is None: 
-            for report in get_all_reports(company):
-                select_features(
-                    report=report, 
-                    attributes_to_calc=attributes_to_calc, 
-                    fundamentals=fundamentals, 
-                    metrics=metrics)
-        else: 
-            for report in get_all_reports(company)[1:]:
-                select_features(
-                    report=report, 
-                    attributes_to_calc=attributes_to_calc, 
-                    fundamentals=fundamentals, 
-                    metrics=metrics)
-
-
-    # Build correlation matrix
-    df = pd.DataFrame(attributes_to_calc)  # Transpose to get features as columns
-    matrix = df.corr().values.tolist()
-
-    return {
-        "matrix": matrix
-    }
     
+    for company in get_all_companies():
+        reports = get_all_reports(company)
+        reports_to_process = reports if not metrics else reports[1:]
+    
+        for report in reports_to_process:
+            feature_row = extract_features_from_report(report, combined_features)
+            if feature_row:  
+                attributes_to_calc.append(feature_row)
 
+    df = pd.DataFrame(attributes_to_calc)
+    return {"matrix": df.corr().values.tolist()}
+    
 
 # === Target Variants ===
 def get_target_names(): 

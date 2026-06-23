@@ -5,7 +5,9 @@ const FEATURE_LABEL_MAP = {
   revenue: "Revenue",
   depreciation: "Depreciation",
   ebitda: "EBITDA",
+  EBITDA: "EBITDA",
   ebit: "EBIT",
+  EBIT: "EBIT",
   net_income: "Net Income",
   total_assets: "Total Assets",
   total_equity: "Total Equity",
@@ -16,7 +18,7 @@ const FEATURE_LABEL_MAP = {
   fixed_assets: "Fixed Assets",
   cash: "Cash",
   inventory: "Inventory",
-  account_receiveables: "Account Receivables",
+  account_receiveables: "Account Receivables", //fix misspelling when back-end misspelling is fixed
 
   // Metrics
   revenue_growth_percent: "Revenue Growth (%)",
@@ -50,48 +52,50 @@ function formatFeatureLabel(featureKey) {
 }
 
 /**
- * Main function: Runs the page setup
+ * Main function: Runs the page setup cleanly
  */
 async function initRunModelsPage() {
   try {
-    const [featuresData, targetsData] = await Promise.all([
-      fetchFeatureNames(),
-      fetchTargetNames(),
-    ]);
+    const featuresNames = await fetchFeatureNames();
+    const targetsNames = await fetchTargetNames();
 
-    if (featuresData) {
+    // --- Render Features and Targets
+    if (featuresNames) {
+      console.log(featuresNames);
       renderCheckboxes(
-        featuresData.fundamental_features,
+        featuresNames.fundamental_features,
         "fundamentals-container",
         "features",
       );
       renderCheckboxes(
-        featuresData.metric_features,
+        featuresNames.metric_features,
         "metrics-container",
         "features",
       );
     }
-    if (targetsData && targetsData.targets) {
-      renderTargets(targetsData.targets, "targets-container");
+
+    if (targetsNames && targetsNames.targets) {
+      console.log(targetsNames);
+      renderTargets(targetsNames.targets, "targets-container");
     }
+
+    // --- Render Select ALL Buttons ---
+    setupCheckboxToggle(
+      "btn-select-all-models",
+      'input[name="models"]',
+      "Models",
+    );
+    setupCheckboxToggle(
+      "btn-select-all-features",
+      'input[name="features"]',
+      "Features",
+    );
   } catch (error) {
     console.error(
       "Initialization failure during runtime layout creation:",
       error,
     );
   }
-
-  // Setup interface toggles
-  setupCheckboxToggle(
-    "btn-select-all-models",
-    'input[name="models"]',
-    "Models",
-  );
-  setupCheckboxToggle(
-    "btn-select-all-features",
-    'input[name="features"]',
-    "Features",
-  );
 
   // --- Multicollinearity Button ---
   const btnLoadCorrelation = document.getElementById("btn-load-correlation");
@@ -104,6 +108,30 @@ async function initRunModelsPage() {
   if (form) {
     form.addEventListener("submit", getModelResults);
   }
+}
+
+/**
+ * Interface Utility: High-performance select/deselect all mass toggling
+ */
+function setupCheckboxToggle(btnId, selector, label) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+
+  let stateToggle = true;
+
+  btn.addEventListener("click", function () {
+    const checkboxes = document.querySelectorAll(selector);
+    if (checkboxes.length === 0) return;
+
+    checkboxes.forEach((cb) => {
+      cb.checked = stateToggle;
+    });
+
+    this.textContent = stateToggle
+      ? `Deselect All ${label}`
+      : `Select All ${label}`;
+    stateToggle = !stateToggle;
+  });
 }
 
 /**
@@ -152,100 +180,61 @@ function renderTargets(targetArray, containerId) {
  * Get Multicollinearity Correlation Matrix
  */
 async function getCorrelationMatrix() {
-  const fundamentalFeatures = Array.from(
-    document.querySelectorAll(
-      '#fundamentals-container input[type="checkbox"]:checked',
-    ),
-  ).map((cb) => cb.value);
-
-  const metricFeatures = Array.from(
-    document.querySelectorAll(
-      '#metrics-container input[type="checkbox"]:checked',
-    ),
-  ).map((cb) => cb.value);
-
-  // Combine
-  const selectedFeatures = [...fundamentalFeatures, ...metricFeatures];
-  if (selectedFeatures.length === 0) return;
-
-  const data = {
-    fundamental_features: fundamentalFeatures,
-    metric_features: metricFeatures,
-  };
-
-  try {
-    const correlationData = await fetchCorrelationMatrix(data);
-    if (correlationData) {
-      renderCorrelationMatrix(correlationData, selectedFeatures);
-    }
-  } catch (error) {
-    console.error("Correlation dataset engine failure:", error);
-  }
-}
-
-/**
- * Get the models results with robust feature type separation
- */
-async function getModelResults(event) {
-  event.preventDefault();
-
-  const form = event.target;
-  const formData = new FormData(form);
-  const modelSettings = Object.fromEntries(formData.entries());
-
   const allCheckedElements = Array.from(
     document.querySelectorAll('input[name="features"]:checked'),
-  );
+  ).map((cb) => cb.value);
 
-  const masterFeatures = await fetchFeatureNames();
-
-  if (masterFeatures) {
-    const fundamentalSet = new Set(masterFeatures.fundamental_features);
-    const metricSet = new Set(masterFeatures.metric_features);
-
-    // 3. Map values precisely by validating their existence in the master lists
-    modelSettings.fundamental_features = allCheckedElements
-      .map((cb) => cb.value)
-      .filter((val) => fundamentalSet.has(val));
-
-    modelSettings.metric_features = allCheckedElements
-      .map((cb) => cb.value)
-      .filter((val) => metricSet.has(val));
-  } else {
-    // Fallback if the network request fails: default to an empty array setup
-    modelSettings.fundamental_features = [];
-    modelSettings.metric_features = [];
-  }
-
-  // 4. Set the combined features list that scikit-learn expects
-  modelSettings.features = allCheckedElements.map((cb) => cb.value);
-  modelSettings.models = getCheckedValues('input[name="models"]');
-
-  // Guard Clause: Prevent submission if nothing is checked to stop sklearn crashes
-  if (modelSettings.features.length === 0) {
+  if (allCheckedElements.length === 0) {
     alert(
-      "Please select at least one feature before running the modeling engine.",
+      "Please select at least one feature to compute the correlation matrix.",
     );
     return;
   }
 
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const originalText = submitBtn.textContent;
-  submitBtn.textContent = "Running Engine...";
-  submitBtn.disabled = true;
+  const btn = document.getElementById("btn-load-correlation");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Computing Matrix...";
+  }
 
   try {
-    console.log("Payload sent to backend:", modelSettings);
-    const results = await runModels(modelSettings);
-    if (results) {
-      renderPerformanceMatrix(results.performance);
-      renderCoefficientsMatrix(results.coefficients);
+    const masterFeatures = await fetchFeatureNames();
+    let fundamentalFeatures = [];
+    let metricFeatures = [];
+
+    if (masterFeatures) {
+      const fundamentalSet = new Set(masterFeatures.fundamental_features);
+      const metricSet = new Set(masterFeatures.metric_features);
+
+      fundamentalFeatures = allCheckedElements.filter((val) =>
+        fundamentalSet.has(val),
+      );
+      metricFeatures = allCheckedElements.filter((val) => metricSet.has(val));
+    } else {
+      fundamentalFeatures = allCheckedElements;
+    }
+
+    const features = {
+      fundamental_features: fundamentalFeatures,
+      metric_features: metricFeatures,
+    };
+
+    console.log("Chosen features for correlation", features);
+    const correlationData = await fetchCorrelationMatrix(features);
+
+    // Forstatt här!!!! Kolla backend
+    if (correlationData && correlationData.matrix) {
+      renderCorrelationMatrix(correlationData, allCheckedElements);
+    } else {
+      console.warn("Backend returned an empty correlation payload.");
     }
   } catch (error) {
-    console.error("Model engine execution failure:", error);
+    console.error("Correlation dataset engine failure:", error);
   } finally {
-    submitBtn.textContent = originalText;
-    submitBtn.disabled = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Compute Correlation Matrix";
+    }
   }
 }
 
@@ -263,34 +252,97 @@ function renderCorrelationMatrix(data, selectedFeatures) {
   tbody.innerHTML = "";
 
   selectedFeatures.forEach((feature) => {
-    // Translate technical name into title string
     thead.innerHTML += `<th>${formatFeatureLabel(feature)}</th>`;
   });
 
   data.matrix.forEach((row, i) => {
     const tr = document.createElement("tr");
-    // Translate row title technical name into clean text
-    tr.innerHTML = `<td class="fw-bold text-start">${formatFeatureLabel(selectedFeatures[i])}</td>`;
+    tr.innerHTML = `<td class="fw-bold text-start text-xs">${formatFeatureLabel(selectedFeatures[i])}</td>`;
 
     row.forEach((value) => {
-      // Color coding logic based on correlation value
       let bgColor = "transparent";
       let textColor = "inherit";
-      if (value > 0.7) {
-        bgColor = "#006400";
-        textColor = "white";
-      } else if (value < -0.7) {
-        bgColor = "var(--ainstien-blue)";
-        textColor = "white";
+      if (value > 0.6) {
+        bgColor = "rgba(0, 100, 0, 0.15)"; // Soft positive green tint matching legendary custom CSS style
+        textColor = "#006400";
+      } else if (value < -0.6) {
+        bgColor = "rgba(0, 86, 179, 0.15)"; // Soft inverse blue tint
+        textColor = "var(--ainstien-blue)";
       }
 
-      tr.innerHTML += `<td style="background-color: ${bgColor}; color: ${textColor}">${value.toFixed(2)}</td>`;
+      tr.innerHTML += `<td class="font-monospace text-xs" style="background-color: ${bgColor}; color: ${textColor}">${value.toFixed(2)}</td>`;
     });
 
     tbody.appendChild(tr);
   });
 
   container.classList.remove("d-none");
+}
+
+/**
+ * Model engine compilation execution orchestrator
+ */
+async function getModelResults(e) {
+  e.preventDefault();
+
+  const selectedFeatures = getCheckedValues('input[name="features"]');
+  const selectedModels = getCheckedValues('input[name="models"]');
+
+  console.log("Selected features: ", selectedFeatures);
+
+  if (selectedFeatures.length === 0 || selectedModels.length === 0) {
+    alert(
+      "Please select at least one tracking feature and one mathematical model algorithm.",
+    );
+    return;
+  }
+
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Processing Regression Tasks...";
+  }
+
+  // Safe checks using optional chaining (?.) and fallback default values to ensure it never crashes with "null" values
+  const payload = {
+    features: selectedFeatures,
+    models: selectedModels,
+    target_variable:
+      e.target.querySelector('input[name="target_variable"]:checked')?.value ||
+      "future_price",
+    log_transform: e.target.querySelector('input[name="log_transform"]')
+      ?.checked
+      ? "on"
+      : "off",
+    cv_folds: e.target.querySelector('input[name="cv_folds"]')?.value || "5",
+    positive_coefficients: e.target.querySelector(
+      'input[name="positive_coefficients"]',
+    )?.checked
+      ? "on"
+      : "off",
+    test_split:
+      e.target.querySelector('input[name="test_split"]')?.value || "0.8",
+  };
+
+  try {
+    const response = await runModels(payload);
+    if (response && response.performance && response.coefficients) {
+      renderPerformanceMatrix(response.performance);
+      renderCoefficientsMatrix(response.coefficients);
+    } else {
+      alert(
+        "The machine learning calculation engine returned an unreadable layout mapping.",
+      );
+    }
+  } catch (error) {
+    console.error("Model performance execution failure:", error);
+    alert("An error occurred during machine learning model processing.");
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Run Analysis Engine";
+    }
+  }
 }
 
 /**
@@ -302,19 +354,18 @@ function renderPerformanceMatrix(performanceData) {
 
   tbody.innerHTML = "";
 
-  console.log("Performance rendering initialized", performanceData);
-
   performanceData.forEach((model) => {
     const tr = document.createElement("tr");
+    tr.className = "stock-row text-sm";
 
     tr.innerHTML = `
-      <td class="fw-bold text-dark">
+      <td class="fw-bold text-dark text-uppercase">
         ${model.model_name}
       </td>
-      <td class="text-end ${model.r2 > 0 ? "quant-up" : "quant-down"}">${model.r2.toFixed(4)}</td>
-      <td class="text-end">${model.mape}%</td>
-      <td class="text-end">${model.mae.toFixed(2)}</td>
-      <td class="text-end">${model.rmse.toFixed(2)}</td>
+      <td class="text-end font-monospace ${model.r2 > 0 ? "quant-up text-success" : "quant-down text-danger"}">${model.r2.toFixed(4)}</td>
+      <td class="text-end font-monospace">${(model.mape * 100).toFixed(1)}%</td>
+      <td class="text-end font-monospace">${model.mae.toFixed(4)}</td>
+      <td class="text-end font-monospace">${model.rmse.toFixed(4)}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -344,19 +395,17 @@ function renderCoefficientsMatrix(coefficientsData) {
 
   if (!tabsList || !tabContent) return;
 
-  // Clear previous states cleanly
   tabsList.innerHTML = "";
   tabContent.innerHTML = "";
 
-  // Pull both the technical names and clean UI text labels using our helper
-  const featureMeta = getFeatureLabels('input[name="features"]');
+  const selectedFeatures = getFeatureLabels('input[name="features"]');
+  console.log("Selected features: ", selectedFeatures);
 
   Object.entries(coefficientsData).forEach(
     ([modelName, coefficients], index) => {
       const safeId = `tab-${modelName.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}`;
       const isActive = index === 0;
 
-      // 1. Render and append Navigation Tab
       const navItem = document.createElement("li");
       navItem.className = "nav-item";
       navItem.role = "presentation";
@@ -375,57 +424,50 @@ function renderCoefficientsMatrix(coefficientsData) {
     `;
       tabsList.appendChild(navItem);
 
-      // 2. Normalize 2D output vectors from sklearn shapes (e.g. [[c1, c2]] vs [c1, c2])
       const flatCoeffs = Array.isArray(coefficients[0])
         ? coefficients[0]
         : coefficients;
 
-      // 3. Render Content Pane Container
       const pane = document.createElement("div");
       pane.className = `tab-pane fade ${isActive ? "show active" : ""}`;
       pane.id = `${safeId}-pane`;
       pane.role = "tabpanel";
       pane.setAttribute("aria-labelledby", `${safeId}-nav`);
 
-      // 4. Map coefficients directly into HTML table rows array
       const rowsHTML = flatCoeffs
         .map((coef, i) => {
-          const featureName = featureMeta[i]
-            ? featureMeta[i].label
+          const featureName = selectedFeatures[i]
+            ? selectedFeatures[i].label
             : `Feature Ref [${i + 1}]`;
-
-          // Dynamic scaling for small floating-point quant signals
           const formattedCoef =
             Math.abs(coef) < 0.0001 && coef !== 0
               ? coef.toExponential(4)
               : coef.toFixed(5);
 
-          // Quant signal styling matched to your design tokens
           let colorClass = "text-muted";
-          if (coef > 0) colorClass = "quant-up fw-semibold"; // Reused your project token
-          if (coef < 0) colorClass = "quant-down fw-semibold"; // Reused your project token
+          if (coef > 0) colorClass = "quant-up text-success fw-semibold";
+          if (coef < 0) colorClass = "quant-down text-danger fw-semibold";
 
           return `
         <tr>
-          <td class="text-dark fw-medium">${featureName}</td>
-          <td class="text-end font-monospace ${colorClass}">${formattedCoef}</td>
+          <td class="text-dark fw-medium text-sm">${featureName}</td>
+          <td class="text-end font-monospace text-sm ${colorClass}">${coef > 0 ? "+" : ""}${formattedCoef}</td>
         </tr>
       `;
         })
         .join("");
 
-      // 5. Construct final markup structure and mount to DOM
       pane.innerHTML = `
-      <div class="table-responsive">
+      <div class="table-responsive border rounded mt-3 bg-white">
         <table class="table table-hover align-middle mb-0 text-sm">
           <thead class="table-light">
             <tr>
-              <th scope="col" style="width: 60%">Feature Attribute</th>
-              <th scope="col" class="text-end" style="width: 40%">Coefficient Weight</th>
+              <th scope="col" class="text-xs text-uppercase tracking-wider py-2" style="width: 60%">Feature Attribute</th>
+              <th scope="col" class="text-end text-xs text-uppercase tracking-wider py-2" style="width: 40%">Coefficient Weight</th>
             </tr>
           </thead>
           <tbody class="financial-data">
-            ${rowsHTML}
+            ${rowsHTML || '<tr><td colspan="2" class="text-center text-muted">No variable factors reported.</td></tr>'}
           </tbody>
         </table>
       </div>
@@ -443,23 +485,6 @@ function getCheckedValues(selector) {
   return Array.from(document.querySelectorAll(`${selector}:checked`)).map(
     (cb) => cb.value,
   );
-}
-
-/**
- * Interface Utility: Attaches select/deselect all mass toggling
- */
-function setupCheckboxToggle(btnId, selector, label) {
-  const btn = document.getElementById(btnId);
-  if (!btn) return;
-
-  btn.addEventListener("click", function () {
-    const checkboxes = document.querySelectorAll(selector);
-    const allChecked = Array.from(checkboxes).every((cb) => cb.checked);
-    checkboxes.forEach((cb) => (cb.checked = !allChecked));
-    this.textContent = allChecked
-      ? `Select All ${label}`
-      : `Deselect All ${label}`;
-  });
 }
 
 // Bootstrap execution

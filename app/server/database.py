@@ -69,14 +69,14 @@ class Fundamental(db.Model): #4 år bak
     # Omsättningstillgångar
     current_assets: Mapped[float] = mapped_column()
     inventory: Mapped[float] = mapped_column()
-    account_receiveables: Mapped[float] = mapped_column()
+    account_receiveables: Mapped[float] = mapped_column() #fix-missspelling
     cash: Mapped[float] = mapped_column()
 
     # Anläggsningstillgångar
     fixed_assets: Mapped[float] = mapped_column()
-    goodwill: Mapped[float] = mapped_column()
+    goodwill: Mapped[float] = mapped_column() #Remove this
 
-    def get_attribute_dict(self): 
+    def to_dict(self): 
         return {
             "revenue": self.revenue,
             "depreciation": self.depreciation,
@@ -98,10 +98,7 @@ class Fundamental(db.Model): #4 år bak
     @classmethod
     def get_attribute_names(cls):
         ignored_keys = {'id', 'report_id'}
-        return [col.key for col in cls.__table__.columns if col.key not in ignored_keys]
-
-    def to_dict(self):
-        return self.get_attribute_dict()
+        return [col.key.lower() for col in cls.__table__.columns if col.key not in ignored_keys]
 
 class Metric(db.Model):
     __tablename__ = "metric"
@@ -149,7 +146,7 @@ class Metric(db.Model):
     ebit_margin_percent: Mapped[float] = mapped_column(nullable=False)
     profit_margin_percent: Mapped[float] = mapped_column(nullable=False)
 
-    def get_attribute_dict(self):
+    def to_dict(self):
         return {
             "revenue_growth_percent": self.revenue_growth_percent, 
             "profit_growth_percent": self.profit_growth_percent, 
@@ -168,7 +165,4 @@ class Metric(db.Model):
     @classmethod
     def get_attribute_names(cls):
         ignored_keys = {'id', 'report_id'}
-        return [col.key for col in cls.__table__.columns if col.key not in ignored_keys]
-
-    def to_dict(self):
-        return self.get_attribute_dict()
+        return [col.key.lower() for col in cls.__table__.columns if col.key not in ignored_keys]

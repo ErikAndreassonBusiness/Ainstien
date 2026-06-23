@@ -16,70 +16,43 @@ from app.server.db_queries import (
     get_metrics_attrbiute_names
 )
 
-def select_fundamental_features(report, chosen_features, features):
-    fundamental_data = report.fundamental.to_dict()
-    
-    report_features = []
-    for feature in chosen_features:
-        if feature in fundamental_data:
-            report_features.append(fundamental_data.get(feature))
-    
-    features.append(report_features)
-
-def select_all_features(report, chosen_features, features):
-    fundamental_data = report.fundamental.to_dict()
-    metric_data = report.metric.to_dict()
-    
-    report_features = []
-    for feature in chosen_features:
-        if feature in fundamental_data:
-            report_features.append(fundamental_data.get(feature))
-
-        elif feature in metric_data:
-            report_features.append(metric_data.get(feature))
-    
-    features.append(report_features)
-
-def get_features_from_db(chosen_features, contains_metrics):
-    features = []
-
-    for company in get_all_companies():
-        if contains_metrics:
-            for report in get_all_reports(company)[1:]: 
-                select_all_features(
-                    report=report, 
-                    chosen_features=chosen_features, 
-                    features=features)
-
-        else: 
-            for report in get_all_reports(company): 
-                select_fundamental_features(
-                    report=report, 
-                    chosen_features=chosen_features, 
-                    features=features)
-    
-    return features
-
-def get_target_from_db(chosen_target):
-    # --- Build target vector --
-    targets = []
+def get_target_from_db(report, chosen_target):
     if chosen_target == "future_price":
-        for company in db.session.query(Company).all():
-            for report in company.reports:
-                targets.append(report.max_average_future_price * report.share_outstanding)
+        return report.max_average_future_price * report.share_outstanding
 
     elif chosen_target == "future_growth":
-        for company in db.session.query(Company).all():
-            for report in company.reports:
-                targets.append((report.max_average_future_price / report.current_price - 1) * 100)
+        return (report.max_average_future_price / report.current_price - 1) * 100
 
-    return targets
+# =============
+def get_features_and_target(settings):
+    features = []
+    targets = []
+    
+    chosen_features = settings.get("chosen_features")
+    chosen_target = settings.get("chosen_target")
+    contains_metrics = settings.get("contains_metrics")
 
-def get_features_and_target(settings): 
-    features = get_features_from_db(settings.get("chosen_features"), settings.get("contains_metrics"))
-    target = get_target_from_db(settings.get("chosen_target"))
+    for company in get_all_companies():
+        reports = get_all_reports(company)
+        reports_to_process = reports[1:] if contains_metrics else reports
 
-    return features, target
+        for report in reports_to_process:
+            target = get_target_from_db(report, chosen_target)
+
+            report_features = []
+            for feature in chosen_features:
+                if hasattr(report.fundamental, feature):
+                    report_features.append(getattr(report.fundamental, feature))
+
+                elif contains_metrics and hasattr(report.metric, feature):
+                    report_features.append(getattr(report.metric, feature))
+
+            features.append(report_features)
+            targets.append(target)
+
+    return features, targets
+
+#==========
 def log_target(log_transform, target):
     # --- Optionally log-transform the target variable ---
     if log_transform == "on":
@@ -148,7 +121,7 @@ def get_settings(data):
     return {
         "chosen_models": data.get('models'),
         "chosen_features": chosen_features,
-        "contains_metrics": set(chosen_features).isdisjoint(all_metrics), #True if overlapps
+        "contains_metrics": not set(chosen_features).isdisjoint(all_metrics), #True if overlapps
         "chosen_target": data.get('target_variable'),
         "log_transform_target": data.get('log_transform'),
         "cv_folds": data.get('cv_folds'), 
@@ -182,6 +155,7 @@ def calc_all_models(settings, X_train_scaled, X_test_scaled, y_train, y_test):
             settings=settings, 
             y_test=y_test, 
             predictions=model.predict(X_test_scaled))
+
         r2, mape, mae, rmse = calc_errors(actual_y_test, actual_prediction)
 
         # --- Return in JSON ---
