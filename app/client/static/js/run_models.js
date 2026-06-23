@@ -4,9 +4,7 @@ const FEATURE_LABEL_MAP = {
   // Fundamentals
   revenue: "Revenue",
   depreciation: "Depreciation",
-  ebitda: "EBITDA",
   EBITDA: "EBITDA",
-  ebit: "EBIT",
   EBIT: "EBIT",
   net_income: "Net Income",
   total_assets: "Total Assets",
@@ -61,7 +59,6 @@ async function initRunModelsPage() {
 
     // --- Render Features and Targets
     if (featuresNames) {
-      console.log(featuresNames);
       renderCheckboxes(
         featuresNames.fundamental_features,
         "fundamentals-container",
@@ -75,7 +72,6 @@ async function initRunModelsPage() {
     }
 
     if (targetsNames && targetsNames.targets) {
-      console.log(targetsNames);
       renderTargets(targetsNames.targets, "targets-container");
     }
 
@@ -196,7 +192,7 @@ async function getCorrelationMatrix() {
     btn.disabled = true;
     btn.textContent = "Computing Matrix...";
   }
-
+  // Check how the names features are gathared
   try {
     const masterFeatures = await fetchFeatureNames();
     let fundamentalFeatures = [];
@@ -219,10 +215,8 @@ async function getCorrelationMatrix() {
       metric_features: metricFeatures,
     };
 
-    console.log("Chosen features for correlation", features);
     const correlationData = await fetchCorrelationMatrix(features);
 
-    // Forstatt här!!!! Kolla backend
     if (correlationData && correlationData.matrix) {
       renderCorrelationMatrix(correlationData, allCheckedElements);
     } else {
@@ -288,8 +282,6 @@ async function getModelResults(e) {
   const selectedFeatures = getCheckedValues('input[name="features"]');
   const selectedModels = getCheckedValues('input[name="models"]');
 
-  console.log("Selected features: ", selectedFeatures);
-
   if (selectedFeatures.length === 0 || selectedModels.length === 0) {
     alert(
       "Please select at least one tracking feature and one mathematical model algorithm.",
@@ -303,7 +295,6 @@ async function getModelResults(e) {
     submitBtn.textContent = "Processing Regression Tasks...";
   }
 
-  // Safe checks using optional chaining (?.) and fallback default values to ensure it never crashes with "null" values
   const payload = {
     features: selectedFeatures,
     models: selectedModels,
@@ -362,10 +353,10 @@ function renderPerformanceMatrix(performanceData) {
       <td class="fw-bold text-dark text-uppercase">
         ${model.model_name}
       </td>
-      <td class="text-end font-monospace ${model.r2 > 0 ? "quant-up text-success" : "quant-down text-danger"}">${model.r2.toFixed(4)}</td>
+      <td class="text-end font-monospace ${model.r2 > 0 ? "quant-up text-success" : "quant-down text-danger"}">${model.r2.toFixed(2)}</td>
       <td class="text-end font-monospace">${(model.mape * 100).toFixed(1)}%</td>
-      <td class="text-end font-monospace">${model.mae.toFixed(4)}</td>
-      <td class="text-end font-monospace">${model.rmse.toFixed(4)}</td>
+      <td class="text-end font-monospace">${model.mae.toFixed(2)}</td>
+      <td class="text-end font-monospace">${model.rmse.toFixed(2)}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -399,7 +390,6 @@ function renderCoefficientsMatrix(coefficientsData) {
   tabContent.innerHTML = "";
 
   const selectedFeatures = getFeatureLabels('input[name="features"]');
-  console.log("Selected features: ", selectedFeatures);
 
   Object.entries(coefficientsData).forEach(
     ([modelName, coefficients], index) => {

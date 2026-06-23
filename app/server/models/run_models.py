@@ -29,6 +29,7 @@ def get_features_and_target(settings):
     targets = []
     
     chosen_features = settings.get("chosen_features")
+    print("Amount of features: ", len(chosen_features))
     chosen_target = settings.get("chosen_target")
     contains_metrics = settings.get("contains_metrics")
 
@@ -46,6 +47,10 @@ def get_features_and_target(settings):
 
                 elif contains_metrics and hasattr(report.metric, feature):
                     report_features.append(getattr(report.metric, feature))
+
+                else: 
+                    print(report.id, "\n")
+                    print("Missing feature: ", feature, "\n\n")
 
             features.append(report_features)
             targets.append(target)
@@ -132,6 +137,7 @@ def get_settings(data):
 def config_data(settings, features, target):
     # --- Define X and y ---
     X = np.array(features)
+    print("My X: ", X.shape)
     y = log_target(settings.get("log_transform_target"), target)
 
     # --- Split data sets ---

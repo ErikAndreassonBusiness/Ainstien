@@ -18,9 +18,9 @@ def extract_features_from_report(report, features):
 
 
 def get_correlation_matrix(data):
-    fundamentals = data.get('fundamental_features', [])
-    metrics = data.get('metric_features', [])
-    combined_features = fundamentals + metrics
+    fundamentals = data.get('features').get('fundamental_features', [])
+    metrics = data.get('features').get('metric_features', [])
+    all_features = fundamentals + metrics
 
     attributes_to_calc = []
     
@@ -29,7 +29,7 @@ def get_correlation_matrix(data):
         reports_to_process = reports if not metrics else reports[1:]
     
         for report in reports_to_process:
-            feature_row = extract_features_from_report(report, combined_features)
+            feature_row = extract_features_from_report(report, all_features)
             if feature_row:  
                 attributes_to_calc.append(feature_row)
 
