@@ -8,7 +8,7 @@ def get_shares_outstanding(bal, date):
     if pd.isna(shares) or shares == 0: 
             raise ValueError("Abort!")
     else: 
-        return shares
+        return round(shares/1_000_000) #Millions
 
 def get_price_at_report_date(ticker_obj, date): 
     end_date = date + timedelta(days=7) # handeling holidays

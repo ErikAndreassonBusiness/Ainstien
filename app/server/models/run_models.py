@@ -47,11 +47,7 @@ def get_features_and_target(settings):
 
                 elif metric_features and hasattr(report.metric, feature):
                     report_features.append(getattr(report.metric, feature))
-
-                else: 
-                    print(report.id)
-                    print("Missing feature: ", feature, "\n")
-
+                    
             features.append(report_features)
             targets.append(target)
 

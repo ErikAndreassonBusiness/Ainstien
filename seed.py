@@ -14,7 +14,7 @@ from seed_db.seed_reports import *
 from seed_db.seed_metrics import *
 from seed_db.seed_fundementals import *
 
-TICKERS = [
+goodTICKERS = [
     "NMAN.ST",      # Nederman Holding
     "VBG-B.ST",     # VBG Group
     "BERG-B.ST",     # Bergman & Beving
@@ -33,10 +33,9 @@ TICKERS = [
     "ALLIGO-B.ST"   # Alligo
 ]
 
-goodTICKERS = ["8TRA.ST", 
-                    "VOLO.ST", 
+TICKERS = ["VOLO.ST", 
                     "PEAB-B.ST", 
-                    "HUSQ-B.ST", 
+                    #"HUSQ-B.ST", 
                     "BUFAB.ST", 
                     "NCC-B.ST", 
                     "BRAV.ST", 
