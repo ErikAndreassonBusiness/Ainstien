@@ -53,56 +53,34 @@ class Fundamental(db.Model): #4 år bak
     # ======== Income Statement (MSEK???) ========
     revenue: Mapped[float] = mapped_column(nullable=False)
     depreciation: Mapped[float] = mapped_column(nullable=False)
-    EBITDA: Mapped[float] = mapped_column()
-    EBIT: Mapped[float] = mapped_column()
-    net_income: Mapped[float] = mapped_column()
+    ebitda: Mapped[float] = mapped_column(nullable=False)
+    ebit: Mapped[float] = mapped_column(nullable=False)
+    net_income: Mapped[float] = mapped_column(nullable=False)
 
     # ========= Balance Sheet (MSEK???) ==========
-    total_assets: Mapped[float] = mapped_column()
-    total_equity: Mapped[float] = mapped_column()
+    total_assets: Mapped[float] = mapped_column(nullable=False)
+    total_equity: Mapped[float] = mapped_column(nullable=False)
 
     # Total debt, Sum(): 
-    total_debt: Mapped[float] = mapped_column()
-    short_term_debt: Mapped[float] = mapped_column()
-    long_term_debt: Mapped[float] = mapped_column()
+    total_debt: Mapped[float] = mapped_column(nullable=False)
+    short_term_debt: Mapped[float] = mapped_column(nullable=False)
+    long_term_debt: Mapped[float] = mapped_column(nullable=False)
 
     # Omsättningstillgångar
-    current_assets: Mapped[float] = mapped_column()
-    inventory: Mapped[float] = mapped_column()
-    account_receiveables: Mapped[float] = mapped_column()
-    cash: Mapped[float] = mapped_column()
+    current_assets: Mapped[float] = mapped_column(nullable=False)
+    inventory: Mapped[float] = mapped_column(nullable=False)
+    account_receivables: Mapped[float] = mapped_column(nullable=False)
+    cash: Mapped[float] = mapped_column(nullable=False)
 
     # Anläggsningstillgångar
-    fixed_assets: Mapped[float] = mapped_column()
-    goodwill: Mapped[float] = mapped_column()
+    fixed_assets: Mapped[float] = mapped_column(nullable=False)
 
-    attribute_dict= {
-        "revenue": revenue,
-        "depreciation": depreciation,
-        "ebitda": EBITDA,
-        "ebit": EBIT,
-        "net_income": net_income,
-        "total_assets": total_assets,
-        "total_equity": total_equity,
-        "short_term_debt": short_term_debt, 
-        "long_term_debt": long_term_debt,
-        "total_debt": total_debt,
-        "current_assets": current_assets,
-        "fixed_assets": fixed_assets,
-        "cash": cash,
-        "inventory": inventory,
-        "account_receiveables": account_receiveables
-    }
-
-    def get_attribute_names(self):
-        return list(self.attribute_dict.keys())
-
-    def to_dict(self):
+    def to_dict(self): 
         return {
             "revenue": self.revenue,
             "depreciation": self.depreciation,
-            "ebitda": self.EBITDA,
-            "ebit": self.EBIT,
+            "ebitda": self.ebitda,
+            "ebit": self.ebit,
             "net_income": self.net_income,
             "total_assets": self.total_assets,
             "total_equity": self.total_equity,
@@ -113,8 +91,13 @@ class Fundamental(db.Model): #4 år bak
             "fixed_assets": self.fixed_assets,
             "cash": self.cash,
             "inventory": self.inventory,
-            "account_receiveables": self.account_receiveables
+            "account_receivables": self.account_receivables
         }
+
+    @classmethod
+    def get_attribute_names(cls):
+        ignored_keys = {'id', 'report_id'}
+        return [col.key.lower() for col in cls.__table__.columns if col.key not in ignored_keys]
 
 class Metric(db.Model):
     __tablename__ = "metric"
@@ -149,36 +132,17 @@ class Metric(db.Model):
     inventory_turnover_ratio : Mapped[float] = mapped_column(nullable=False) # Cost of Goods Sold / Average Inventory 
 
     # Return on Assets
-    ROA : Mapped[float] = mapped_column(nullable=False) #Net Income / Tot. Average Assets 
+    roa : Mapped[float] = mapped_column(nullable=False) #Net Income / Tot. Average Assets 
 
     #Return on Equtiy
-    ROE : Mapped[float] = mapped_column(nullable=False) #Net Income / Avarage Shareholders' Equity
+    roe : Mapped[float] = mapped_column(nullable=False) #Net Income / Avarage Shareholders' Equity
 
     #Return on Investment
-    ROI : Mapped[float] = mapped_column(nullable=False) #Net Income from Investment / Cost of Investment
+    roi : Mapped[float] = mapped_column(nullable=False) #Net Income from Investment / Cost of Investment
 
     """ ============== Profitability ratios: Profit relative to sales, assets, or equity ============= """
-    #gross_profit_margin_percent: Mapped[float] = mapped_column(nullable=False)
     ebit_margin_percent: Mapped[float] = mapped_column(nullable=False)
     profit_margin_percent: Mapped[float] = mapped_column(nullable=False)
-
-    attribute_dict = {
-        "revenue_growth_percent": revenue_growth_percent, 
-        "profit_growth_percent": profit_growth_percent, 
-        "quick_ratio_percent": quick_ratio_percent,
-        "net_debt_ebitda_ratio": net_debt_ebitda_ratio,
-        "equity_ratio_percent": equity_ratio_percent,
-        "assets_turnover_ratio": assets_turnover_ratio,
-        "inventory_turnover_ratio": inventory_turnover_ratio,
-        "roa": ROA,
-        "roe": ROE,
-        "roi": ROI,
-        "ebit_margin_percent": ebit_margin_percent,
-        "profit_margin_percent": profit_margin_percent
-    }
-
-    def get_attribute_names(self):
-        return list(self.attribute_dict.keys())
 
     def to_dict(self):
         return {
@@ -189,9 +153,14 @@ class Metric(db.Model):
             "equity_ratio_percent": self.equity_ratio_percent,
             "assets_turnover_ratio": self.assets_turnover_ratio,
             "inventory_turnover_ratio": self.inventory_turnover_ratio,
-            "roa": self.ROA,
-            "roe": self.ROE,
-            "roi": self.ROI,
+            "roa": self.roa,
+            "roe": self.roe,
+            "roi": self.roi,
             "ebit_margin_percent": self.ebit_margin_percent,
             "profit_margin_percent": self.profit_margin_percent
         }
+
+    @classmethod
+    def get_attribute_names(cls):
+        ignored_keys = {'id', 'report_id'}
+        return [col.key.lower() for col in cls.__table__.columns if col.key not in ignored_keys]

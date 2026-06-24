@@ -12,44 +12,52 @@ import pandas as pd
 
 from app.server.db_queries import (
     get_all_companies, 
-    get_all_reports
+    get_all_reports, 
+    get_metrics_attrbiute_names
 )
 
-def get_features_from_db(chosen_features):
-    features = []
-    for company in db.session.query(Company).all():
-        for report in company.reports: 
-            fundamental_data = report.fundamental.to_dict()
-            
-            report_features = []
-            for feature in chosen_features:
-                report_features.append(fundamental_data.get(feature))
-            
-            #add metrcis as well
-            features.append(report_features)
-    
-    return features
-
-def get_target_from_db(chosen_target):
-    # --- Build target vector --
-    targets = []
+def get_target_from_db(report, chosen_target):
     if chosen_target == "future_price":
-        for company in db.session.query(Company).all():
-            for report in company.reports:
-                targets.append(report.max_average_future_price * report.share_outstanding)
+        return report.max_average_future_price * report.share_outstanding
 
     elif chosen_target == "future_growth":
-        for company in db.session.query(Company).all():
-            for report in company.reports:
-                targets.append((report.max_average_future_price / report.current_price - 1) * 100)
+        return (report.max_average_future_price / report.current_price - 1) * 100
 
-    return targets
+# =============
+def get_features_and_target(settings):
+    features = []
+    targets = []
+    
+    fundamental_features = settings.get("fundamental_features") or []
+    metric_features = settings.get("metric_features") or []
 
-def get_features_and_target(settings): 
-    features = get_features_from_db(settings.get("chosen_features"))
-    target = get_target_from_db(settings.get("chosen_target"))
+    chosen_target = settings.get("chosen_target")
 
-    return features, target
+    for company in get_all_companies():
+        reports = get_all_reports(company)
+        reports_to_process = reports[1:] if metric_features else reports
+
+        for report in reports_to_process:
+            target = get_target_from_db(report, chosen_target)
+
+            report_features = []
+            for feature in fundamental_features + metric_features:
+                if hasattr(report.fundamental, feature):
+                    report_features.append(getattr(report.fundamental, feature))
+
+                elif metric_features and hasattr(report.metric, feature):
+                    report_features.append(getattr(report.metric, feature))
+
+                else: 
+                    print(report.id)
+                    print("Missing feature: ", feature, "\n")
+
+            features.append(report_features)
+            targets.append(target)
+
+    return features, targets
+
+#==========
 def log_target(log_transform, target):
     # --- Optionally log-transform the target variable ---
     if log_transform == "on":
@@ -114,12 +122,13 @@ def calc_errors(actual_y_test, actual_predictions):
 def get_settings(data):
     return {
         "chosen_models": data.get('models'),
-        "chosen_features": data.get('features'),
+        "fundamental_features": data.get('fundamental_features'),
+        "metric_features": data.get('metric_features'),
         "chosen_target": data.get('target_variable'),
         "log_transform_target": data.get('log_transform'),
         "cv_folds": data.get('cv_folds'), 
         "positive_coef": data.get('positive_coefficients'),
-        "split": data.get('test_split')
+        "split": data.get('test_split'), 
     }
 
 def config_data(settings, features, target):
@@ -148,6 +157,7 @@ def calc_all_models(settings, X_train_scaled, X_test_scaled, y_train, y_test):
             settings=settings, 
             y_test=y_test, 
             predictions=model.predict(X_test_scaled))
+
         r2, mape, mae, rmse = calc_errors(actual_y_test, actual_prediction)
 
         # --- Return in JSON ---
@@ -165,7 +175,7 @@ def calc_all_models(settings, X_train_scaled, X_test_scaled, y_train, y_test):
 
 def run_models(data): 
     settings = get_settings(data)
-    print("My settings: ", settings)
+
     # --- Feature and Target selection ---
     features, target = get_features_and_target(settings=settings)
 
@@ -185,31 +195,3 @@ def run_models(data):
         "performance": performance_list,
         "coefficients": coefficients_dict
     }
-
-
-# ======= Run Models Extra features ========
-def get_correlation_matrix(data):
-    attributes_to_calc = []
-
-    for company in get_all_companies():
-        for report in get_all_reports(company):
-            fundamental_data = report.fundamental.to_dict()
-            #metric_data = report.metric.to_dict()
-
-            feature_row = {}
-            for feature in data.get("features"):
-                feature_row[feature] = fundamental_data[feature]
-                #metrics = metric_data.get(feature)
-                #attributes_to_calc.append(metrics)
-
-            attributes_to_calc.append(feature_row)
-
-    # Build correlation matrix
-    df = pd.DataFrame(attributes_to_calc)  # Transpose to get features as columns
-    matrix = df.corr().values.tolist()
-
-    matrix_dict = {
-        "matrix": matrix
-    }
-    
-    return jsonify(matrix_dict)
