@@ -1,40 +1,37 @@
-/* Inherits global tokens from base.css */
+/* ==========================================================================
+   Dashboard Component Constraints
+   ========================================================================== */
 
-.custom-card-header {
-  border-bottom: none;
-  padding: 1rem 1.25rem;
+/* Standard height constraint to keep lower boxes perfectly uniform */
+.dashboard-card-body {
+  height: 280px;
+  overflow-y: auto;
+  padding: 1rem;
 }
 
-.bg-ainstien-dark {
-  background-color: var(--ainstien-dark, #1a1d20) !important;
+/* Expanded height constraint to give the wide Portfolio & Trades split breathing room */
+.portfolio-card-body {
+  height: 380px;
+  overflow-y: auto;
+  padding: 1.5rem;
 }
 
-.bg-ainstien-blue {
-  background-color: var(--ainstien-blue, #0056b3) !important;
+/* Critical safety wrapper preventing Chart.js from expanding infinitely down the viewport */
+.chart-wrapper {
+  position: relative;
+  height: 100%;
+  width: 100%;
 }
 
-.bg-ainstien-success {
-  background-color: var(--ainstien-success, #28a745) !important;
+/* Card layout refinements matching your base design language */
+.card-footer {
+  background-color: transparent;
+  border-top: 1px solid #eee;
 }
 
-.border-ainstien-success {
-  border-color: var(--ainstien-success, #28a745) !important;
-}
-
-/* Table refinements for dashboard */
-.table-hover tbody tr:hover {
-  background-color: rgba(0, 86, 179, 0.05);
-  cursor: pointer;
-}
-
-.table th,
-.table td {
-  vertical-align: middle;
-  font-size: 0.9rem;
-}
-
-/* Custom styling for the Six Sigma canvas container */
-#marketCapHistogram {
-  width: 100% !important;
-  max-height: 400px;
+/* Responsive vertical divider line between the doughnut chart and table on tablet/desktop views */
+@media (min-width: 768px) {
+  .border-md-end {
+    border-right: 1px solid #e9ecef !important;
+  }
 }

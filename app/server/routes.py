@@ -77,6 +77,10 @@ def dashboard():
 def companies():
     return render_template('companies.html')
 
+@app.route('/portfolio')
+def portfolio():
+    return render_template('portfolio.html')
+
 @app.route('/company/<ticker>')
 def company(ticker):
     return render_template('company.html', ticker=ticker)

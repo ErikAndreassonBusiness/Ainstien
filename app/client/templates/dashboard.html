@@ -1,80 +1,64 @@
 {% extends "base.html" %} {% block title %}Ainstien | Command Center{% endblock
 %} {% block page_css %}
-<style>
-  /* Strict constraints to prevent infinite stretching */
-  .dashboard-card-body {
-    height: 280px;
-    overflow-y: auto;
-    padding: 1rem;
-  }
-  .chart-wrapper {
-    position: relative;
-    height: 100%;
-    width: 100%;
-  }
-  .card-footer {
-    background-color: transparent;
-    border-top: 1px solid #eee;
-  }
-</style>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/dashboard.css') }}"
+/>
 {% endblock %} {% block content %}
 <div class="container mt-4 mb-5">
   <div class="row mb-4">
     <div class="col-12">
       <h2 class="fw-bold text-dark m-0">Command Center</h2>
       <p class="text-muted mt-2">
-        High-level 2x2 overview of your active system. Click the buttons for
-        deep dives.
+        Executive system overview. Use the card action buttons to drill down
+        into specifics.
       </p>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-ainstien-dark text-white border-0">
+          <h6 class="mb-0">Portfolio Allocation & Active Trades</h6>
+        </div>
+        <div class="card-body portfolio-card-body">
+          <div class="row h-100 g-4">
+            <div class="col-12 col-md-4 border-md-end">
+              <div class="chart-wrapper">
+                <canvas id="portfolioChart"></canvas>
+              </div>
+            </div>
+            <div class="col-12 col-md-8">
+              <div class="table-responsive h-100">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light sticky-top">
+                    <tr>
+                      <th>Ticker</th>
+                      <th>Entry</th>
+                      <th>Current</th>
+                      <th class="text-end">P/L</th>
+                    </tr>
+                  </thead>
+                  <tbody id="activeTradesTable"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer text-end border-0">
+          <a href="{{ url_for('portfolio') }}" class="btn btn-dark btn-sm"
+            >Manage Portfolio & Trades</a
+          >
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="row g-4">
     <div class="col-12 col-lg-6">
       <div class="card h-100 border-0 shadow-sm">
-        <div class="card-header bg-ainstien-dark text-white border-0">
-          <h6 class="mb-0">Portfolio Structure</h6>
-        </div>
-        <div class="card-body dashboard-card-body">
-          <div class="chart-wrapper">
-            <canvas id="portfolioChart"></canvas>
-          </div>
-        </div>
-        <div class="card-footer text-end border-0">
-          <a href="#" class="btn btn-dark btn-sm">View Full Portfolio</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-lg-6">
-      <div class="card h-100 border-0 shadow-sm">
         <div class="card-header bg-ainstien-blue text-white border-0">
-          <h6 class="mb-0">Active Trades Overview</h6>
-        </div>
-        <div class="card-body dashboard-card-body p-0">
-          <div class="table-responsive h-100">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light sticky-top">
-                <tr>
-                  <th>Ticker</th>
-                  <th>Entry</th>
-                  <th>Current</th>
-                  <th class="text-end">P/L</th>
-                </tr>
-              </thead>
-              <tbody id="activeTradesTable"></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="card-footer text-end border-0">
-          <a href="#" class="btn btn-dark btn-sm">Manage Trades</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-lg-6">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-header bg-ainstien-success text-white border-0">
           <h6 class="mb-0">Latest Model Signals</h6>
         </div>
         <div class="card-body dashboard-card-body p-0">
@@ -104,8 +88,10 @@
         <div
           class="card-header bg-ainstien-dark text-white border-0 d-flex justify-content-between align-items-center"
         >
-          <h6 class="mb-0">Market Cap Distribution</h6>
-          <span class="badge bg-secondary" style="font-size: 0.7rem">Demo</span>
+          <h6 class="mb-0">Market Cap Distribution (Six Sigma)</h6>
+          <span class="badge bg-secondary" style="font-size: 0.7rem"
+            >Static Demo</span
+          >
         </div>
         <div class="card-body dashboard-card-body">
           <div class="chart-wrapper">
