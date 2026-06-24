@@ -48,8 +48,6 @@ def correlation_matrix():
 def model():
     return jsonify(run_models(request.get_json()))
 
-from flask import jsonify
-
 @app.route('/api/model-features', methods=['GET'])
 def get_model_features():
     return jsonify(get_)

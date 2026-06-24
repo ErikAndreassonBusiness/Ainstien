@@ -14,7 +14,7 @@ from seed_db.seed_reports import *
 from seed_db.seed_metrics import *
 from seed_db.seed_fundementals import *
 
-goodTICKERS = [
+TICKERS = [
     "NMAN.ST",      # Nederman Holding
     "VBG-B.ST",     # VBG Group
     "BERG-B.ST",     # Bergman & Beving
@@ -33,7 +33,7 @@ goodTICKERS = [
     "ALLIGO-B.ST"   # Alligo
 ]
 
-TICKERS = ["8TRA.ST", 
+goodTICKERS = ["8TRA.ST", 
                     "VOLO.ST", 
                     "PEAB-B.ST", 
                     "HUSQ-B.ST", 
@@ -231,8 +231,8 @@ def instance_fundamental_entity(report_obj, date, inc, bal):
         #substansvarde = get_substansvarde(bal, date),
         revenue=get_revenue(inc, date),
         depreciation=get_depreciation(inc, date),
-        EBITDA=get_ebitda(inc, date),
-        EBIT=get_ebit(inc, date),
+        ebitda=get_ebitda(inc, date),
+        ebit=get_ebit(inc, date),
         net_income=get_net_income(inc, date),
         total_assets=get_total_assets(bal, date),
         total_equity=get_total_equity(bal, date),
@@ -241,10 +241,9 @@ def instance_fundamental_entity(report_obj, date, inc, bal):
         long_term_debt=get_long_debt(bal, date),
         current_assets=get_current_assets(bal, date),
         inventory=get_inventory(bal, date),
-        account_receiveables=get_receivables(bal, date),
+        account_receivables=get_receivables(bal, date),
         cash=get_cash(bal, date),
         fixed_assets=get_fixed_assets(bal, date),
-        goodwill=get_goodwill(bal, date)
     )
 
 def instance_metric_entity(report_obj, date, prev_date, inc, bal): 
@@ -257,10 +256,9 @@ def instance_metric_entity(report_obj, date, prev_date, inc, bal):
         equity_ratio_percent=get_equity_ratio(bal, date),
         assets_turnover_ratio=get_asset_turnover(inc, bal, date),
         inventory_turnover_ratio=get_inventory_turnover(inc, bal, date),
-        ROA=get_roa(inc, bal, date),
-        ROE=get_roe(inc, bal, date),
-        ROI=get_roi(inc, bal, date),
-        #gross_profit_margin_percent=get_gross_margin(inc, date),
+        roa=get_roa(inc, bal, date),
+        roe=get_roe(inc, bal, date),
+        roi=get_roi(inc, bal, date),
         ebit_margin_percent=get_ebit_margin(inc, date),
         profit_margin_percent=get_profit_margin(inc, date)
     )

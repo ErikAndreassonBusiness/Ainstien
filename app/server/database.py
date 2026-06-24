@@ -53,35 +53,34 @@ class Fundamental(db.Model): #4 år bak
     # ======== Income Statement (MSEK???) ========
     revenue: Mapped[float] = mapped_column(nullable=False)
     depreciation: Mapped[float] = mapped_column(nullable=False)
-    EBITDA: Mapped[float] = mapped_column()
-    EBIT: Mapped[float] = mapped_column()
-    net_income: Mapped[float] = mapped_column()
+    ebitda: Mapped[float] = mapped_column(nullable=False)
+    ebit: Mapped[float] = mapped_column(nullable=False)
+    net_income: Mapped[float] = mapped_column(nullable=False)
 
     # ========= Balance Sheet (MSEK???) ==========
-    total_assets: Mapped[float] = mapped_column()
-    total_equity: Mapped[float] = mapped_column()
+    total_assets: Mapped[float] = mapped_column(nullable=False)
+    total_equity: Mapped[float] = mapped_column(nullable=False)
 
     # Total debt, Sum(): 
-    total_debt: Mapped[float] = mapped_column()
-    short_term_debt: Mapped[float] = mapped_column()
-    long_term_debt: Mapped[float] = mapped_column()
+    total_debt: Mapped[float] = mapped_column(nullable=False)
+    short_term_debt: Mapped[float] = mapped_column(nullable=False)
+    long_term_debt: Mapped[float] = mapped_column(nullable=False)
 
     # Omsättningstillgångar
-    current_assets: Mapped[float] = mapped_column()
-    inventory: Mapped[float] = mapped_column()
-    account_receiveables: Mapped[float] = mapped_column() #fix-missspelling
-    cash: Mapped[float] = mapped_column()
+    current_assets: Mapped[float] = mapped_column(nullable=False)
+    inventory: Mapped[float] = mapped_column(nullable=False)
+    account_receivables: Mapped[float] = mapped_column(nullable=False)
+    cash: Mapped[float] = mapped_column(nullable=False)
 
     # Anläggsningstillgångar
-    fixed_assets: Mapped[float] = mapped_column()
-    goodwill: Mapped[float] = mapped_column() #Remove this
+    fixed_assets: Mapped[float] = mapped_column(nullable=False)
 
     def to_dict(self): 
         return {
             "revenue": self.revenue,
             "depreciation": self.depreciation,
-            "ebitda": self.EBITDA,
-            "ebit": self.EBIT,
+            "ebitda": self.ebitda,
+            "ebit": self.ebit,
             "net_income": self.net_income,
             "total_assets": self.total_assets,
             "total_equity": self.total_equity,
@@ -92,7 +91,7 @@ class Fundamental(db.Model): #4 år bak
             "fixed_assets": self.fixed_assets,
             "cash": self.cash,
             "inventory": self.inventory,
-            "account_receiveables": self.account_receiveables
+            "account_receiveables": self.account_receivables
         }
 
     @classmethod
@@ -133,16 +132,15 @@ class Metric(db.Model):
     inventory_turnover_ratio : Mapped[float] = mapped_column(nullable=False) # Cost of Goods Sold / Average Inventory 
 
     # Return on Assets
-    ROA : Mapped[float] = mapped_column(nullable=False) #Net Income / Tot. Average Assets 
+    roa : Mapped[float] = mapped_column(nullable=False) #Net Income / Tot. Average Assets 
 
     #Return on Equtiy
-    ROE : Mapped[float] = mapped_column(nullable=False) #Net Income / Avarage Shareholders' Equity
+    roe : Mapped[float] = mapped_column(nullable=False) #Net Income / Avarage Shareholders' Equity
 
     #Return on Investment
-    ROI : Mapped[float] = mapped_column(nullable=False) #Net Income from Investment / Cost of Investment
+    roi : Mapped[float] = mapped_column(nullable=False) #Net Income from Investment / Cost of Investment
 
     """ ============== Profitability ratios: Profit relative to sales, assets, or equity ============= """
-    #gross_profit_margin_percent: Mapped[float] = mapped_column(nullable=False)
     ebit_margin_percent: Mapped[float] = mapped_column(nullable=False)
     profit_margin_percent: Mapped[float] = mapped_column(nullable=False)
 
@@ -155,9 +153,9 @@ class Metric(db.Model):
             "equity_ratio_percent": self.equity_ratio_percent,
             "assets_turnover_ratio": self.assets_turnover_ratio,
             "inventory_turnover_ratio": self.inventory_turnover_ratio,
-            "roa": self.ROA,
-            "roe": self.ROE,
-            "roi": self.ROI,
+            "roa": self.roa,
+            "roe": self.roe,
+            "roi": self.roi,
             "ebit_margin_percent": self.ebit_margin_percent,
             "profit_margin_percent": self.profit_margin_percent
         }

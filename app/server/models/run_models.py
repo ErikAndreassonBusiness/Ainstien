@@ -49,8 +49,8 @@ def get_features_and_target(settings):
                     report_features.append(getattr(report.metric, feature))
 
                 else: 
-                    print(report.id, "\n")
-                    print("Missing feature: ", feature, "\n\n")
+                    print(report.id)
+                    print("Missing feature: ", feature, "\n")
 
             features.append(report_features)
             targets.append(target)

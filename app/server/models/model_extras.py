@@ -34,6 +34,7 @@ def get_correlation_matrix(data):
                 attributes_to_calc.append(feature_row)
 
     df = pd.DataFrame(attributes_to_calc)
+    print("My Matrix: ", df.corr().values.tolist())
     return {"matrix": df.corr().values.tolist()}
     
 

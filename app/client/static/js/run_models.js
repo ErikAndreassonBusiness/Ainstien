@@ -4,8 +4,8 @@ const FEATURE_LABEL_MAP = {
   // Fundamentals
   revenue: "Revenue",
   depreciation: "Depreciation",
-  EBITDA: "EBITDA",
-  EBIT: "EBIT",
+  ebitda: "EBITDA",
+  ebit: "EBIT",
   net_income: "Net Income",
   total_assets: "Total Assets",
   total_equity: "Total Equity",
@@ -16,7 +16,7 @@ const FEATURE_LABEL_MAP = {
   fixed_assets: "Fixed Assets",
   cash: "Cash",
   inventory: "Inventory",
-  account_receiveables: "Account Receivables", //fix misspelling when back-end misspelling is fixed
+  account_receivables: "Account Receivables",
 
   // Metrics
   revenue_growth_percent: "Revenue Growth (%)",
@@ -176,11 +176,9 @@ function renderTargets(targetArray, containerId) {
  * Get Multicollinearity Correlation Matrix
  */
 async function getCorrelationMatrix() {
-  const allCheckedElements = Array.from(
-    document.querySelectorAll('input[name="features"]:checked'),
-  ).map((cb) => cb.value);
+  const selectedFeatures = getCheckedValues('input[name="features"]');
 
-  if (allCheckedElements.length === 0) {
+  if (selectedFeatures.length === 0) {
     alert(
       "Please select at least one feature to compute the correlation matrix.",
     );
@@ -194,31 +192,32 @@ async function getCorrelationMatrix() {
   }
   // Check how the names features are gathared
   try {
-    const masterFeatures = await fetchFeatureNames();
-    let fundamentalFeatures = [];
-    let metricFeatures = [];
+    const allFeatures = await fetchFeatureNames();
+    const selectedFundamentals = allFeatures.fundamental_features;
+    const selectedMetrics = allFeatures.metric_features;
 
-    if (masterFeatures) {
-      const fundamentalSet = new Set(masterFeatures.fundamental_features);
-      const metricSet = new Set(masterFeatures.metric_features);
+    const fundamentalFeatures = selectedFeatures.filter((feature) =>
+      selectedFundamentals.includes(feature),
+    );
 
-      fundamentalFeatures = allCheckedElements.filter((val) =>
-        fundamentalSet.has(val),
-      );
-      metricFeatures = allCheckedElements.filter((val) => metricSet.has(val));
-    } else {
-      fundamentalFeatures = allCheckedElements;
-    }
+    const metricFeatures = selectedFeatures.filter((feature) =>
+      selectedMetrics.includes(feature),
+    );
 
-    const features = {
+    console.log("Fundamental features: ", fundamentalFeatures);
+    console.log("Metric features: ", metricFeatures);
+
+    const payload = {
       fundamental_features: fundamentalFeatures,
       metric_features: metricFeatures,
     };
 
-    const correlationData = await fetchCorrelationMatrix(features);
+    console.log(payload);
+
+    const correlationData = await fetchCorrelationMatrix(payload);
 
     if (correlationData && correlationData.matrix) {
-      renderCorrelationMatrix(correlationData, allCheckedElements);
+      renderCorrelationMatrix(correlationData, selectedFeatures);
     } else {
       console.warn("Backend returned an empty correlation payload.");
     }
