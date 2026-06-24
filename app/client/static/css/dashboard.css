@@ -1,0 +1,40 @@
+/* Inherits global tokens from base.css */
+
+.custom-card-header {
+  border-bottom: none;
+  padding: 1rem 1.25rem;
+}
+
+.bg-ainstien-dark {
+  background-color: var(--ainstien-dark, #1a1d20) !important;
+}
+
+.bg-ainstien-blue {
+  background-color: var(--ainstien-blue, #0056b3) !important;
+}
+
+.bg-ainstien-success {
+  background-color: var(--ainstien-success, #28a745) !important;
+}
+
+.border-ainstien-success {
+  border-color: var(--ainstien-success, #28a745) !important;
+}
+
+/* Table refinements for dashboard */
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 86, 179, 0.05);
+  cursor: pointer;
+}
+
+.table th,
+.table td {
+  vertical-align: middle;
+  font-size: 0.9rem;
+}
+
+/* Custom styling for the Six Sigma canvas container */
+#marketCapHistogram {
+  width: 100% !important;
+  max-height: 400px;
+}
