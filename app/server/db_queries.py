@@ -50,7 +50,7 @@ def get_dashboard_market_data():
             fundamental = latest_report.fundamental
             if fundamental:
                 revenue = fundamental.revenue
-                ebit = fundamental.EBIT
+                ebit = fundamental.ebit
 
         # 3. Build the lightweight dictionary for the dashboard
         company_data = {

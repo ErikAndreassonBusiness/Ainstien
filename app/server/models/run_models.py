@@ -28,24 +28,24 @@ def get_features_and_target(settings):
     features = []
     targets = []
     
-    chosen_features = settings.get("chosen_features")
-    print("Amount of features: ", len(chosen_features))
+    fundamental_features = settings.get("fundamental_features") or []
+    metric_features = settings.get("metric_features") or []
+
     chosen_target = settings.get("chosen_target")
-    contains_metrics = settings.get("contains_metrics")
 
     for company in get_all_companies():
         reports = get_all_reports(company)
-        reports_to_process = reports[1:] if contains_metrics else reports
+        reports_to_process = reports[1:] if metric_features else reports
 
         for report in reports_to_process:
             target = get_target_from_db(report, chosen_target)
 
             report_features = []
-            for feature in chosen_features:
+            for feature in fundamental_features + metric_features:
                 if hasattr(report.fundamental, feature):
                     report_features.append(getattr(report.fundamental, feature))
 
-                elif contains_metrics and hasattr(report.metric, feature):
+                elif metric_features and hasattr(report.metric, feature):
                     report_features.append(getattr(report.metric, feature))
 
                 else: 
@@ -120,13 +120,10 @@ def calc_errors(actual_y_test, actual_predictions):
     return r2, mape, mae, rmse
 
 def get_settings(data):
-    chosen_features = data.get('features')
-    all_metrics = get_metrics_attrbiute_names()
-
     return {
         "chosen_models": data.get('models'),
-        "chosen_features": chosen_features,
-        "contains_metrics": not set(chosen_features).isdisjoint(all_metrics), #True if overlapps
+        "fundamental_features": data.get('fundamental_features'),
+        "metric_features": data.get('metric_features'),
         "chosen_target": data.get('target_variable'),
         "log_transform_target": data.get('log_transform'),
         "cv_folds": data.get('cv_folds'), 
@@ -137,7 +134,6 @@ def get_settings(data):
 def config_data(settings, features, target):
     # --- Define X and y ---
     X = np.array(features)
-    print("My X: ", X.shape)
     y = log_target(settings.get("log_transform_target"), target)
 
     # --- Split data sets ---
@@ -178,7 +174,6 @@ def calc_all_models(settings, X_train_scaled, X_test_scaled, y_train, y_test):
     return performance_list, coefficients_dict
 
 def run_models(data): 
-    print(data)
     settings = get_settings(data)
 
     # --- Feature and Target selection ---

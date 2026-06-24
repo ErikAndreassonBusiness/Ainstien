@@ -193,26 +193,11 @@ async function getCorrelationMatrix() {
   // Check how the names features are gathared
   try {
     const allFeatures = await fetchFeatureNames();
-    const selectedFundamentals = allFeatures.fundamental_features;
-    const selectedMetrics = allFeatures.metric_features;
-
-    const fundamentalFeatures = selectedFeatures.filter((feature) =>
-      selectedFundamentals.includes(feature),
-    );
-
-    const metricFeatures = selectedFeatures.filter((feature) =>
-      selectedMetrics.includes(feature),
-    );
-
-    console.log("Fundamental features: ", fundamentalFeatures);
-    console.log("Metric features: ", metricFeatures);
 
     const payload = {
-      fundamental_features: fundamentalFeatures,
-      metric_features: metricFeatures,
+      fundamental_features: getFundamentFeatures(selectedFeatures, allFeatures),
+      metric_features: getMetricFeatures(selectedFeatures, allFeatures),
     };
-
-    console.log(payload);
 
     const correlationData = await fetchCorrelationMatrix(payload);
 
@@ -294,8 +279,12 @@ async function getModelResults(e) {
     submitBtn.textContent = "Processing Regression Tasks...";
   }
 
+  // FIxa back-end så alla attribute fixas
+  const allFeatures = await fetchFeatureNames();
+
   const payload = {
-    features: selectedFeatures,
+    fundamental_features: getFundamentFeatures(selectedFeatures, allFeatures),
+    metric_features: getMetricFeatures(selectedFeatures, allFeatures),
     models: selectedModels,
     target_variable:
       e.target.querySelector('input[name="target_variable"]:checked')?.value ||
@@ -474,6 +463,31 @@ function getCheckedValues(selector) {
   return Array.from(document.querySelectorAll(`${selector}:checked`)).map(
     (cb) => cb.value,
   );
+}
+
+/**
+ * Helpter function - Gets the chosen fundamentals and metrics
+ */
+function getFundamentFeatures(selectedFeatures, allFeatures) {
+  if (!allFeatures || !allFeatures.fundamental_features) return [];
+  const selectedFundamentals = allFeatures.fundamental_features;
+
+  const fundamentalFeatures = selectedFeatures.filter((feature) =>
+    selectedFundamentals.includes(feature),
+  );
+
+  return fundamentalFeatures;
+}
+
+function getMetricFeatures(selectedFeatures, allFeatures) {
+  if (!allFeatures || !allFeatures.metric_features) return [];
+  const selectedMetrics = allFeatures.metric_features;
+
+  const metricFeatures = selectedFeatures.filter((feature) =>
+    selectedMetrics.includes(feature),
+  );
+
+  return metricFeatures;
 }
 
 // Bootstrap execution

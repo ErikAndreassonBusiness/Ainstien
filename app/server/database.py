@@ -91,7 +91,7 @@ class Fundamental(db.Model): #4 år bak
             "fixed_assets": self.fixed_assets,
             "cash": self.cash,
             "inventory": self.inventory,
-            "account_receiveables": self.account_receivables
+            "account_receivables": self.account_receivables
         }
 
     @classmethod
