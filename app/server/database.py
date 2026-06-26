@@ -22,7 +22,14 @@ class Report(db.Model):
 
     # ==== For our predictions =====
     share_outstanding: Mapped[int] = mapped_column(nullable=False)
+
     current_price : Mapped[float] = mapped_column(nullable=False)
+    one_month_price : Mapped[float] = mapped_column(nullable=False)
+    two_month_price : Mapped[float] = mapped_column(nullable=False)
+    three_month_price : Mapped[float] = mapped_column(nullable=False)
+    #six_month_price : Mapped[float] = mapped_column(nullable=False)
+    #twelve_month_price : Mapped[float] = mapped_column(nullable=False)
+
     max_average_future_price: Mapped[float] = mapped_column(nullable=False) #y (Target), currently 3 months
 
     # ==== Connections to other entities ====

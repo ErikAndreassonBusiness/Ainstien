@@ -140,6 +140,16 @@ def config_data(settings, features, target):
 
     return X_train_scaled, X_test_scaled, y_train, y_test
 
+def print_baseline(y_train): 
+    y_mean = np.mean(y_train)
+    y_prediction_baseline = [y_mean] * len(y_train)
+
+    MAE_baseline = mean_absolute_error(y_train, y_prediction_baseline)
+
+    #print the mean and the baseline MAE
+    print("Mean Y:", round(y_mean, 2))
+    print("Baseline MAE:", round(MAE_baseline, 2)) 
+
 def calc_all_models(settings, X_train_scaled, X_test_scaled, y_train, y_test): 
     performance_list = []
     coefficients_dict = {}
@@ -179,6 +189,8 @@ def run_models(data):
         settings=settings, 
         features=features, 
         target=target)
+    
+    print_baseline(y_train)
 
     performance_list, coefficients_dict = calc_all_models(
         settings=settings, 
