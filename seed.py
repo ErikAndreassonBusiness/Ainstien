@@ -6,6 +6,7 @@ Target: Swedish Mid-Cap stocks (.ST).
 
 import pandas as pd
 import time
+from datetime import date, timedelta
 
 from app import create_app
 from app.server.database import db, Company, Report, Fundamental, Metric
@@ -14,7 +15,7 @@ from seed_db.seed_reports import *
 from seed_db.seed_metrics import *
 from seed_db.seed_fundementals import *
 
-TICKERS = [
+goodTICKERS = [
     "NMAN.ST",      # Nederman Holding
     "VBG-B.ST",     # VBG Group
     "BERG-B.ST",     # Bergman & Beving
@@ -33,10 +34,9 @@ TICKERS = [
     "ALLIGO-B.ST"   # Alligo
 ]
 
-goodTICKERS = ["8TRA.ST", 
-                    "VOLO.ST", 
+TICKERS = ["VOLO.ST", 
                     "PEAB-B.ST", 
-                    "HUSQ-B.ST", 
+                    #"HUSQ-B.ST", 
                     "BUFAB.ST", 
                     "NCC-B.ST", 
                     "BRAV.ST", 
@@ -217,6 +217,26 @@ def instance_report_entity(ticker_obj, report_date, company_obj, inc, bal):
         current_price = get_price_at_report_date(
             ticker_obj=ticker_obj, 
             date=report_date),
+        
+        one_month_price = get_price_at_report_date(
+            ticker_obj=ticker_obj, 
+            date=report_date + + timedelta(days=30)),
+
+        two_month_price = get_price_at_report_date(
+            ticker_obj=ticker_obj, 
+            date=report_date + + timedelta(days=60)),
+        
+        three_month_price = get_price_at_report_date(
+            ticker_obj=ticker_obj, 
+            date=report_date + + timedelta(days=90)),
+        
+        # six_month_price = get_price_at_report_date(
+        #     ticker_obj=ticker_obj, 
+        #     date=report_date + + timedelta(days=180)),
+        
+        # twelve_month_price = get_price_at_report_date(
+        #     ticker_obj=ticker_obj, 
+        #     date=report_date + + timedelta(days=360)),
 
         max_average_future_price = get_max_avarage_future_prices(
             ticker_obj=ticker_obj, 

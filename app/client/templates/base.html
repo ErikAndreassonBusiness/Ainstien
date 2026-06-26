@@ -37,10 +37,14 @@
               >
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Trades</a>
+              <a class="nav-link" href="{{ url_for('companies') }}"
+                >Companies</a
+              >
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">ML Predictions</a>
+              <a class="nav-link" href="{{ url_for('portfolio') }}"
+                >Portfolio</a
+              >
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('run_models_page') }}"

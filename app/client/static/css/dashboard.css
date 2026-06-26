@@ -1,35 +1,37 @@
 /* ==========================================================================
-   Dashboard Custom Component Styling
+   Dashboard Component Constraints
    ========================================================================== */
 
-/* 1. Ticker Header Rule: Forces the first column header text to be crisp white */
-.table thead th:nth-child(1) {
-  color: #ffffff;
+/* Standard height constraint to keep lower boxes perfectly uniform */
+.dashboard-card-body {
+  height: 280px;
+  overflow-y: auto;
+  padding: 1rem;
 }
 
-/* 2. Ticker Column Data Rule: Overrides any inherited links or variations 
-      to make tickers bold, black, and perfectly tracking */
-.table td:nth-child(1),
-.table td:nth-child(1) strong {
-  color: #000000;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+/* Expanded height constraint to give the wide Portfolio & Trades split breathing room */
+.portfolio-card-body {
+  height: 380px;
+  overflow-y: auto;
+  padding: 1.5rem;
 }
 
-/* Unique layout rules for your real-time API sync indicator badge */
-.status-fetching {
-  background-color: #6c757d;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 600;
-  border-radius: 50px;
+/* Critical safety wrapper preventing Chart.js from expanding infinitely down the viewport */
+.chart-wrapper {
+  position: relative;
+  height: 100%;
+  width: 100%;
 }
 
-.status-success {
-  background-color: var(--ainstien-success);
+/* Card layout refinements matching your base design language */
+.card-footer {
+  background-color: transparent;
+  border-top: 1px solid #eee;
 }
 
-.status-error {
-  background-color: var(--ainstien-danger);
+/* Responsive vertical divider line between the doughnut chart and table on tablet/desktop views */
+@media (min-width: 768px) {
+  .border-md-end {
+    border-right: 1px solid #e9ecef !important;
+  }
 }
