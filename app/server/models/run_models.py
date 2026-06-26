@@ -4,11 +4,12 @@ from sklearn.linear_model import LassoCV, RidgeCV, ElasticNetCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, mean_absolute_percentage_error
 
-from flask import jsonify
-
-import yfinance as yf
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 from app.server.db_queries import (
     get_all_companies, 
@@ -16,104 +17,120 @@ from app.server.db_queries import (
     get_metrics_attrbiute_names
 )
 
-def get_target_from_db(report, chosen_target):
-    if chosen_target == "future_price":
-        return report.max_average_future_price * report.share_outstanding
-
-    elif chosen_target == "future_growth":
-        return (report.max_average_future_price / report.current_price - 1) * 100
-
-# =============
-def get_features_and_target(settings):
-    features = []
-    targets = []
+def build_dataframe(metric_features_enabled):
+    """
+    Extracts all database objects into a flat Pandas DataFrame.
+    """
+    data_rows = []
     
-    fundamental_features = settings.get("fundamental_features") or []
-    metric_features = settings.get("metric_features") or []
-
-    chosen_target = settings.get("chosen_target")
-
     for company in get_all_companies():
         reports = get_all_reports(company)
-        reports_to_process = reports[1:] if metric_features else reports
+        reports_to_process = reports[1:] if metric_features_enabled else reports
 
         for report in reports_to_process:
-            target = get_target_from_db(report, chosen_target)
-
-            report_features = []
-            for feature in fundamental_features + metric_features:
-                if hasattr(report.fundamental, feature):
-                    report_features.append(getattr(report.fundamental, feature))
-
-                elif metric_features and hasattr(report.metric, feature):
-                    report_features.append(getattr(report.metric, feature))
+            # Flatten the database relationship records into a flat dictionary row
+            row = {
+                "max_average_future_price": report.max_average_future_price,
+                "one_month_price": report.one_month_price, 
+                "two_month_price": report.two_month_price,
+                "three_month_price": report.three_month_price,
+                "share_outstanding": report.share_outstanding,
+                "current_price": report.current_price,
+            }
+        
+            for attr in dir(report.fundamental):
+                row[f"fundamental_{attr}"] = getattr(report.fundamental, attr)
                     
-            features.append(report_features)
-            targets.append(target)
+            for attr in dir(report.metric):
+                row[f"metric_{attr}"] = getattr(report.metric, attr)
+        
+            data_rows.append(row)
+            
+    return pd.DataFrame(data_rows)
 
-    return features, targets
 
-#==========
-def log_target(log_transform, target):
-    # --- Optionally log-transform the target variable ---
-    if log_transform == "on":
-        return np.log(target)
+def get_features_and_target_df(settings):
+    """
+    Uses Pandas to filter columns and calculate the target variable using vectorization.
+    """
+    fundamental_features = settings.get("fundamental_features") or []
+    metric_features = settings.get("metric_features") or []
+    chosen_target = settings.get("chosen_target")
+
+    # Build the dataframe
+    df = build_dataframe(metric_features_enabled=bool(metric_features))
+
+    if chosen_target == "future_max_price": 
+        df['target'] = df['max_average_future_price'] * df['share_outstanding']
+    elif chosen_target == "future_growth":
+        df['target'] = (df['max_average_future_price'] / df['current_price'] - 1) * 100
+    elif chosen_target == "one_month_price":
+        df['target'] = df['one_month_price'] * df['share_outstanding']
+    elif chosen_target == "two_month_price":
+        df['target'] = df['two_month_price'] * df['share_outstanding']
+    elif chosen_target == "three_month_price":
+        df['target'] = df['three_month_price'] * df['share_outstanding']
     else:
-        return target
+        print("Target value does not exists")
+
+    # Map features 
+    selected_fundamental = [f"fundamental_{f}" for f in fundamental_features if f"fundamental_{f}" in df.columns]
+    selected_metric = [f"metric_{m}" for m in metric_features if f"metric_{m}" in df.columns]
+    all_features = selected_fundamental + selected_metric
+
+    # Extract features and targets
+    X = df[all_features].copy()
+    y = df['target'].copy()
+
+    if settings.get("log_transform_target") == "on":
+        y = np.log(y)
+
+    return X, y
+
 
 def split_data(X, y, settings):
-    split = settings.get("split")
-    test_cutoff = int(float(split)*len(X))
+    split = float(settings.get("split"))
+    test_cutoff = int(split * len(X))
 
-    X_train, X_test = X[:test_cutoff], X[test_cutoff:]
-    y_train, y_test = y[:test_cutoff], y[test_cutoff:]
+    X_train, X_test = X.iloc[:test_cutoff], X.iloc[test_cutoff:]
+    y_train, y_test = y.iloc[:test_cutoff], y.iloc[test_cutoff:]
 
     return X_train, X_test, y_train, y_test
+
 
 def scale_features(X_train, X_test):
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
-
     return X_train_scaled, X_test_scaled
 
+
 def choose_model(chosen_model, settings): 
+    cv_folds = int(settings.get("cv_folds"))
+    is_positive = settings.get('positive_coef') == "on"
+
     if chosen_model == "ridge":
-        model = RidgeCV(cv=int(settings.get("cv_folds")))
-
+        return RidgeCV(cv=cv_folds)
     elif chosen_model == "lasso":
-        model = LassoCV(
-            cv=int(settings.get("cv_folds")), 
-            random_state=42, 
-            positive=True if settings.get('positive_coef') == "on" else False)
-    
+        return LassoCV(cv=cv_folds, random_state=42, positive=is_positive)
     elif chosen_model == "elasticnet": 
-        model = ElasticNetCV(
-            l1_ratio=0.5, #change to dynamic
-            cv = int(settings.get("cv_folds")), 
-            random_state=42, 
-            positive=True if settings.get('positive_coef') == "on" else False)
+        return ElasticNetCV(l1_ratio=0.5, cv=cv_folds, random_state=42, positive=is_positive)
 
-    return model
 
 def exp_y_from_log(settings, y_test, predictions): 
     if settings.get("log_transform_target") == "on":
-            actual_y_test = np.exp(y_test)
-            actual_predictions = np.exp(predictions)
+        return np.exp(y_test), np.exp(predictions)
+    return y_test, predictions
 
-    else:
-        actual_y_test = y_test
-        actual_predictions = predictions
-
-    return actual_y_test, actual_predictions
 
 def calc_errors(actual_y_test, actual_predictions): 
-    r2 = r2_score(actual_y_test, actual_predictions)
-    mape = mean_absolute_percentage_error(actual_y_test, actual_predictions)
-    mae = mean_absolute_error(actual_y_test, actual_predictions)
-    rmse = np.sqrt(mean_squared_error(actual_y_test, actual_predictions))
+    return (
+        r2_score(actual_y_test, actual_predictions),
+        mean_absolute_percentage_error(actual_y_test, actual_predictions),
+        mean_absolute_error(actual_y_test, actual_predictions),
+        np.sqrt(mean_squared_error(actual_y_test, actual_predictions))
+    )
 
-    return r2, mape, mae, rmse
 
 def get_settings(data):
     return {
@@ -127,28 +144,72 @@ def get_settings(data):
         "split": data.get('test_split'), 
     }
 
-def config_data(settings, features, target):
-    # --- Define X and y ---
-    X = np.array(features)
-    y = log_target(settings.get("log_transform_target"), target)
+def print_sanity_check(X, y):
+    df_check = X.copy()
+    df_check['TARGET'] = y
 
-    # --- Split data sets ---
-    X_train, X_test, y_train, y_test = split_data(X, y, settings)
+    print("--- DATA SUMMARY ---")
+    print(df_check.describe())
 
-    #--- Scale features ---
-    X_train_scaled, X_test_scaled = scale_features(X_train, X_test)
+    # Correlatiom Heatmap
+    plt.figure(figsize=(14, 12))  
+    correlation_matrix = df_check.corr() 
+    mask = np.triu(np.ones_like(correlation_matrix, dtype=bool))
+    
+    sns.heatmap(
+        correlation_matrix, 
+        mask=mask,
+        annot=True,            
+        cmap='coolwarm', 
+        fmt=".2f", 
+        linewidths=0.5,
+        cbar_kws={"shrink": .8}
+    )
+    plt.title("Linear Correlation Heatmap (Features vs Target)")
+    plt.tight_layout()
+    plt.savefig('app/server/models/images/real_correlation_matrix.png')
+    plt.close()
 
-    return X_train_scaled, X_test_scaled, y_train, y_test
+    # Plot Outliers
+    num_features = len(X.columns)
+    fig, axes = plt.subplots(nrows=int(np.ceil(num_features/4)), ncols=4, figsize=(16, num_features))
+    axes = axes.flatten()
+    
+    for i, col in enumerate(X.columns):
+        sns.boxplot(y=df_check[col], ax=axes[i])
+        axes[i].set_title(col, fontsize=9)
+        axes[i].set_ylabel('')
+        
+    # Clear unused axes
+    for j in range(i + 1, len(axes)):
+        fig.delaxes(axes[j])
+        
+    plt.suptitle("Individual Feature Boxplots (Outlier Check)", fontsize=16)
+    plt.tight_layout()
+    plt.savefig('app/server/models/images/outliers_scaled.png') 
+    plt.close()
+
+    # Target Distirbution
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    sns.histplot(df_check['TARGET'], kde=True, ax=axes[0])
+    axes[0].set_title("Target Distribution (Skewness Check)")
+    
+    sns.boxplot(x=df_check['TARGET'], ax=axes[1])
+    axes[1].set_title("Target Boxplot (Outlier Check)")
+    
+    plt.tight_layout()
+    plt.savefig('app/server/models/images/target_distribution.png') 
+    plt.close()
+
 
 def print_baseline(y_train): 
     y_mean = np.mean(y_train)
     y_prediction_baseline = [y_mean] * len(y_train)
-
     MAE_baseline = mean_absolute_error(y_train, y_prediction_baseline)
 
-    #print the mean and the baseline MAE
     print("Mean Y:", round(y_mean, 2))
     print("Baseline MAE:", round(MAE_baseline, 2)) 
+
 
 def calc_all_models(settings, X_train_scaled, X_test_scaled, y_train, y_test): 
     performance_list = []
@@ -158,15 +219,14 @@ def calc_all_models(settings, X_train_scaled, X_test_scaled, y_train, y_test):
         model = choose_model(chosen_model, settings)
         model.fit(X_train_scaled, y_train)
 
-        # --- Make predicitons and calc errors
         actual_y_test, actual_prediction = exp_y_from_log(
             settings=settings, 
             y_test=y_test, 
-            predictions=model.predict(X_test_scaled))
+            predictions=model.predict(X_test_scaled)
+        )
 
         r2, mape, mae, rmse = calc_errors(actual_y_test, actual_prediction)
 
-        # --- Return in JSON ---
         performance_list.append({
             "model_name": model.__class__.__name__,
             "r2": round(r2, 2),
@@ -179,25 +239,26 @@ def calc_all_models(settings, X_train_scaled, X_test_scaled, y_train, y_test):
 
     return performance_list, coefficients_dict
 
+
 def run_models(data): 
     settings = get_settings(data)
 
-    # --- Feature and Target selection ---
-    features, target = get_features_and_target(settings=settings)
-
-    X_train_scaled, X_test_scaled, y_train, y_test = config_data(
-        settings=settings, 
-        features=features, 
-        target=target)
+    # Handle data
+    X, y = get_features_and_target_df(settings=settings)
+    print_sanity_check(X, y)
+    X_train, X_test, y_train, y_test = split_data(X, y, settings)
+    X_train_scaled, X_test_scaled = scale_features(X_train, X_test)
     
     print_baseline(y_train)
 
+    # Train and Evaluate
     performance_list, coefficients_dict = calc_all_models(
         settings=settings, 
         X_train_scaled=X_train_scaled, 
         X_test_scaled=X_test_scaled,
         y_train=y_train, 
-        y_test=y_test)
+        y_test=y_test
+    )
 
     return {
         "performance": performance_list,
