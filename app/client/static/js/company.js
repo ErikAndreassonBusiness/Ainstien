@@ -145,7 +145,7 @@ function displayFundamentals(history) {
       <td class="text-end">${mil(f.fixed_assets)}M</td>
       <td class="text-end">${mil(f.cash)}M</td>
       <td class="text-end">${mil(f.inventory)}M</td>
-      <td class="text-end">${mil(f.account_receiveables)}M</td>
+      <td class="text-end">${mil(f.account_receivables)}M</td>
       <td class="text-end fw-semibold">${mil(f.total_equity)}M</td>
       <td class="text-end">${mil(f.short_term_debt)}M</td>
       <td class="text-end">${mil(f.long_term_debt)}M</td>

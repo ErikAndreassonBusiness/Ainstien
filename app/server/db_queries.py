@@ -76,13 +76,52 @@ def sort_fundamentals_from_company(company):
         key=lambda fundamental: fundamental.report_date, 
         reverse=True)
 
+# ============ For Models ===============
+def build_dataframe_for_models(metric_features_enabled):
+    data_rows = []
+    
+    for company in get_all_companies():
+        reports = get_all_reports(company)
+        reports_to_process = reports[1:] if metric_features_enabled else reports
+
+        for report in reports_to_process:
+            # Flatten the database relationship records into a flat dictionary row
+            row = {
+                "max_average_future_price": report.max_average_future_price,
+                "one_month_price": report.one_month_price, 
+                "two_month_price": report.two_month_price,
+                "three_month_price": report.three_month_price,
+                "share_outstanding": report.share_outstanding,
+                "current_price": report.current_price,
+            }
+        
+            for attr in dir(get_all_fundamentals(report)):
+                row[f"fundamental_{attr}"] = getattr(get_all_fundamentals(report), attr)
+                    
+            for attr in dir(get_all_metrics(report)):
+                row[f"metric_{attr}"] = getattr(get_all_metrics(report), attr)
+        
+            data_rows.append(row)
+            
+    return pd.DataFrame(data_rows)
+
+
+
+# ============== Getters ================
+# --- Main ---
 def get_all_companies(): 
     return Company.query.all()
 
 def get_all_reports(company):
     return company.reports
 
-# ============== Models ================
+def get_all_fundamentals(report):
+    return report.fundamental
+
+def get_all_metrics(report):
+    return report.metric
+
+# --- Others ---
 def get_fundamentals_attrbiute_names():
     return Fundamental.get_attribute_names()
 

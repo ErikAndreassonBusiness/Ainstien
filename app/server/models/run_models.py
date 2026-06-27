@@ -1,5 +1,3 @@
-from app.server.database import db, Company, Report, Fundamental, Metric
-
 from sklearn.linear_model import LassoCV, RidgeCV, ElasticNetCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, mean_absolute_percentage_error
@@ -7,47 +5,18 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, m
 import numpy as np
 import pandas as pd
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg') #To plot at the same time with Flask
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 from app.server.db_queries import (
     get_all_companies, 
     get_all_reports, 
+    get_all_fundamentals, 
+    get_all_metrics,
+    build_dataframe_for_models,
     get_metrics_attrbiute_names
 )
-
-def build_dataframe(metric_features_enabled):
-    """
-    Extracts all database objects into a flat Pandas DataFrame.
-    """
-    data_rows = []
-    
-    for company in get_all_companies():
-        reports = get_all_reports(company)
-        reports_to_process = reports[1:] if metric_features_enabled else reports
-
-        for report in reports_to_process:
-            # Flatten the database relationship records into a flat dictionary row
-            row = {
-                "max_average_future_price": report.max_average_future_price,
-                "one_month_price": report.one_month_price, 
-                "two_month_price": report.two_month_price,
-                "three_month_price": report.three_month_price,
-                "share_outstanding": report.share_outstanding,
-                "current_price": report.current_price,
-            }
-        
-            for attr in dir(report.fundamental):
-                row[f"fundamental_{attr}"] = getattr(report.fundamental, attr)
-                    
-            for attr in dir(report.metric):
-                row[f"metric_{attr}"] = getattr(report.metric, attr)
-        
-            data_rows.append(row)
-            
-    return pd.DataFrame(data_rows)
-
 
 def get_features_and_target_df(settings):
     """
@@ -144,6 +113,7 @@ def get_settings(data):
         "split": data.get('test_split'), 
     }
 
+
 def print_sanity_check(X, y):
     df_check = X.copy()
     df_check['TARGET'] = y
@@ -167,7 +137,7 @@ def print_sanity_check(X, y):
     )
     plt.title("Linear Correlation Heatmap (Features vs Target)")
     plt.tight_layout()
-    plt.savefig('app/server/models/images/real_correlation_matrix.png')
+    plt.savefig('app/server/models/images/correlation_matrix.png')
     plt.close()
 
     # Plot Outliers

@@ -23,13 +23,12 @@ from .models.model_extras import get_correlation_matrix, get_target_names
 
 # ========== API routes ============
 
-# --- Dashboard Page---
+# --- Company Page ---
 @app.route('/api/market-summary', methods = ['GET'])
 def market_summary():
     data = get_dashboard_market_data()
     return jsonify(data)
 
-# --- Company Page ---
 @app.route('/api/company-details/<ticker>')
 def api_company_details(ticker):
     return get_company_fundamentals_history(ticker)
@@ -47,10 +46,6 @@ def correlation_matrix():
 @app.route('/api/run-models', methods = ['POST'])
 def model():
     return jsonify(run_models(request.get_json()))
-
-@app.route('/api/model-features', methods=['GET'])
-def get_model_features():
-    return jsonify(get_)
 
 @app.route('/api/feature-names', methods = ['GET'])
 def feature_names():
