@@ -84,6 +84,10 @@ def company(ticker):
 def run_models_page():
     return render_template('run_models.html')
 
+@app.route('/feature-analysis')
+def feature_analysis(): 
+    return render_template('feature_analysis.html')
+
 
 
 

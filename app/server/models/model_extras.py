@@ -17,8 +17,8 @@ def extract_features_from_report(report, features):
 
 
 def get_correlation_matrix(data):
-    fundamentals = data.get('features').get('fundamental_features', [])
-    metrics = data.get('features').get('metric_features', [])
+    fundamentals = data.get('data_to_get').get('fundamental_features', [])
+    metrics = data.get('data_to_get').get('metric_features', [])
     all_features = fundamentals + metrics
 
     attributes_to_calc = []

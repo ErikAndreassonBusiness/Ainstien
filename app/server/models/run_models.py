@@ -27,7 +27,7 @@ def get_features_and_target_df(settings):
     chosen_target = settings.get("chosen_target")
 
     # Build the dataframe
-    df = build_dataframe(metric_features_enabled=bool(metric_features))
+    df = build_dataframe_for_models(metric_features_enabled=bool(metric_features))
 
     if chosen_target == "future_max_price": 
         df['target'] = df['max_average_future_price'] * df['share_outstanding']
@@ -41,6 +41,8 @@ def get_features_and_target_df(settings):
         df['target'] = df['three_month_price'] * df['share_outstanding']
     else:
         print("Target value does not exists")
+    
+    print("Target: ", chosen_target)
 
     # Map features 
     selected_fundamental = [f"fundamental_{f}" for f in fundamental_features if f"fundamental_{f}" in df.columns]
@@ -102,15 +104,16 @@ def calc_errors(actual_y_test, actual_predictions):
 
 
 def get_settings(data):
+    print("Data: ", data)
     return {
-        "chosen_models": data.get('models'),
-        "fundamental_features": data.get('fundamental_features'),
-        "metric_features": data.get('metric_features'),
-        "chosen_target": data.get('target_variable'),
-        "log_transform_target": data.get('log_transform'),
-        "cv_folds": data.get('cv_folds'), 
-        "positive_coef": data.get('positive_coefficients'),
-        "split": data.get('test_split'), 
+        "chosen_models": data.get('data_to_get').get('models'),
+        "fundamental_features": data.get('data_to_get').get('fundamental_features'),
+        "metric_features": data.get('data_to_get').get('metric_features'),
+        "chosen_target": data.get('data_to_get').get('target_variable'),
+        "log_transform_target": data.get('data_to_get').get('log_transform'),
+        "cv_folds": data.get('data_to_get').get('cv_folds'), 
+        "positive_coef": data.get('data_to_get').get('positive_coefficients'),
+        "split": data.get('data_to_get').get('test_split'), 
     }
 
 

@@ -286,9 +286,9 @@ async function getModelResults(e) {
     fundamental_features: getFundamentFeatures(selectedFeatures, allFeatures),
     metric_features: getMetricFeatures(selectedFeatures, allFeatures),
     models: selectedModels,
-    target_variable:
-      e.target.querySelector('input[name="target_variable"]:checked')?.value ||
-      "future_price",
+    target_variable: e.target.querySelector(
+      'input[name="target_variable"]:checked',
+    )?.value,
     log_transform: e.target.querySelector('input[name="log_transform"]')
       ?.checked
       ? "on"

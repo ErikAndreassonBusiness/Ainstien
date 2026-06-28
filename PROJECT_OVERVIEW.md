@@ -94,6 +94,10 @@ app/
         ├── metric_model.py
         ├── metric_ridge_model.py
         └── run_models.py               # Model executer
+        └── images/                # Backend API & business logic
+            └── correlation_matrix.png
+            └── target_distribution.png
+            └── target_outliers.png
 ```
 
 ### `/data` - Database Storage

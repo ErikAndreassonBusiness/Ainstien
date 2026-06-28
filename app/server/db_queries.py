@@ -1,6 +1,7 @@
 # app/server/db_queries.py
 
 from app import db
+import pandas as pd
 from .database import Company, Fundamental, Metric, Report
 from sqlalchemy.orm import joinedload
 
