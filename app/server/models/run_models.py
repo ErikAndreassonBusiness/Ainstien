@@ -140,7 +140,7 @@ def print_sanity_check(X, y):
     )
     plt.title("Linear Correlation Heatmap (Features vs Target)")
     plt.tight_layout()
-    plt.savefig('app/server/models/images/correlation_matrix.png')
+    plt.savefig('app/client/static/images/correlation_matrix.png')
     plt.close()
 
     # Plot Outliers
@@ -159,7 +159,7 @@ def print_sanity_check(X, y):
         
     plt.suptitle("Individual Feature Boxplots (Outlier Check)", fontsize=16)
     plt.tight_layout()
-    plt.savefig('app/server/models/images/outliers_scaled.png') 
+    plt.savefig('app/client/static/images/outliers_scaled.png') 
     plt.close()
 
     # Target Distirbution
@@ -171,7 +171,7 @@ def print_sanity_check(X, y):
     axes[1].set_title("Target Boxplot (Outlier Check)")
     
     plt.tight_layout()
-    plt.savefig('app/server/models/images/target_distribution.png') 
+    plt.savefig('app/client/static/images/target_distribution.png') 
     plt.close()
 
 
