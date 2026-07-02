@@ -101,6 +101,32 @@ async function initRunModelsPage() {
   const btnGoToStep2 = document.getElementById("btn-go-to-step-2");
   if (btnGoToStep2) {
     btnGoToStep2.addEventListener("click", () => {
+      // 1. Gather choices to verify something is selected
+      const selectedFeatures = getCheckedValues('input[name="features"]');
+      const targetInput = document.querySelector(
+        'input[name="target_variable"]:checked',
+      );
+
+      if (selectedFeatures.length === 0 || !targetInput) {
+        alert(
+          "Please ensure you have selected a target and at least one feature.",
+        );
+        return;
+      }
+
+      // 2. Safely compute the human label mapping
+      const targetKey = targetInput.value;
+      const targetLabel = FEATURE_LABEL_MAP[targetKey] || targetKey;
+
+      // 3. Directly update the little dynamic placeholder slots in Step 2's summary UI
+      const labelEl = document.getElementById("summary-target-label");
+      const countEl = document.getElementById("summary-features-count");
+
+      if (labelEl) labelEl.textContent = targetLabel;
+      if (countEl)
+        countEl.textContent = `${selectedFeatures.length} features passed from Step 1.`;
+
+      // 4. Toggle layouts cleanly
       document.getElementById("panel-step-1")?.classList.add("d-none");
       document.getElementById("panel-step-2")?.classList.remove("d-none");
       document.getElementById("timeline-step-1")?.classList.remove("active");
@@ -215,10 +241,10 @@ async function getDiagnostics() {
     };
 
     // Await core analytical computation call from backend engines
-    await fetchDataDiagnostics(payload);
+    images = await fetchDataDiagnostics(payload);
 
     // Call graphic compiler mapping function directly
-    renderDiagnosticsLayout();
+    renderDiagnosticsLayout(images);
   } catch (error) {
     console.error("Correlation dataset engine failure:", error);
     alert("An error occurred during diagnostic graphic asset compilation.");
@@ -233,11 +259,23 @@ async function getDiagnostics() {
 /**
  * Injects Graphical Analytical Charts directly inside the step-1 dashboard workspace
  */
-function renderDiagnosticsLayout() {
+function renderDiagnosticsLayout(apiResponse) {
+  console.log("Diagnostics Images API Response:", apiResponse);
+
   const displayArea = document.getElementById("diagnostics-display-area");
   if (!displayArea) return;
 
-  // Render both graphic analytical block card frames dynamically
+  // Safely extract the inner images dictionary from the backend response wrapper
+  const images = apiResponse?.images;
+  if (!images) {
+    console.error(
+      "No inner 'images' object found in the payload:",
+      apiResponse,
+    );
+    return;
+  }
+
+  // Inject the HTML directly while inserting the dynamic paths from your JSON
   displayArea.innerHTML = `
     <div class="text-start animate-fade-in w-100">
       
@@ -249,13 +287,22 @@ function renderDiagnosticsLayout() {
           </h6>
         </div>
         <div class="card-body text-center py-4 bg-white">
-          <img
-            id = "target-dist-img"
-            src="/static/images/target_distribution.png"
-            alt="Target Distribution and Boxplot"
-            class="img-fluid rounded shadow-sm border"
-            style="max-height: 400px; width: auto; object-fit: contain"
-          />
+          <div class="d-flex flex-wrap justify-content-center gap-3">
+            <img
+              id="target-dist-img"
+              src="${images.target_distribution}"
+              alt="Target Distribution"
+              class="img-fluid rounded shadow-sm border"
+              style="max-height: 400px; width: auto; object-fit: contain"
+            />
+            <img
+              id="outliers-scaled-img"
+              src="${images.outliers_scaled}"
+              alt="Outliers Scaled Check"
+              class="img-fluid rounded shadow-sm border"
+              style="max-height: 400px; width: auto; object-fit: contain"
+            />
+          </div>
           <div class="mt-4 text-start bg-light p-3 rounded border-start border-4 border-primary">
             <p class="financial-data mb-0 text-muted text-xs">
               <strong>Observation:</strong> This visualization checks the distribution for normality and skewness, while the boxplot identifies potential extreme outliers in the future maximum price targets that may require robust scaling or clipping before model training.
@@ -273,8 +320,8 @@ function renderDiagnosticsLayout() {
         </div>
         <div class="card-body text-center py-4 bg-white">
           <img
-            id = "heatmap-img"
-            src="/static/images/correlation_matrix.png"
+            id="heatmap-img"
+            src="${images.correlation_matrix}"
             alt="Correlation Matrix Heatmap"
             class="img-fluid rounded shadow-sm border"
             style="max-height: 750px; width: auto; object-fit: contain"

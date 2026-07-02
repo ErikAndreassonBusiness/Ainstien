@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import time
+from pathlib import Path
 
 from app.server.db_queries import build_dataframe_for_models
 
@@ -44,13 +45,21 @@ def get_features_and_target_df(settings):
     X = df[all_features].copy()
     y = df['target'].copy()
 
-    print("Settings log: ", settings.get('log_transform_target'))
     if settings.get("log_transform_target") == "on":
         y = np.log(y)
 
     return X, y
 
-def print_target_outliers(df_check): 
+def remove_past_images():
+    current_dir = Path(__file__).resolve().parent
+    folderPath = current_dir.parents[1] / "client" / "static" / "images" #Go to folder
+    filesList = list(folderPath.rglob("*"))
+
+    for file in filesList:
+        file.unlink()  # Remove the file
+    print("All Files are Remove if Existed")
+
+def print_target_outliers(df_check, timestamp): 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
     sns.histplot(df_check['TARGET'], kde=True, ax=axes[0])
     axes[0].set_title("Target Distribution (Skewness Check)")
@@ -59,22 +68,20 @@ def print_target_outliers(df_check):
     axes[1].set_title("Target Boxplot (Outlier Check)")
     
     plt.tight_layout()
-    plt.savefig('app/client/static/images/target_distribution.png') 
+    plt.savefig(f"app/client/static/images/target_distribution{timestamp}.png") 
     plt.close()
+    
 
-
-def print_feature_outliers(X): 
+def print_feature_outliers(X, timestamp): 
     # Plot Outliers
     num_features = len(X.columns)
     if num_features == 0:
-        print("No features selected for outlier plotting.")
         return
 
     fig, axes = plt.subplots(nrows=int(np.ceil(num_features/4)), ncols=4, figsize=(16, max(4, num_features)))
     axes = axes.flatten()
     
     for i, col in enumerate(X.columns):
-        # FIX: Changed df_check[col] to X[col] since X is what we passed into this scope
         sns.boxplot(y=X[col], ax=axes[i])
         axes[i].set_title(col, fontsize=9)
         axes[i].set_ylabel('')
@@ -85,10 +92,10 @@ def print_feature_outliers(X):
         
     plt.suptitle("Individual Feature Boxplots (Outlier Check)", fontsize=16)
     plt.tight_layout()
-    plt.savefig('app/client/static/images/outliers_scaled.png') 
+    plt.savefig(f"app/client/static/images/outliers_scaled{timestamp}.png") 
     plt.close()
 
-def print_correlation_heatmap(df_check): 
+def print_correlation_heatmap(df_check, timestamp): 
     # Correlation Heatmap
     plt.figure(figsize=(14, 12))  
     correlation_matrix = df_check.corr() 
@@ -105,11 +112,12 @@ def print_correlation_heatmap(df_check):
     )
     plt.title("Linear Correlation Heatmap (Features vs Target)")
     plt.tight_layout()
-    plt.savefig('app/client/static/images/correlation_matrix.png')
+    plt.savefig(f"app/client/static/images/correlation_matrix{timestamp}.png")
     plt.close()
 
 
 def print_diagnostics(data):
+    timestamp = int(time.time())
     X, y = get_features_and_target_df(get_settings(data))
 
     # Prepare dataframes for the printing utilities
@@ -117,17 +125,17 @@ def print_diagnostics(data):
     df_check['TARGET'] = y
 
     # Run printers cleanly by passing exactly what they need
-    print_target_outliers(df_check)
-    print_feature_outliers(X)
-    print_correlation_heatmap(df_check)
+    remove_past_images()
+    print_target_outliers(df_check, timestamp)
+    print_feature_outliers(X, timestamp)
+    print_correlation_heatmap(df_check, timestamp)
 
-    timestamp = int(time.time())
     
     return {
         "status": "success", 
         "images": {
-            "target_distribution": f"/static/images/target_distribution.png?v={timestamp}",
-            "outliers_scaled": f"/static/images/outliers_scaled.png?v={timestamp}",
-            "correlation_matrix": f"/static/images/correlation_matrix.png?v={timestamp}"
+            "target_distribution": f"/static/images/target_distribution{timestamp}.png",
+            "outliers_scaled": f"/static/images/outliers_scaled{timestamp}.png",
+            "correlation_matrix": f"/static/images/correlation_matrix{timestamp}.png"
         }
     }

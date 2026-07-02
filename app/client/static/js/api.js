@@ -84,47 +84,10 @@ async function fetchCorrelationMatrix(features) {
  */
 async function fetchDataDiagnostics(data) {
   try {
-    console.log("1. Sending diagnostics request with data:", data);
-
-    const response = await fetch("/api/diagnostics", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-
-    const result = await response.json();
-    console.log("2. Received response from backend:", result);
-
-    if (result.status === "success") {
-      console.log("3. Backend reported success. Checking HTML elements...");
-
-      const distImg = document.getElementById("target-dist-img");
-      const outliersImg = document.getElementById("outliers-img");
-      const heatmapImg = document.getElementById("heatmap-img");
-
-      console.log("Elements found in HTML:", {
-        "target-dist-img": !!distImg,
-        "outliers-img": !!outliersImg,
-        "heatmap-img": !!heatmapImg,
-      });
-
-      if (distImg && result.images?.target_distribution) {
-        distImg.src = result.images.target_distribution;
-        console.log("Updated target-dist-img src to:", distImg.src);
-      }
-      if (outliersImg && result.images?.outliers_scaled) {
-        outliersImg.src = result.images.outliers_scaled;
-        console.log("Updated outliers-img src to:", outliersImg.src);
-      }
-      if (heatmapImg && result.images?.correlation_matrix) {
-        heatmapImg.src = result.images.correlation_matrix;
-        console.log("Updated heatmap-img src to:", heatmapImg.src);
-      }
-    } else {
-      console.error("Backend returned success=false:", result.message);
-    }
+    return await post(data, "diagnostics");
   } catch (error) {
-    console.error("Network or execution error:", error);
+    console.error("API Error (Diagnostics):", error);
+    return null;
   }
 }
 
