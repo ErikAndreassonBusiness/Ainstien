@@ -1,5 +1,3 @@
-// app/static/js/run_models.js
-
 const FEATURE_LABEL_MAP = {
   // Fundamentals
   revenue: "Revenue",
@@ -93,10 +91,48 @@ async function initRunModelsPage() {
     );
   }
 
-  // --- Multicollinearity Button ---
-  const btnLoadCorrelation = document.getElementById("btn-load-correlation");
-  if (btnLoadCorrelation) {
-    btnLoadCorrelation.addEventListener("click", getCorrelationMatrix);
+  // --- Diagnostics Layout Button Click Handler ---
+  const btnRunDiagnostics = document.getElementById("btn-run-diagnostics");
+  if (btnRunDiagnostics) {
+    btnRunDiagnostics.addEventListener("click", getDiagnostics);
+  }
+
+  // --- Step 1 to Step 2 Pipeline Wizard Navigation Toggler ---
+  const btnGoToStep2 = document.getElementById("btn-go-to-step-2");
+  if (btnGoToStep2) {
+    btnGoToStep2.addEventListener("click", () => {
+      // 1. Gather choices to verify something is selected
+      const selectedFeatures = getCheckedValues('input[name="features"]');
+      const targetInput = document.querySelector(
+        'input[name="target_variable"]:checked',
+      );
+
+      if (selectedFeatures.length === 0 || !targetInput) {
+        alert(
+          "Please ensure you have selected a target and at least one feature.",
+        );
+        return;
+      }
+
+      // 2. Safely compute the human label mapping
+      const targetKey = targetInput.value;
+      const targetLabel = FEATURE_LABEL_MAP[targetKey] || targetKey;
+
+      // 3. Directly update the little dynamic placeholder slots in Step 2's summary UI
+      const labelEl = document.getElementById("summary-target-label");
+      const countEl = document.getElementById("summary-features-count");
+
+      if (labelEl) labelEl.textContent = targetLabel;
+      if (countEl)
+        countEl.textContent = `${selectedFeatures.length} features passed from Step 1.`;
+
+      // 4. Toggle layouts cleanly
+      document.getElementById("panel-step-1")?.classList.add("d-none");
+      document.getElementById("panel-step-2")?.classList.remove("d-none");
+      document.getElementById("timeline-step-1")?.classList.remove("active");
+      document.getElementById("timeline-step-2")?.classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
   }
 
   // --- Modeling Button ---
@@ -173,88 +209,139 @@ function renderTargets(targetArray, containerId) {
 }
 
 /**
- * Get Multicollinearity Correlation Matrix
+ * Runs Diagnostics Engine and Triggers Graphical Render Layer
  */
-async function getCorrelationMatrix() {
+async function getDiagnostics() {
   const selectedFeatures = getCheckedValues('input[name="features"]');
 
   if (selectedFeatures.length === 0) {
-    alert(
-      "Please select at least one feature to compute the correlation matrix.",
-    );
+    alert("Please select at least one feature to compute diagnostics.");
     return;
   }
 
-  const btn = document.getElementById("btn-load-correlation");
+  const btn = document.getElementById("btn-run-diagnostics");
   if (btn) {
     btn.disabled = true;
-    btn.textContent = "Computing Matrix...";
+    btn.textContent = "Computing System Analytics...";
   }
-  // Check how the names features are gathared
+
   try {
     const allFeatures = await fetchFeatureNames();
 
     const payload = {
       fundamental_features: getFundamentFeatures(selectedFeatures, allFeatures),
       metric_features: getMetricFeatures(selectedFeatures, allFeatures),
+      target_variable: document.querySelector(
+        'input[name="target_variable"]:checked',
+      )?.value,
+      log_transform: document.querySelector('input[name="log_transform"]')
+        ?.checked
+        ? "on"
+        : "off",
     };
 
-    const correlationData = await fetchCorrelationMatrix(payload);
+    // Await core analytical computation call from backend engines
+    images = await fetchDataDiagnostics(payload);
 
-    if (correlationData && correlationData.matrix) {
-      renderCorrelationMatrix(correlationData, selectedFeatures);
-    } else {
-      console.warn("Backend returned an empty correlation payload.");
-    }
+    // Call graphic compiler mapping function directly
+    renderDiagnosticsLayout(images);
   } catch (error) {
     console.error("Correlation dataset engine failure:", error);
+    alert("An error occurred during diagnostic graphic asset compilation.");
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.textContent = "Compute Correlation Matrix";
+      btn.textContent = "Compute Layout Diagnostics";
     }
   }
 }
 
 /**
- * Renders the multidimensional correlation grid
+ * Injects Graphical Analytical Charts directly inside the step-1 dashboard workspace
  */
-function renderCorrelationMatrix(data, selectedFeatures) {
-  const container = document.getElementById("correlationMatrixContainer");
-  const thead = document.getElementById("correlationHeaderRow");
-  const tbody = document.getElementById("correlationTableBody");
+function renderDiagnosticsLayout(apiResponse) {
+  console.log("Diagnostics Images API Response:", apiResponse);
 
-  if (!container || !thead || !tbody) return;
+  const displayArea = document.getElementById("diagnostics-display-area");
+  if (!displayArea) return;
 
-  thead.innerHTML = "<th>Feature</th>";
-  tbody.innerHTML = "";
+  // Safely extract the inner images dictionary from the backend response wrapper
+  const images = apiResponse?.images;
+  if (!images) {
+    console.error(
+      "No inner 'images' object found in the payload:",
+      apiResponse,
+    );
+    return;
+  }
 
-  selectedFeatures.forEach((feature) => {
-    thead.innerHTML += `<th>${formatFeatureLabel(feature)}</th>`;
-  });
+  // Inject the HTML directly while inserting the dynamic paths from your JSON
+  displayArea.innerHTML = `
+    <div class="text-start animate-fade-in w-100">
+      
+      <!-- Target Distribution Component Block -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-2 border-bottom">
+          <h6 class="m-0 fw-bold text-dark text-xs text-uppercase tracking-wider">
+            Target Distribution & Outlier Check
+          </h6>
+        </div>
+        <div class="card-body text-center py-4 bg-white">
+          <div class="d-flex flex-wrap justify-content-center gap-3">
+            <img
+              id="target-dist-img"
+              src="${images.target_distribution}"
+              alt="Target Distribution"
+              class="img-fluid rounded shadow-sm border"
+              style="max-height: 400px; width: auto; object-fit: contain"
+            />
+            <img
+              id="outliers-scaled-img"
+              src="${images.outliers_scaled}"
+              alt="Outliers Scaled Check"
+              class="img-fluid rounded shadow-sm border"
+              style="max-height: 400px; width: auto; object-fit: contain"
+            />
+          </div>
+          <div class="mt-4 text-start bg-light p-3 rounded border-start border-4 border-primary">
+            <p class="financial-data mb-0 text-muted text-xs">
+              <strong>Observation:</strong> This visualization checks the distribution for normality and skewness, while the boxplot identifies potential extreme outliers in the future maximum price targets that may require robust scaling or clipping before model training.
+            </p>
+          </div>
+        </div>
+      </div>
 
-  data.matrix.forEach((row, i) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td class="fw-bold text-start text-xs">${formatFeatureLabel(selectedFeatures[i])}</td>`;
+      <!-- Linear Correlation Matrix Heatmap Block -->
+      <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white py-2 border-bottom">
+          <h6 class="m-0 fw-bold text-dark text-xs text-uppercase tracking-wider">
+            Linear Correlation Heatmap
+          </h6>
+        </div>
+        <div class="card-body text-center py-4 bg-white">
+          <img
+            id="heatmap-img"
+            src="${images.correlation_matrix}"
+            alt="Correlation Matrix Heatmap"
+            class="img-fluid rounded shadow-sm border"
+            style="max-height: 750px; width: auto; object-fit: contain"
+          />
+          <div class="mt-4 text-start bg-light p-3 rounded border-start border-4 border-primary">
+            <p class="financial-data mb-0 text-muted text-xs">
+              <strong>Observation:</strong> Lower-triangle heatmap displaying Pearson correlation coefficients. Features exhibiting high multicollinearity with one another may need to be dropped or combined, while features with strong correlations to the target variable should be prioritized.
+            </p>
+          </div>
+        </div>
+      </div>
 
-    row.forEach((value) => {
-      let bgColor = "transparent";
-      let textColor = "inherit";
-      if (value > 0.6) {
-        bgColor = "rgba(0, 100, 0, 0.15)"; // Soft positive green tint matching legendary custom CSS style
-        textColor = "#006400";
-      } else if (value < -0.6) {
-        bgColor = "rgba(0, 86, 179, 0.15)"; // Soft inverse blue tint
-        textColor = "var(--ainstien-blue)";
-      }
+    </div>
+  `;
 
-      tr.innerHTML += `<td class="font-monospace text-xs" style="background-color: ${bgColor}; color: ${textColor}">${value.toFixed(2)}</td>`;
-    });
-
-    tbody.appendChild(tr);
-  });
-
-  container.classList.remove("d-none");
+  // Reveal wizard navigation pipeline progression step button
+  const btnGoToStep2 = document.getElementById("btn-go-to-step-2");
+  if (btnGoToStep2) {
+    btnGoToStep2.classList.remove("d-none");
+  }
 }
 
 /**
@@ -279,7 +366,6 @@ async function getModelResults(e) {
     submitBtn.textContent = "Processing Regression Tasks...";
   }
 
-  // FIxa back-end så alla attribute fixas
   const allFeatures = await fetchFeatureNames();
 
   const payload = {
@@ -466,28 +552,24 @@ function getCheckedValues(selector) {
 }
 
 /**
- * Helpter function - Gets the chosen fundamentals and metrics
+ * Helper function - Gets the chosen fundamentals and metrics
  */
 function getFundamentFeatures(selectedFeatures, allFeatures) {
   if (!allFeatures || !allFeatures.fundamental_features) return [];
   const selectedFundamentals = allFeatures.fundamental_features;
 
-  const fundamentalFeatures = selectedFeatures.filter((feature) =>
+  return selectedFeatures.filter((feature) =>
     selectedFundamentals.includes(feature),
   );
-
-  return fundamentalFeatures;
 }
 
 function getMetricFeatures(selectedFeatures, allFeatures) {
   if (!allFeatures || !allFeatures.metric_features) return [];
   const selectedMetrics = allFeatures.metric_features;
 
-  const metricFeatures = selectedFeatures.filter((feature) =>
+  return selectedFeatures.filter((feature) =>
     selectedMetrics.includes(feature),
   );
-
-  return metricFeatures;
 }
 
 // Bootstrap execution

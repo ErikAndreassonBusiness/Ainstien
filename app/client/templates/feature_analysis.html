@@ -1,0 +1,75 @@
+{% extends "base.html" %} {% block title %}Feature Analysis | Ainstien{%
+endblock %} {% block content %}
+<div class="container mt-4 mb-5">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="fw-bold" style="color: var(--ainstien-dark)">
+        Feature & Target Analysis
+      </h2>
+      <p class="quant-muted">
+        Evaluating target distributions, skewness, and linear correlations for
+        max price targets.
+      </p>
+    </div>
+  </div>
+
+  <!-- Target Distribution Section -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">Target Distribution & Outlier Check</div>
+        <div class="card-body text-center py-4">
+          <img
+            src="{{ url_for('static', filename='images/target_distribution_future_max_target.png') }}"
+            alt="Target Distribution and Boxplot"
+            class="img-fluid rounded shadow-sm border"
+            style="max-height: 400px; width: auto; object-fit: contain"
+          />
+
+          <div
+            class="mt-4 text-start bg-light p-3 rounded border-start border-4 border-primary"
+          >
+            <p class="financial-data mb-0 text-muted">
+              <strong>Observation:</strong> This visualization checks the
+              distribution for normality and skewness, while the boxplot
+              identifies potential extreme outliers in the future maximum price
+              targets that may require robust scaling or clipping before model
+              training.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Correlation Matrix Section -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">Linear Correlation Heatmap</div>
+        <div class="card-body text-center py-4">
+          <img
+            src="{{ url_for('static', filename='/images/correlation_matrix.png') }}"
+            alt="Correlation Matrix Heatmap"
+            class="img-fluid rounded shadow-sm border"
+            style="max-height: 750px; width: auto; object-fit: contain"
+          />
+
+          <div
+            class="mt-4 text-start bg-light p-3 rounded border-start border-4 border-primary"
+          >
+            <p class="financial-data mb-0 text-muted">
+              <strong>Observation:</strong> Lower-triangle heatmap displaying
+              Pearson correlation coefficients. Features exhibiting high
+              multicollinearity with one another may need to be dropped or
+              combined, while features with strong correlations to the target
+              variable should be prioritized.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

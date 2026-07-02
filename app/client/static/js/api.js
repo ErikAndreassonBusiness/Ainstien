@@ -9,7 +9,7 @@ async function post(data_to_get, endpoint) {
   const response = await fetch("/api/" + endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ data_to_get }),
+    body: JSON.stringify(data_to_get),
   });
 
   if (!response.ok) {
@@ -77,6 +77,18 @@ async function fetchCompanyDetails(ticker) {
  */
 async function fetchCorrelationMatrix(features) {
   return post(features, "correlation-matrix");
+}
+
+/**
+ * Special fetch to force the browser to update
+ */
+async function fetchDataDiagnostics(data) {
+  try {
+    return await post(data, "diagnostics");
+  } catch (error) {
+    console.error("API Error (Diagnostics):", error);
+    return null;
+  }
 }
 
 /**

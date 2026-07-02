@@ -18,6 +18,8 @@ from .db_queries import (
     get_metrics_attrbiute_names
 )
 
+from .models.feature_analysis import print_diagnostics
+
 from .models.run_models import run_models
 from .models.model_extras import get_correlation_matrix, get_target_names
 
@@ -42,6 +44,10 @@ def api_market_data(ticker = None):
 @app.route('/api/correlation-matrix', methods = ['POST'])
 def correlation_matrix():
     return jsonify(get_correlation_matrix(request.get_json()))
+
+@app.route('/api/diagnostics', methods = ['POST'])
+def diagnostics(): 
+    return jsonify(print_diagnostics(request.get_json()))
 
 @app.route('/api/run-models', methods = ['POST'])
 def model():
@@ -83,6 +89,14 @@ def company(ticker):
 @app.route('/models')
 def run_models_page():
     return render_template('run_models.html')
+
+@app.route('/runmodels')
+def models_page():
+    return render_template('runmodels.html')
+
+@app.route('/feature-analysis')
+def feature_analysis(): 
+    return render_template('feature_analysis.html')
 
 
 
