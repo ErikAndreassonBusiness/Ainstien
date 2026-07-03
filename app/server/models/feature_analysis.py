@@ -25,7 +25,7 @@ def get_features_and_target_df(settings):
     # Build the dataframe
     df = build_dataframe_for_models(metric_features_enabled=bool(metric_features))
 
-    if chosen_target == "future_price": 
+    if chosen_target == "future_max_price": 
         df['target'] = df['max_average_future_price'] * df['share_outstanding']
     elif chosen_target == "future_growth":
         df['target'] = (df['max_average_future_price'] / df['current_price'] - 1) * 100

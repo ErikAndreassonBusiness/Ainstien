@@ -31,7 +31,7 @@ const FEATURE_LABEL_MAP = {
   profit_margin_percent: "Profit Margin (%)",
 
   // Targets
-  future_price: "Future Price Target",
+  future_max_price: "Future Max Price Target",
   future_growth: "Future Growth Target",
 };
 
@@ -48,14 +48,31 @@ function formatFeatureLabel(featureKey) {
 }
 
 /**
- * Main function: Runs the page setup cleanly
+ * ==================================================================
+ *                                                 MAIN FUNCTIONS FOR PIPELINE
+ * ==================================================================
  */
-async function initRunModelsPage() {
+
+/**
+ * ==========================================
+ * STEP 1: Data Configuration
+ * ==========================================
+ */
+async function renderStep1Layout() {
+  // Handeling Timeline state
+  document.getElementById("panel-step-1")?.classList.remove("d-none");
+  document.getElementById("panel-step-2")?.classList.add("d-none");
+  document.getElementById("panel-step-3")?.classList.add("d-none");
+
+  document.getElementById("timeline-step-1")?.classList.add("active");
+  document.getElementById("timeline-step-2")?.classList.remove("active");
+  document.getElementById("timeline-step-3")?.classList.remove("active");
+
+  // Render possible features and targets
   try {
     const featuresNames = await fetchFeatureNames();
     const targetsNames = await fetchTargetNames();
 
-    // --- Render Features and Targets
     if (featuresNames) {
       renderCheckboxes(
         featuresNames.fundamental_features,
@@ -73,7 +90,6 @@ async function initRunModelsPage() {
       renderTargets(targetsNames.targets, "targets-container");
     }
 
-    // --- Render Select ALL Buttons ---
     setupCheckboxToggle(
       "btn-select-all-models",
       'input[name="models"]',
@@ -86,61 +102,129 @@ async function initRunModelsPage() {
     );
   } catch (error) {
     console.error(
-      "Initialization failure during runtime layout creation:",
+      "Initialization failure during Step 1 layout creation:",
       error,
     );
   }
 
-  // --- Diagnostics Layout Button Click Handler ---
+  // Display Diagnosis button
   const btnRunDiagnostics = document.getElementById("btn-run-diagnostics");
   if (btnRunDiagnostics) {
-    btnRunDiagnostics.addEventListener("click", getDiagnostics);
+    btnRunDiagnostics.replaceWith(btnRunDiagnostics.cloneNode(true)); // If a user navigates back to Step 1
+    document
+      .getElementById("btn-run-diagnostics")
+      .addEventListener("click", getDiagnostics);
   }
 
-  // --- Step 1 to Step 2 Pipeline Wizard Navigation Toggler ---
+  // Display Go to Step 2 button
   const btnGoToStep2 = document.getElementById("btn-go-to-step-2");
   if (btnGoToStep2) {
-    btnGoToStep2.addEventListener("click", () => {
-      // 1. Gather choices to verify something is selected
-      const selectedFeatures = getCheckedValues('input[name="features"]');
-      const targetInput = document.querySelector(
-        'input[name="target_variable"]:checked',
-      );
-
-      if (selectedFeatures.length === 0 || !targetInput) {
-        alert(
-          "Please ensure you have selected a target and at least one feature.",
+    btnGoToStep2.replaceWith(btnGoToStep2.cloneNode(true));
+    document
+      .getElementById("btn-go-to-step-2")
+      .addEventListener("click", () => {
+        const selectedFeatures = getCheckedValues('input[name="features"]');
+        const targetInput = document.querySelector(
+          'input[name="target_variable"]:checked',
         );
-        return;
-      }
 
-      // 2. Safely compute the human label mapping
-      const targetKey = targetInput.value;
-      const targetLabel = FEATURE_LABEL_MAP[targetKey] || targetKey;
-
-      // 3. Directly update the little dynamic placeholder slots in Step 2's summary UI
-      const labelEl = document.getElementById("summary-target-label");
-      const countEl = document.getElementById("summary-features-count");
-
-      if (labelEl) labelEl.textContent = targetLabel;
-      if (countEl)
-        countEl.textContent = `${selectedFeatures.length} features passed from Step 1.`;
-
-      // 4. Toggle layouts cleanly
-      document.getElementById("panel-step-1")?.classList.add("d-none");
-      document.getElementById("panel-step-2")?.classList.remove("d-none");
-      document.getElementById("timeline-step-1")?.classList.remove("active");
-      document.getElementById("timeline-step-2")?.classList.add("active");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-  }
-
-  // --- Modeling Button ---
-  const form = document.getElementById("model-config-form");
-  if (form) {
-    form.addEventListener("submit", getModelResults);
+        // Transition to Step 2
+        renderStep2Layout(selectedFeatures, targetInput.value);
+      });
   }
 }
+
+/**
+ * ==========================================
+ * STEP 2: TUNE & TRAIN
+ * ==========================================
+ */
+function renderStep2Layout(selectedFeatures, targetKey) {
+  // Manage Timeline state
+  document.getElementById("panel-step-1")?.classList.add("d-none");
+  document.getElementById("panel-step-2")?.classList.remove("d-none");
+  document.getElementById("panel-step-3")?.classList.add("d-none");
+
+  document.getElementById("timeline-step-1")?.classList.remove("active");
+  document.getElementById("timeline-step-2")?.classList.add("active");
+  document.getElementById("timeline-step-3")?.classList.remove("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  document.getElementById("btn-go-to-step-3")?.classList.add("d-none");
+
+  // Step 2 summary from Step 1
+  const targetLabel = FEATURE_LABEL_MAP[targetKey] || targetKey;
+  const labelEl = document.getElementById("summary-target-label");
+  const countEl = document.getElementById("summary-features-count");
+
+  if (labelEl) labelEl.textContent = targetLabel; // Target chosen displays
+  if (countEl)
+    countEl.textContent = `${selectedFeatures.length} features passed from Step 1.`; // Features count displays
+
+  /// Run Model form
+  const form = document.getElementById("model-config-form");
+  if (form) {
+    form.replaceWith(form.cloneNode(true));
+
+    // Back to Step 1 button
+    const btnBackToStep1 = document.getElementById("btn-back-to-step-1");
+    if (btnBackToStep1) {
+      btnBackToStep1.addEventListener("click", () => {
+        document.getElementById("panel-step-1")?.classList.remove("d-none");
+        document.getElementById("panel-step-2")?.classList.add("d-none");
+        document.getElementById("timeline-step-1")?.classList.add("active");
+        document.getElementById("timeline-step-2")?.classList.remove("active");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+
+    document
+      .getElementById("model-config-form")
+      .addEventListener("submit", async (e) => {
+        const results = await getModelResults(e, selectedFeatures, targetKey);
+
+        if (results) {
+          renderPerformanceMatrix(results.performance);
+          renderCoefficientsMatrix(results.coefficients);
+
+          const btnGoToStep3 = document.getElementById("btn-go-to-step-3");
+          if (btnGoToStep3) {
+            btnGoToStep3.classList.remove("d-none"); // Reveal the button
+
+            btnGoToStep3.replaceWith(btnGoToStep3.cloneNode(true));
+            document
+              .getElementById("btn-go-to-step-3")
+              .addEventListener("click", () => {
+                !renderStep3Layout(results, { selectedFeatures, targetKey });
+              });
+          }
+        }
+      });
+  }
+}
+
+/**
+ * ==========================================
+ * STEP 3: SAVED REGISTRY
+ * ==========================================
+ */
+function renderStep3Layout(modelResults) {
+  // Manage Timeline state
+  document.getElementById("panel-step-1")?.classList.add("d-none");
+  document.getElementById("panel-step-2")?.classList.add("d-none");
+  document.getElementById("panel-step-3")?.classList.remove("d-none");
+
+  document.getElementById("timeline-step-1")?.classList.remove("active");
+  document.getElementById("timeline-step-2")?.classList.remove("active");
+  document.getElementById("timeline-step-3")?.classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/**
+ * ==================================================================
+ *                                                          LOGIC FUNCTIONS
+ * ==================================================================
+ */
 
 /**
  * Interface Utility: High-performance select/deselect all mass toggling
@@ -241,13 +325,10 @@ async function getDiagnostics() {
     };
 
     // Await core analytical computation call from backend engines
-    images = await fetchDataDiagnostics(payload);
+    let images = await fetchDataDiagnostics(payload);
 
     // Call graphic compiler mapping function directly
     renderDiagnosticsLayout(images);
-  } catch (error) {
-    console.error("Correlation dataset engine failure:", error);
-    alert("An error occurred during diagnostic graphic asset compilation.");
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -260,18 +341,13 @@ async function getDiagnostics() {
  * Injects Graphical Analytical Charts directly inside the step-1 dashboard workspace
  */
 function renderDiagnosticsLayout(apiResponse) {
-  console.log("Diagnostics Images API Response:", apiResponse);
-
   const displayArea = document.getElementById("diagnostics-display-area");
   if (!displayArea) return;
 
   // Safely extract the inner images dictionary from the backend response wrapper
   const images = apiResponse?.images;
   if (!images) {
-    console.error(
-      "No inner 'images' object found in the payload:",
-      apiResponse,
-    );
+    console.error("No images found in diagnostics response");
     return;
   }
 
@@ -347,17 +423,14 @@ function renderDiagnosticsLayout(apiResponse) {
 /**
  * Model engine compilation execution orchestrator
  */
-async function getModelResults(e) {
+async function getModelResults(e, selectedFeatures, targetKey) {
   e.preventDefault();
 
-  const selectedFeatures = getCheckedValues('input[name="features"]');
-  const selectedModels = getCheckedValues('input[name="models"]');
+  const selectedModels = getCheckedValues('input[name="models"]'); //Get checked model
 
-  if (selectedFeatures.length === 0 || selectedModels.length === 0) {
-    alert(
-      "Please select at least one tracking feature and one mathematical model algorithm.",
-    );
-    return;
+  if (selectedModels.length === 0) {
+    alert("Please select at least one model.");
+    return null;
   }
 
   const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -372,9 +445,7 @@ async function getModelResults(e) {
     fundamental_features: getFundamentFeatures(selectedFeatures, allFeatures),
     metric_features: getMetricFeatures(selectedFeatures, allFeatures),
     models: selectedModels,
-    target_variable: e.target.querySelector(
-      'input[name="target_variable"]:checked',
-    )?.value,
+    target_variable: targetKey,
     log_transform: e.target.querySelector('input[name="log_transform"]')
       ?.checked
       ? "on"
@@ -391,17 +462,18 @@ async function getModelResults(e) {
 
   try {
     const response = await runModels(payload);
-    if (response && response.performance && response.coefficients) {
-      renderPerformanceMatrix(response.performance);
-      renderCoefficientsMatrix(response.coefficients);
+    if (response) {
+      return response; // Passed back for pipeline flow
     } else {
       alert(
         "The machine learning calculation engine returned an unreadable layout mapping.",
       );
+      return null;
     }
   } catch (error) {
     console.error("Model performance execution failure:", error);
     alert("An error occurred during machine learning model processing.");
+    return null;
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
@@ -414,25 +486,44 @@ async function getModelResults(e) {
  * Renders the primary performance metric tables (R2, MAPE, etc.)
  */
 function renderPerformanceMatrix(performanceData) {
-  const tbody = document.getElementById("performanceTableBody");
-  if (!tbody) return;
+  console.log("Rendering performance matrix with results:", performanceData);
+  const tableBody = document.getElementById("performanceTableBody");
+  if (!tableBody) return;
 
-  tbody.innerHTML = "";
+  tableBody.innerHTML = ""; // Clear out previous placeholder runs
 
-  performanceData.forEach((model) => {
-    const tr = document.createElement("tr");
-    tr.className = "stock-row text-sm";
+  performanceData.forEach((performance) => {
+    const row = document.createElement("tr");
 
-    tr.innerHTML = `
-      <td class="fw-bold text-dark text-uppercase">
-        ${model.model_name}
+    row.style.cursor = "pointer";
+    row.className = "model-selection-row";
+    row.innerHTML = `
+      <td>
+        <input class="form-check-input model-radio" type="radio" name="selectedChampion" value="${performance.model_name}" />
       </td>
-      <td class="text-end font-monospace ${model.r2 > 0 ? "quant-up text-success" : "quant-down text-danger"}">${model.r2.toFixed(2)}</td>
-      <td class="text-end font-monospace">${(model.mape * 100).toFixed(1)}%</td>
-      <td class="text-end font-monospace">${model.mae.toFixed(2)}</td>
-      <td class="text-end font-monospace">${model.rmse.toFixed(2)}</td>
+      <td class="fw-semibold text-xs">${performance.model_name}</td>
+      <td class="text-end font-monospace text-xs">${performance.r2.toFixed(4)}</td>
+      <td class="text-end font-monospace text-xs">${performance.mape.toFixed(4)}</td>
+      <td class="text-end font-monospace text-xs">${performance.mae.toFixed(4)}</td>
+      <td class="text-end font-monospace text-xs">${performance.rmse.toFixed(4)}</td>
     `;
-    tbody.appendChild(tr);
+
+    // Row selection logic lives here locally
+    row.addEventListener("click", () => {
+      document
+        .querySelectorAll(".model-selection-row")
+        .forEach((r) => r.classList.remove("table-success"));
+      row.classList.add("table-success");
+
+      const radio = row.querySelector(".model-radio");
+      if (radio) radio.checked = true;
+
+      // Safely wake up the step transition button
+      const btnGoToStep3 = document.getElementById("btn-go-to-step-3");
+      if (btnGoToStep3) btnGoToStep3.disabled = false;
+    });
+
+    tableBody.appendChild(row);
   });
 }
 
@@ -573,4 +664,4 @@ function getMetricFeatures(selectedFeatures, allFeatures) {
 }
 
 // Bootstrap execution
-document.addEventListener("DOMContentLoaded", initRunModelsPage);
+document.addEventListener("DOMContentLoaded", renderStep1Layout);
