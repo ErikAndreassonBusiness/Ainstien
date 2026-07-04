@@ -57,7 +57,6 @@ def remove_past_images():
 
     for file in filesList:
         file.unlink()  # Remove the file
-    print("All Files are Remove if Existed")
 
 def print_target_outliers(df_check, timestamp): 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
@@ -78,7 +77,11 @@ def print_feature_outliers(X, timestamp):
     if num_features == 0:
         return
 
-    fig, axes = plt.subplots(nrows=int(np.ceil(num_features/4)), ncols=4, figsize=(16, max(4, num_features)))
+    fig, axes = plt.subplots(
+        nrows=int(np.ceil(num_features/4)), 
+        ncols=4, 
+        figsize=(16, max(4, num_features)))
+
     axes = axes.flatten()
     
     for i, col in enumerate(X.columns):
@@ -90,10 +93,39 @@ def print_feature_outliers(X, timestamp):
     for j in range(i + 1, len(axes)):
         fig.delaxes(axes[j])
         
-    plt.suptitle("Individual Feature Boxplots (Outlier Check)", fontsize=16)
+    plt.suptitle("Outliers in Scaled Features", fontsize=16)
     plt.tight_layout()
     plt.savefig(f"app/client/static/images/outliers_scaled{timestamp}.png") 
     plt.close()
+
+
+def print_feature_target_plot(X, y, timestamp): 
+    # Feature vs Target Plots
+    num_features = len(X.columns)
+    if num_features == 0:
+        return
+
+    fig, axes = plt.subplots(
+        nrows=int(np.ceil(num_features/4)), 
+        ncols=4, 
+        figsize=(16, max(4, num_features)))
+    axes = axes.flatten()
+    
+    for i, col in enumerate(X.columns):
+        sns.scatterplot(x=X[col], y=y, ax=axes[i])
+        axes[i].set_title(f"{col} vs Target", fontsize=9)
+        axes[i].set_xlabel(col)
+        axes[i].set_ylabel('Target')
+        
+    # Clear unused axes
+    for j in range(i + 1, len(axes)):
+        fig.delaxes(axes[j])
+        
+    plt.suptitle("Feature vs Target Scatter Plots", fontsize=16)
+    plt.tight_layout()
+    plt.savefig(f"app/client/static/images/feature_target_plots{timestamp}.png") 
+    plt.close()
+    
 
 def print_correlation_heatmap(df_check, timestamp): 
     # Correlation Heatmap
@@ -129,13 +161,14 @@ def print_diagnostics(data):
     print_target_outliers(df_check, timestamp)
     print_feature_outliers(X, timestamp)
     print_correlation_heatmap(df_check, timestamp)
+    print_feature_target_plot(X, y, timestamp)
 
-    
     return {
         "status": "success", 
         "images": {
             "target_distribution": f"/static/images/target_distribution{timestamp}.png",
             "outliers_scaled": f"/static/images/outliers_scaled{timestamp}.png",
-            "correlation_matrix": f"/static/images/correlation_matrix{timestamp}.png"
+            "correlation_matrix": f"/static/images/correlation_matrix{timestamp}.png", 
+            "feature_target_plots": f"/static/images/feature_target_plots{timestamp}.png"
         }
     }

@@ -378,6 +378,13 @@ function renderDiagnosticsLayout(apiResponse) {
               class="img-fluid rounded shadow-sm border"
               style="max-height: 400px; width: auto; object-fit: contain"
             />
+            <img
+              id="outliers-scaled-img"
+              src="${images.feature_target_plots}"
+              alt="Feature vs Target Plots"
+              class="img-fluid rounded shadow-sm border"
+              style="max-height: 400px; width: auto; object-fit: contain"
+            />
           </div>
           <div class="mt-4 text-start bg-light p-3 rounded border-start border-4 border-primary">
             <p class="financial-data mb-0 text-muted text-xs">
