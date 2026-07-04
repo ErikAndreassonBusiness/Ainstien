@@ -50,7 +50,7 @@ def get_features_and_target_df(settings):
         transformation = transformation_map.get(raw_feature_name, "none")
         
         if transformation == "log":
-            if df[base_feature].eq(0).any(): 
+            if (df[base_feature] <= 0).any(): 
                 raise ValueError(f"Cannot apply log transformation to feature '{base_feature}' because it contains zero values.")
             
             new_feature_name = f"log_{base_feature}"
@@ -68,8 +68,8 @@ def get_features_and_target_df(settings):
             all_features.append(new_feature_name)
             
         elif transformation == "inverse":
-            if df[base_feature].eq(0).any(): 
-                raise ValueError(f"Cannot apply inverse transformation to feature '{base_feature}' because it contains zero values.")
+            if (df[base_feature] <= 0).any(): 
+                raise ValueError(f"Cannot apply inverse transformation to feature '{base_feature}' because it contains zero or negative values.")
             
             new_feature_name = f"inverse_{base_feature}"
             df[new_feature_name] = 1 / df[base_feature]
