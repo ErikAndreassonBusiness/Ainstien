@@ -389,6 +389,18 @@
     <!-- Static summary of confirmed, persistent settings -->
   </div>
 </div>
+<!-- ====== FULLSCREEN IMAGE LIGHTBOX ====== -->
+<div id="image-lightbox" class="lightbox-overlay d-none">
+  <span class="lightbox-close" id="lightbox-close">&times;</span>
+  <div class="lightbox-container">
+    <img
+      id="lightbox-img"
+      class="lightbox-content"
+      src=""
+      alt="Zoomed Diagnostic Image"
+    />
+  </div>
+</div>
 {% endblock %} {% block scripts %}
 <script src="{{ url_for('static', filename='js/api.js') }}"></script>
 <script src="{{ url_for('static', filename='js/runmodels.js') }}"></script>

@@ -127,9 +127,14 @@ async function renderStep1Layout() {
         const targetInput = document.querySelector(
           'input[name="target_variable"]:checked',
         );
+        const logTransform = document.querySelector(
+          'input[name="log_transform"]',
+        )?.checked
+          ? "on"
+          : "off";
 
         // Transition to Step 2
-        renderStep2Layout(selectedFeatures, targetInput.value);
+        renderStep2Layout(selectedFeatures, targetInput.value, logTransform);
       });
   }
 }
@@ -139,7 +144,7 @@ async function renderStep1Layout() {
  * STEP 2: TUNE & TRAIN
  * ==========================================
  */
-function renderStep2Layout(selectedFeatures, targetKey) {
+function renderStep2Layout(selectedFeatures, targetKey, logTransform) {
   // Manage Timeline state
   document.getElementById("panel-step-1")?.classList.add("d-none");
   document.getElementById("panel-step-2")?.classList.remove("d-none");
@@ -157,7 +162,8 @@ function renderStep2Layout(selectedFeatures, targetKey) {
   const labelEl = document.getElementById("summary-target-label");
   const countEl = document.getElementById("summary-features-count");
 
-  if (labelEl) labelEl.textContent = targetLabel; // Target chosen displays
+  if (labelEl)
+    labelEl.textContent = `${targetLabel} - Log Transformation ${logTransform}`; // Target chosen displays and log on or off
   if (countEl)
     countEl.textContent = `${selectedFeatures.length} features passed from Step 1.`; // Features count displays
 
@@ -181,7 +187,12 @@ function renderStep2Layout(selectedFeatures, targetKey) {
     document
       .getElementById("model-config-form")
       .addEventListener("submit", async (e) => {
-        const results = await getModelResults(e, selectedFeatures, targetKey);
+        const results = await getModelResults(
+          e,
+          selectedFeatures,
+          targetKey,
+          logTransform,
+        );
 
         if (results) {
           renderPerformanceMatrix(results.performance);
@@ -353,72 +364,101 @@ function renderDiagnosticsLayout(apiResponse) {
 
   // Inject the HTML directly while inserting the dynamic paths from your JSON
   displayArea.innerHTML = `
-    <div class="text-start animate-fade-in w-100">
-      
-      <!-- Target Distribution Component Block -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-2 border-bottom">
+  <div class="text-start animate-fade-in w-100">
+
+    <!-- 1. Target Distribution Component -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white py-2 border-bottom cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapse-target-dist">
+        <div class="d-flex justify-content-between align-items-center">
           <h6 class="m-0 fw-bold text-dark text-xs text-uppercase tracking-wider">
-            Target Distribution & Outlier Check
+            Target Distribution
           </h6>
+          <svg class="collapse-arrow text-secondary" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+          </svg>
         </div>
+      </div>
+      <div id="collapse-target-dist" class="collapse show">
         <div class="card-body text-center py-4 bg-white">
-          <div class="d-flex flex-wrap justify-content-center gap-3">
-            <img
-              id="target-dist-img"
-              src="${images.target_distribution}"
-              alt="Target Distribution"
-              class="img-fluid rounded shadow-sm border"
-              style="max-height: 400px; width: auto; object-fit: contain"
-            />
-            <img
-              id="outliers-scaled-img"
-              src="${images.outliers_scaled}"
-              alt="Outliers Scaled Check"
-              class="img-fluid rounded shadow-sm border"
-              style="max-height: 400px; width: auto; object-fit: contain"
-            />
-            <img
-              id="outliers-scaled-img"
-              src="${images.feature_target_plots}"
-              alt="Feature vs Target Plots"
-              class="img-fluid rounded shadow-sm border"
-              style="max-height: 400px; width: auto; object-fit: contain"
-            />
-          </div>
+          <img id="target-dist-img" src="${images.target_distribution}" alt="Target Distribution" class="img-fluid rounded shadow-sm border zoomable-img" style="max-height: 400px; width: auto; object-fit: contain" />
           <div class="mt-4 text-start bg-light p-3 rounded border-start border-4 border-primary">
             <p class="financial-data mb-0 text-muted text-xs">
-              <strong>Observation:</strong> This visualization checks the distribution for normality and skewness, while the boxplot identifies potential extreme outliers in the future maximum price targets that may require robust scaling or clipping before model training.
+              <strong>Observation:</strong> This visualization checks the distribution for normality and skewness to determine if target transformation is required.
             </p>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Linear Correlation Matrix Heatmap Block -->
-      <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-white py-2 border-bottom">
+    <!-- 2. Scaled Outliers Check Component -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white py-2 border-bottom cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapse-outliers">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="m-0 fw-bold text-dark text-xs text-uppercase tracking-wider">
+            Scaled Outlier Check
+          </h6>
+          <svg class="collapse-arrow text-secondary" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+          </svg>
+        </div>
+      </div>
+      <div id="collapse-outliers" class="collapse show">
+        <div class="card-body text-center py-4 bg-white">
+          <img id="outliers-scaled-img" src="${images.outliers_scaled}" alt="Outliers Scaled Check" class="img-fluid rounded shadow-sm border zoomable-img" style="max-height: 400px; width: auto; object-fit: contain" />
+          <div class="mt-4 text-start bg-light p-3 rounded border-start border-4 border-primary">
+            <p class="financial-data mb-0 text-muted text-xs">
+              <strong>Observation:</strong> The boxplot identifies potential extreme outliers in the future maximum price targets that may require robust scaling or clipping before model training.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Feature vs Target Plots Component -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white py-2 border-bottom cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapse-feature-target">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="m-0 fw-bold text-dark text-xs text-uppercase tracking-wider">
+            Feature vs Target Relationships
+          </h6>
+          <svg class="collapse-arrow text-secondary" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+          </svg>
+        </div>
+      </div>
+      <div id="collapse-feature-target" class="collapse show">
+        <div class="card-body text-center py-4 bg-white">
+          <img id="feature-target-img" src="${images.feature_target_plots}" alt="Feature vs Target Plots" class="img-fluid rounded shadow-sm border zoomable-img" style="max-height: 400px; width: auto; object-fit: contain" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Linear Correlation Matrix Heatmap Component -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white py-2 border-bottom cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapse-heatmap">
+        <div class="d-flex justify-content-between align-items-center">
           <h6 class="m-0 fw-bold text-dark text-xs text-uppercase tracking-wider">
             Linear Correlation Heatmap
           </h6>
+          <svg class="collapse-arrow text-secondary" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+          </svg>
         </div>
+      </div>
+      <div id="collapse-heatmap" class="collapse show">
         <div class="card-body text-center py-4 bg-white">
-          <img
-            id="heatmap-img"
-            src="${images.correlation_matrix}"
-            alt="Correlation Matrix Heatmap"
-            class="img-fluid rounded shadow-sm border"
-            style="max-height: 750px; width: auto; object-fit: contain"
-          />
+          <img id="heatmap-img" src="${images.correlation_matrix}" alt="Correlation Matrix Heatmap" class="img-fluid rounded shadow-sm border zoomable-img" style="max-height: 750px; width: auto; object-fit: contain" />
           <div class="mt-4 text-start bg-light p-3 rounded border-start border-4 border-primary">
             <p class="financial-data mb-0 text-muted text-xs">
-              <strong>Observation:</strong> Lower-triangle heatmap displaying Pearson correlation coefficients. Features exhibiting high multicollinearity with one another may need to be dropped or combined, while features with strong correlations to the target variable should be prioritized.
+              <strong>Observation:</strong> Lower-triangle heatmap displaying Pearson correlation coefficients. Features exhibiting high multicollinearity with one another may need to be dropped or combined.
             </p>
           </div>
         </div>
       </div>
-
     </div>
-  `;
+
+  </div>
+`;
 
   // Reveal wizard navigation pipeline progression step button
   const btnGoToStep2 = document.getElementById("btn-go-to-step-2");
@@ -430,7 +470,7 @@ function renderDiagnosticsLayout(apiResponse) {
 /**
  * Model engine compilation execution orchestrator
  */
-async function getModelResults(e, selectedFeatures, targetKey) {
+async function getModelResults(e, selectedFeatures, targetKey, logTransform) {
   e.preventDefault();
 
   const selectedModels = getCheckedValues('input[name="models"]'); //Get checked model
@@ -453,10 +493,7 @@ async function getModelResults(e, selectedFeatures, targetKey) {
     metric_features: getMetricFeatures(selectedFeatures, allFeatures),
     models: selectedModels,
     target_variable: targetKey,
-    log_transform: e.target.querySelector('input[name="log_transform"]')
-      ?.checked
-      ? "on"
-      : "off",
+    log_transform: logTransform,
     cv_folds: e.target.querySelector('input[name="cv_folds"]')?.value || "5",
     positive_coefficients: e.target.querySelector(
       'input[name="positive_coefficients"]',
@@ -670,5 +707,148 @@ function getMetricFeatures(selectedFeatures, allFeatures) {
   );
 }
 
+/**
+ * Interface Utility: Initializes the image lightbox, zoom, and bounded panning functionality
+ */
+function setupLightbox() {
+  const lightbox = document.getElementById("image-lightbox");
+  const lightboxImg = document.getElementById("lightbox-img");
+  const closeBtn = document.getElementById("lightbox-close");
+
+  if (!lightbox || !lightboxImg || !closeBtn) return;
+
+  // State variables for zoom and pan
+  let currentScale = 1;
+  let isDragging = false;
+  let startX = 0,
+    startY = 0;
+  let translateX = 0,
+    translateY = 0;
+
+  // Unified function to apply both zoom and drag transforms with boundaries
+  const updateTransform = () => {
+    // Calculate boundaries
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Get the base (unscaled) dimensions of the image element
+    const imgWidth = lightboxImg.offsetWidth;
+    const imgHeight = lightboxImg.offsetHeight;
+
+    // Calculate how big the image currently is visually
+    const scaledWidth = imgWidth * currentScale;
+    const scaledHeight = imgHeight * currentScale;
+
+    // Calculate the maximum allowed translation.
+    // If the scaled image is smaller than the viewport, lock translation to 0 (centered)
+    const maxX = Math.max(0, (scaledWidth - viewportWidth) / 2);
+    const maxY = Math.max(0, (scaledHeight - viewportHeight) / 2);
+
+    // Clamp the translation values to not exceed the boundaries
+    translateX = Math.min(Math.max(translateX, -maxX), maxX);
+    translateY = Math.min(Math.max(translateY, -maxY), maxY);
+
+    lightboxImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+  };
+
+  // Open Lightbox
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("zoomable-img")) {
+      lightboxImg.src = e.target.src;
+      lightbox.classList.remove("d-none");
+
+      // Reset zoom and pan states
+      currentScale = 1;
+      translateX = 0;
+      translateY = 0;
+      updateTransform();
+
+      // Lock background scrolling
+      document.body.style.overflow = "hidden";
+    }
+  });
+
+  // Close Lightbox Function
+  const closeLightbox = () => {
+    lightbox.classList.add("d-none");
+    document.body.style.overflow = "auto"; // Unlock background scrolling
+  };
+
+  closeBtn.addEventListener("click", closeLightbox);
+
+  // Close when clicking the blurred background (outside the image)
+  lightbox.addEventListener("click", (e) => {
+    if (
+      e.target === lightbox ||
+      e.target.classList.contains("lightbox-container")
+    ) {
+      closeLightbox();
+    }
+  });
+
+  // Close on Escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !lightbox.classList.contains("d-none")) {
+      closeLightbox();
+    }
+  });
+
+  // Mouse Wheel Zooming Logic
+  lightbox.addEventListener(
+    "wheel",
+    (e) => {
+      e.preventDefault(); // Prevent page scrolling while zooming
+
+      const zoomSensitivity = 0.1;
+
+      if (e.deltaY < 0) {
+        currentScale += zoomSensitivity; // Zoom In
+      } else {
+        currentScale -= zoomSensitivity; // Zoom Out
+      }
+
+      currentScale = Math.min(Math.max(1, currentScale), 5);
+
+      updateTransform(); // Re-evaluates boundaries if user zooms out while panned to the edge
+    },
+    { passive: false },
+  );
+
+  // Click & Drag Panning Logic
+  lightboxImg.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+
+    // Only allow dragging if the image is actually zoomed in
+    if (currentScale > 1) {
+      isDragging = true;
+      startX = e.clientX - translateX;
+      startY = e.clientY - translateY;
+      lightboxImg.style.cursor = "grabbing";
+    }
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+
+    // Update translation based on mouse movement
+    translateX = e.clientX - startX;
+    translateY = e.clientY - startY;
+
+    updateTransform();
+  });
+
+  const stopDragging = () => {
+    isDragging = false;
+    // Reset cursor to zoom-in if fully zoomed out, otherwise grab
+    lightboxImg.style.cursor = currentScale > 1 ? "grab" : "zoom-in";
+  };
+
+  document.addEventListener("mouseup", stopDragging);
+}
+
 // Bootstrap execution
-document.addEventListener("DOMContentLoaded", renderStep1Layout);
+document.addEventListener("DOMContentLoaded", () => {
+  renderStep1Layout();
+  setupLightbox();
+});

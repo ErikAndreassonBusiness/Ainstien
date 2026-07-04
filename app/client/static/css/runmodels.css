@@ -148,3 +148,82 @@
   background-color: var(--ainstien-success);
   color: white;
 }
+
+/* Custom Collapse Arrow Rotation */
+.cursor-pointer {
+  cursor: pointer;
+}
+.collapse-arrow {
+  transition: transform 0.3s ease-in-out;
+}
+/* When the panel is closed, Bootstrap adds the .collapsed class. We rotate the arrow up. */
+.collapsed .collapse-arrow {
+  transform: rotate(180deg);
+}
+
+/* Lightbox Overlay Background */
+.lightbox-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* The Image Container & Image */
+.lightbox-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 90vw;
+  height: 90vh;
+}
+
+.lightbox-content {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.15s ease-out; /* Smooth zoom transition */
+  cursor: grab;
+}
+
+.lightbox-content:active {
+  cursor: grabbing;
+}
+
+/* Close Button */
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 40px;
+  color: #ffffff;
+  font-size: 48px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10000;
+  user-select: none;
+  transition: color 0.2s;
+}
+
+.lightbox-close:hover {
+  color: #ff4d4d;
+}
+
+/* Utility to make dashboard images look clickable */
+.zoomable-img {
+  cursor: zoom-in;
+  transition: transform 0.2s;
+}
+
+.zoomable-img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
