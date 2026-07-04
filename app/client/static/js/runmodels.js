@@ -31,7 +31,7 @@ const FEATURE_LABEL_MAP = {
   profit_margin_percent: "Profit Margin (%)",
 
   // Targets
-  future_price: "Future Price Target",
+  future_max_price: "Future Max Price Target",
   future_growth: "Future Growth Target",
 };
 
@@ -48,14 +48,31 @@ function formatFeatureLabel(featureKey) {
 }
 
 /**
- * Main function: Runs the page setup cleanly
+ * ==================================================================
+ *                                                 MAIN FUNCTIONS FOR PIPELINE
+ * ==================================================================
  */
-async function initRunModelsPage() {
+
+/**
+ * ==========================================
+ * STEP 1: Data Configuration
+ * ==========================================
+ */
+async function renderStep1Layout() {
+  // Handeling Timeline state
+  document.getElementById("panel-step-1")?.classList.remove("d-none");
+  document.getElementById("panel-step-2")?.classList.add("d-none");
+  document.getElementById("panel-step-3")?.classList.add("d-none");
+
+  document.getElementById("timeline-step-1")?.classList.add("active");
+  document.getElementById("timeline-step-2")?.classList.remove("active");
+  document.getElementById("timeline-step-3")?.classList.remove("active");
+
+  // Render possible features and targets
   try {
     const featuresNames = await fetchFeatureNames();
     const targetsNames = await fetchTargetNames();
 
-    // --- Render Features and Targets
     if (featuresNames) {
       renderCheckboxes(
         featuresNames.fundamental_features,
@@ -73,7 +90,6 @@ async function initRunModelsPage() {
       renderTargets(targetsNames.targets, "targets-container");
     }
 
-    // --- Render Select ALL Buttons ---
     setupCheckboxToggle(
       "btn-select-all-models",
       'input[name="models"]',
@@ -86,61 +102,140 @@ async function initRunModelsPage() {
     );
   } catch (error) {
     console.error(
-      "Initialization failure during runtime layout creation:",
+      "Initialization failure during Step 1 layout creation:",
       error,
     );
   }
 
-  // --- Diagnostics Layout Button Click Handler ---
+  // Display Diagnosis button
   const btnRunDiagnostics = document.getElementById("btn-run-diagnostics");
   if (btnRunDiagnostics) {
-    btnRunDiagnostics.addEventListener("click", getDiagnostics);
+    btnRunDiagnostics.replaceWith(btnRunDiagnostics.cloneNode(true)); // If a user navigates back to Step 1
+    document
+      .getElementById("btn-run-diagnostics")
+      .addEventListener("click", getDiagnostics);
   }
 
-  // --- Step 1 to Step 2 Pipeline Wizard Navigation Toggler ---
+  // Display Go to Step 2 button
   const btnGoToStep2 = document.getElementById("btn-go-to-step-2");
   if (btnGoToStep2) {
-    btnGoToStep2.addEventListener("click", () => {
-      // 1. Gather choices to verify something is selected
-      const selectedFeatures = getCheckedValues('input[name="features"]');
-      const targetInput = document.querySelector(
-        'input[name="target_variable"]:checked',
-      );
-
-      if (selectedFeatures.length === 0 || !targetInput) {
-        alert(
-          "Please ensure you have selected a target and at least one feature.",
+    btnGoToStep2.replaceWith(btnGoToStep2.cloneNode(true));
+    document
+      .getElementById("btn-go-to-step-2")
+      .addEventListener("click", () => {
+        const selectedFeatures = getCheckedValues('input[name="features"]');
+        const targetInput = document.querySelector(
+          'input[name="target_variable"]:checked',
         );
-        return;
-      }
+        const logTransform = document.querySelector(
+          'input[name="log_transform"]',
+        )?.checked
+          ? "on"
+          : "off";
 
-      // 2. Safely compute the human label mapping
-      const targetKey = targetInput.value;
-      const targetLabel = FEATURE_LABEL_MAP[targetKey] || targetKey;
-
-      // 3. Directly update the little dynamic placeholder slots in Step 2's summary UI
-      const labelEl = document.getElementById("summary-target-label");
-      const countEl = document.getElementById("summary-features-count");
-
-      if (labelEl) labelEl.textContent = targetLabel;
-      if (countEl)
-        countEl.textContent = `${selectedFeatures.length} features passed from Step 1.`;
-
-      // 4. Toggle layouts cleanly
-      document.getElementById("panel-step-1")?.classList.add("d-none");
-      document.getElementById("panel-step-2")?.classList.remove("d-none");
-      document.getElementById("timeline-step-1")?.classList.remove("active");
-      document.getElementById("timeline-step-2")?.classList.add("active");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-  }
-
-  // --- Modeling Button ---
-  const form = document.getElementById("model-config-form");
-  if (form) {
-    form.addEventListener("submit", getModelResults);
+        // Transition to Step 2
+        renderStep2Layout(selectedFeatures, targetInput.value, logTransform);
+      });
   }
 }
+
+/**
+ * ==========================================
+ * STEP 2: TUNE & TRAIN
+ * ==========================================
+ */
+function renderStep2Layout(selectedFeatures, targetKey, logTransform) {
+  // Manage Timeline state
+  document.getElementById("panel-step-1")?.classList.add("d-none");
+  document.getElementById("panel-step-2")?.classList.remove("d-none");
+  document.getElementById("panel-step-3")?.classList.add("d-none");
+
+  document.getElementById("timeline-step-1")?.classList.remove("active");
+  document.getElementById("timeline-step-2")?.classList.add("active");
+  document.getElementById("timeline-step-3")?.classList.remove("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  document.getElementById("btn-go-to-step-3")?.classList.add("d-none");
+
+  // Step 2 summary from Step 1
+  const targetLabel = FEATURE_LABEL_MAP[targetKey] || targetKey;
+  const labelEl = document.getElementById("summary-target-label");
+  const countEl = document.getElementById("summary-features-count");
+
+  if (labelEl)
+    labelEl.textContent = `${targetLabel} - Log Transformation ${logTransform}`; // Target chosen displays and log on or off
+  if (countEl)
+    countEl.textContent = `${selectedFeatures.length} features passed from Step 1.`; // Features count displays
+
+  /// Run Model form
+  const form = document.getElementById("model-config-form");
+  if (form) {
+    form.replaceWith(form.cloneNode(true));
+
+    // Back to Step 1 button
+    const btnBackToStep1 = document.getElementById("btn-back-to-step-1");
+    if (btnBackToStep1) {
+      btnBackToStep1.addEventListener("click", () => {
+        document.getElementById("panel-step-1")?.classList.remove("d-none");
+        document.getElementById("panel-step-2")?.classList.add("d-none");
+        document.getElementById("timeline-step-1")?.classList.add("active");
+        document.getElementById("timeline-step-2")?.classList.remove("active");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+
+    document
+      .getElementById("model-config-form")
+      .addEventListener("submit", async (e) => {
+        const results = await getModelResults(
+          e,
+          selectedFeatures,
+          targetKey,
+          logTransform,
+        );
+
+        if (results) {
+          renderPerformanceMatrix(results.performance);
+          renderCoefficientsMatrix(results.coefficients);
+
+          const btnGoToStep3 = document.getElementById("btn-go-to-step-3");
+          if (btnGoToStep3) {
+            btnGoToStep3.classList.remove("d-none"); // Reveal the button
+
+            btnGoToStep3.replaceWith(btnGoToStep3.cloneNode(true));
+            document
+              .getElementById("btn-go-to-step-3")
+              .addEventListener("click", () => {
+                !renderStep3Layout(results, { selectedFeatures, targetKey });
+              });
+          }
+        }
+      });
+  }
+}
+
+/**
+ * ==========================================
+ * STEP 3: SAVED REGISTRY
+ * ==========================================
+ */
+function renderStep3Layout(modelResults) {
+  // Manage Timeline state
+  document.getElementById("panel-step-1")?.classList.add("d-none");
+  document.getElementById("panel-step-2")?.classList.add("d-none");
+  document.getElementById("panel-step-3")?.classList.remove("d-none");
+
+  document.getElementById("timeline-step-1")?.classList.remove("active");
+  document.getElementById("timeline-step-2")?.classList.remove("active");
+  document.getElementById("timeline-step-3")?.classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/**
+ * ==================================================================
+ *                                                          LOGIC FUNCTIONS
+ * ==================================================================
+ */
 
 /**
  * Interface Utility: High-performance select/deselect all mass toggling
@@ -167,7 +262,7 @@ function setupCheckboxToggle(btnId, selector, label) {
 }
 
 /**
- * Helper function to inject checkboxes into scrolling features viewport panels
+ * Helper function to inject checkboxes with inline pencil transformation options
  */
 function renderCheckboxes(featureArray, containerId, inputName) {
   const container = document.getElementById(containerId);
@@ -177,10 +272,32 @@ function renderCheckboxes(featureArray, containerId, inputName) {
   featureArray.forEach((feature) => {
     const cleanLabel = formatFeatureLabel(feature);
     const div = document.createElement("div");
-    div.className = "form-check mb-2";
+    div.className = "mb-3 border-bottom pb-2";
     div.innerHTML = `
-      <input class="form-check-input" type="checkbox" name="${inputName}" value="${feature}" id="feat_${feature}" checked />
-      <label class="form-check-label fw-semibold text-sm" for="feat_${feature}">${cleanLabel}</label>
+      <div class="d-flex justify-content-between align-items-center form-check mb-1">
+        <div>
+          <input class="form-check-input" type="checkbox" name="${inputName}" value="${feature}" id="feat_${feature}" checked />
+          <label class="form-check-label fw-semibold text-sm cursor-pointer" for="feat_${feature}">${cleanLabel}</label>
+        </div>
+        <!-- Pencil Icon Button -->
+        <button type="button" class="btn btn-link btn-sm text-secondary p-0 text-decoration-none" onclick="toggleFeatureSettings('${feature}')" title="Transform Feature">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Hidden transformation options drawer -->
+      <div id="settings_${feature}" class="d-none mt-1 ps-4 text-xs bg-light p-2 rounded border">
+        <label class="fw-bold text-muted d-block mb-1">Mathematical Transformation:</label>
+        <select class="form-select form-select-sm feature-transform-select w-100" name="transform_${feature}" data-feature="${feature}" style="font-size: 0.75rem;">
+          <option value="none" selected>None (Linear)</option>
+          <option value="log">Logarithmic ( log(x) )</option>
+          <option value="square">Squared ( x² )</option>
+          <option value="sqrt">Square Root ( √x )</option>
+          <option value="inverse">Inverse ( 1/x )</option>
+        </select>
+      </div>
     `;
     container.appendChild(div);
   });
@@ -228,6 +345,17 @@ async function getDiagnostics() {
   try {
     const allFeatures = await fetchFeatureNames();
 
+    // For edited features
+    const transformationsMap = {};
+    selectedFeatures.forEach((feature) => {
+      const selectElement = document.querySelector(
+        `select[name="transform_${feature}"]`,
+      );
+      if (selectElement && selectElement.value !== "none") {
+        transformationsMap[feature] = selectElement.value;
+      }
+    });
+
     const payload = {
       fundamental_features: getFundamentFeatures(selectedFeatures, allFeatures),
       metric_features: getMetricFeatures(selectedFeatures, allFeatures),
@@ -238,16 +366,14 @@ async function getDiagnostics() {
         ?.checked
         ? "on"
         : "off",
+      transformations: transformationsMap,
     };
 
     // Await core analytical computation call from backend engines
-    images = await fetchDataDiagnostics(payload);
+    let images = await fetchDataDiagnostics(payload);
 
     // Call graphic compiler mapping function directly
     renderDiagnosticsLayout(images);
-  } catch (error) {
-    console.error("Correlation dataset engine failure:", error);
-    alert("An error occurred during diagnostic graphic asset compilation.");
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -260,82 +386,113 @@ async function getDiagnostics() {
  * Injects Graphical Analytical Charts directly inside the step-1 dashboard workspace
  */
 function renderDiagnosticsLayout(apiResponse) {
-  console.log("Diagnostics Images API Response:", apiResponse);
-
   const displayArea = document.getElementById("diagnostics-display-area");
   if (!displayArea) return;
 
   // Safely extract the inner images dictionary from the backend response wrapper
   const images = apiResponse?.images;
   if (!images) {
-    console.error(
-      "No inner 'images' object found in the payload:",
-      apiResponse,
-    );
+    console.error("No images found in diagnostics response");
     return;
   }
 
   // Inject the HTML directly while inserting the dynamic paths from your JSON
   displayArea.innerHTML = `
-    <div class="text-start animate-fade-in w-100">
-      
-      <!-- Target Distribution Component Block -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-2 border-bottom">
+  <div class="text-start animate-fade-in w-100">
+
+    <!-- 1. Target Distribution Component -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white py-2 border-bottom cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapse-target-dist">
+        <div class="d-flex justify-content-between align-items-center">
           <h6 class="m-0 fw-bold text-dark text-xs text-uppercase tracking-wider">
-            Target Distribution & Outlier Check
+            Target Distribution
           </h6>
+          <svg class="collapse-arrow text-secondary" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+          </svg>
         </div>
+      </div>
+      <div id="collapse-target-dist" class="collapse show">
         <div class="card-body text-center py-4 bg-white">
-          <div class="d-flex flex-wrap justify-content-center gap-3">
-            <img
-              id="target-dist-img"
-              src="${images.target_distribution}"
-              alt="Target Distribution"
-              class="img-fluid rounded shadow-sm border"
-              style="max-height: 400px; width: auto; object-fit: contain"
-            />
-            <img
-              id="outliers-scaled-img"
-              src="${images.outliers_scaled}"
-              alt="Outliers Scaled Check"
-              class="img-fluid rounded shadow-sm border"
-              style="max-height: 400px; width: auto; object-fit: contain"
-            />
-          </div>
+          <img id="target-dist-img" src="${images.target_distribution}" alt="Target Distribution" class="img-fluid rounded shadow-sm border zoomable-img" style="max-height: 400px; width: auto; object-fit: contain" />
           <div class="mt-4 text-start bg-light p-3 rounded border-start border-4 border-primary">
             <p class="financial-data mb-0 text-muted text-xs">
-              <strong>Observation:</strong> This visualization checks the distribution for normality and skewness, while the boxplot identifies potential extreme outliers in the future maximum price targets that may require robust scaling or clipping before model training.
+              <strong>Observation:</strong> This visualization checks the distribution for normality and skewness to determine if target transformation is required.
             </p>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Linear Correlation Matrix Heatmap Block -->
-      <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-white py-2 border-bottom">
+    <!-- 2. Scaled Outliers Check Component -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white py-2 border-bottom cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapse-outliers">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="m-0 fw-bold text-dark text-xs text-uppercase tracking-wider">
+            Scaled Outlier Check
+          </h6>
+          <svg class="collapse-arrow text-secondary" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+          </svg>
+        </div>
+      </div>
+      <div id="collapse-outliers" class="collapse show">
+        <div class="card-body text-center py-4 bg-white">
+          <img id="outliers-scaled-img" src="${images.outliers_scaled}" alt="Outliers Scaled Check" class="img-fluid rounded shadow-sm border zoomable-img" style="max-height: 400px; width: auto; object-fit: contain" />
+          <div class="mt-4 text-start bg-light p-3 rounded border-start border-4 border-primary">
+            <p class="financial-data mb-0 text-muted text-xs">
+              <strong>Observation:</strong> The boxplot identifies potential extreme outliers in the future maximum price targets that may require robust scaling or clipping before model training.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Feature vs Target Plots Component -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white py-2 border-bottom cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapse-feature-target">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="m-0 fw-bold text-dark text-xs text-uppercase tracking-wider">
+            Feature vs Target Relationships
+          </h6>
+          <svg class="collapse-arrow text-secondary" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+          </svg>
+        </div>
+      </div>
+      <div id="collapse-feature-target" class="collapse show">
+        <div class="card-body text-center py-4 bg-white">
+          <img id="feature-target-img" src="${images.feature_target_plots}" alt="Feature vs Target Plots" class="img-fluid rounded shadow-sm border zoomable-img" style="max-height: 400px; width: auto; object-fit: contain" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Linear Correlation Matrix Heatmap Component -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white py-2 border-bottom cursor-pointer" data-bs-toggle="collapse" data-bs-target="#collapse-heatmap">
+        <div class="d-flex justify-content-between align-items-center">
           <h6 class="m-0 fw-bold text-dark text-xs text-uppercase tracking-wider">
             Linear Correlation Heatmap
           </h6>
+          <svg class="collapse-arrow text-secondary" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+          </svg>
         </div>
+      </div>
+      <div id="collapse-heatmap" class="collapse show">
         <div class="card-body text-center py-4 bg-white">
-          <img
-            id="heatmap-img"
-            src="${images.correlation_matrix}"
-            alt="Correlation Matrix Heatmap"
-            class="img-fluid rounded shadow-sm border"
-            style="max-height: 750px; width: auto; object-fit: contain"
-          />
+          <img id="heatmap-img" src="${images.correlation_matrix}" alt="Correlation Matrix Heatmap" class="img-fluid rounded shadow-sm border zoomable-img" style="max-height: 750px; width: auto; object-fit: contain" />
           <div class="mt-4 text-start bg-light p-3 rounded border-start border-4 border-primary">
             <p class="financial-data mb-0 text-muted text-xs">
-              <strong>Observation:</strong> Lower-triangle heatmap displaying Pearson correlation coefficients. Features exhibiting high multicollinearity with one another may need to be dropped or combined, while features with strong correlations to the target variable should be prioritized.
+              <strong>Observation:</strong> Lower-triangle heatmap displaying Pearson correlation coefficients. Features exhibiting high multicollinearity with one another may need to be dropped or combined.
             </p>
           </div>
         </div>
       </div>
-
     </div>
-  `;
+
+  </div>
+`;
 
   // Reveal wizard navigation pipeline progression step button
   const btnGoToStep2 = document.getElementById("btn-go-to-step-2");
@@ -347,17 +504,14 @@ function renderDiagnosticsLayout(apiResponse) {
 /**
  * Model engine compilation execution orchestrator
  */
-async function getModelResults(e) {
+async function getModelResults(e, selectedFeatures, targetKey, logTransform) {
   e.preventDefault();
 
-  const selectedFeatures = getCheckedValues('input[name="features"]');
-  const selectedModels = getCheckedValues('input[name="models"]');
+  const selectedModels = getCheckedValues('input[name="models"]'); //Get checked model
 
-  if (selectedFeatures.length === 0 || selectedModels.length === 0) {
-    alert(
-      "Please select at least one tracking feature and one mathematical model algorithm.",
-    );
-    return;
+  if (selectedModels.length === 0) {
+    alert("Please select at least one model.");
+    return null;
   }
 
   const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -368,17 +522,22 @@ async function getModelResults(e) {
 
   const allFeatures = await fetchFeatureNames();
 
+  const transformationsMap = {};
+  selectedFeatures.forEach((feature) => {
+    const selectElement = document.querySelector(
+      `select[name="transform_${feature}"]`,
+    );
+    if (selectElement && selectElement.value !== "none") {
+      transformationsMap[feature] = selectElement.value;
+    }
+  });
+
   const payload = {
     fundamental_features: getFundamentFeatures(selectedFeatures, allFeatures),
     metric_features: getMetricFeatures(selectedFeatures, allFeatures),
     models: selectedModels,
-    target_variable: e.target.querySelector(
-      'input[name="target_variable"]:checked',
-    )?.value,
-    log_transform: e.target.querySelector('input[name="log_transform"]')
-      ?.checked
-      ? "on"
-      : "off",
+    target_variable: targetKey,
+    log_transform: logTransform,
     cv_folds: e.target.querySelector('input[name="cv_folds"]')?.value || "5",
     positive_coefficients: e.target.querySelector(
       'input[name="positive_coefficients"]',
@@ -387,21 +546,23 @@ async function getModelResults(e) {
       : "off",
     test_split:
       e.target.querySelector('input[name="test_split"]')?.value || "0.8",
+    transformations: transformationsMap,
   };
 
   try {
     const response = await runModels(payload);
-    if (response && response.performance && response.coefficients) {
-      renderPerformanceMatrix(response.performance);
-      renderCoefficientsMatrix(response.coefficients);
+    if (response) {
+      return response; // Passed back for pipeline flow
     } else {
       alert(
         "The machine learning calculation engine returned an unreadable layout mapping.",
       );
+      return null;
     }
   } catch (error) {
     console.error("Model performance execution failure:", error);
     alert("An error occurred during machine learning model processing.");
+    return null;
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
@@ -414,25 +575,44 @@ async function getModelResults(e) {
  * Renders the primary performance metric tables (R2, MAPE, etc.)
  */
 function renderPerformanceMatrix(performanceData) {
-  const tbody = document.getElementById("performanceTableBody");
-  if (!tbody) return;
+  console.log("Rendering performance matrix with results:", performanceData);
+  const tableBody = document.getElementById("performanceTableBody");
+  if (!tableBody) return;
 
-  tbody.innerHTML = "";
+  tableBody.innerHTML = ""; // Clear out previous placeholder runs
 
-  performanceData.forEach((model) => {
-    const tr = document.createElement("tr");
-    tr.className = "stock-row text-sm";
+  performanceData.forEach((performance) => {
+    const row = document.createElement("tr");
 
-    tr.innerHTML = `
-      <td class="fw-bold text-dark text-uppercase">
-        ${model.model_name}
+    row.style.cursor = "pointer";
+    row.className = "model-selection-row";
+    row.innerHTML = `
+      <td>
+        <input class="form-check-input model-radio" type="radio" name="selectedChampion" value="${performance.model_name}" />
       </td>
-      <td class="text-end font-monospace ${model.r2 > 0 ? "quant-up text-success" : "quant-down text-danger"}">${model.r2.toFixed(2)}</td>
-      <td class="text-end font-monospace">${(model.mape * 100).toFixed(1)}%</td>
-      <td class="text-end font-monospace">${model.mae.toFixed(2)}</td>
-      <td class="text-end font-monospace">${model.rmse.toFixed(2)}</td>
+      <td class="fw-semibold text-xs">${performance.model_name}</td>
+      <td class="text-end font-monospace text-xs">${performance.r2.toFixed(4)}</td>
+      <td class="text-end font-monospace text-xs">${performance.mape.toFixed(4)}</td>
+      <td class="text-end font-monospace text-xs">${performance.mae.toFixed(4)}</td>
+      <td class="text-end font-monospace text-xs">${performance.rmse.toFixed(4)}</td>
     `;
-    tbody.appendChild(tr);
+
+    // Row selection logic lives here locally
+    row.addEventListener("click", () => {
+      document
+        .querySelectorAll(".model-selection-row")
+        .forEach((r) => r.classList.remove("table-success"));
+      row.classList.add("table-success");
+
+      const radio = row.querySelector(".model-radio");
+      if (radio) radio.checked = true;
+
+      // Safely wake up the step transition button
+      const btnGoToStep3 = document.getElementById("btn-go-to-step-3");
+      if (btnGoToStep3) btnGoToStep3.disabled = false;
+    });
+
+    tableBody.appendChild(row);
   });
 }
 
@@ -572,5 +752,158 @@ function getMetricFeatures(selectedFeatures, allFeatures) {
   );
 }
 
+/**
+ * Interface Utility: Initializes the image lightbox, zoom, and bounded panning functionality
+ */
+function setupLightbox() {
+  const lightbox = document.getElementById("image-lightbox");
+  const lightboxImg = document.getElementById("lightbox-img");
+  const closeBtn = document.getElementById("lightbox-close");
+
+  if (!lightbox || !lightboxImg || !closeBtn) return;
+
+  // State variables for zoom and pan
+  let currentScale = 1;
+  let isDragging = false;
+  let startX = 0,
+    startY = 0;
+  let translateX = 0,
+    translateY = 0;
+
+  // Unified function to apply both zoom and drag transforms with boundaries
+  const updateTransform = () => {
+    // Calculate boundaries
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Get the base (unscaled) dimensions of the image element
+    const imgWidth = lightboxImg.offsetWidth;
+    const imgHeight = lightboxImg.offsetHeight;
+
+    // Calculate how big the image currently is visually
+    const scaledWidth = imgWidth * currentScale;
+    const scaledHeight = imgHeight * currentScale;
+
+    // Calculate the maximum allowed translation.
+    // If the scaled image is smaller than the viewport, lock translation to 0 (centered)
+    const maxX = Math.max(0, (scaledWidth - viewportWidth) / 2);
+    const maxY = Math.max(0, (scaledHeight - viewportHeight) / 2);
+
+    // Clamp the translation values to not exceed the boundaries
+    translateX = Math.min(Math.max(translateX, -maxX), maxX);
+    translateY = Math.min(Math.max(translateY, -maxY), maxY);
+
+    lightboxImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+  };
+
+  // Open Lightbox
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("zoomable-img")) {
+      lightboxImg.src = e.target.src;
+      lightbox.classList.remove("d-none");
+
+      // Reset zoom and pan states
+      currentScale = 1;
+      translateX = 0;
+      translateY = 0;
+      updateTransform();
+
+      // Lock background scrolling
+      document.body.style.overflow = "hidden";
+    }
+  });
+
+  // Close Lightbox Function
+  const closeLightbox = () => {
+    lightbox.classList.add("d-none");
+    document.body.style.overflow = "auto"; // Unlock background scrolling
+  };
+
+  closeBtn.addEventListener("click", closeLightbox);
+
+  // Close when clicking the blurred background (outside the image)
+  lightbox.addEventListener("click", (e) => {
+    if (
+      e.target === lightbox ||
+      e.target.classList.contains("lightbox-container")
+    ) {
+      closeLightbox();
+    }
+  });
+
+  // Close on Escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !lightbox.classList.contains("d-none")) {
+      closeLightbox();
+    }
+  });
+
+  // Mouse Wheel Zooming Logic
+  lightbox.addEventListener(
+    "wheel",
+    (e) => {
+      e.preventDefault(); // Prevent page scrolling while zooming
+
+      const zoomSensitivity = 0.1;
+
+      if (e.deltaY < 0) {
+        currentScale += zoomSensitivity; // Zoom In
+      } else {
+        currentScale -= zoomSensitivity; // Zoom Out
+      }
+
+      currentScale = Math.min(Math.max(1, currentScale), 5);
+
+      updateTransform(); // Re-evaluates boundaries if user zooms out while panned to the edge
+    },
+    { passive: false },
+  );
+
+  // Click & Drag Panning Logic
+  lightboxImg.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+
+    // Only allow dragging if the image is actually zoomed in
+    if (currentScale > 1) {
+      isDragging = true;
+      startX = e.clientX - translateX;
+      startY = e.clientY - translateY;
+      lightboxImg.style.cursor = "grabbing";
+    }
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+
+    // Update translation based on mouse movement
+    translateX = e.clientX - startX;
+    translateY = e.clientY - startY;
+
+    updateTransform();
+  });
+
+  const stopDragging = () => {
+    isDragging = false;
+    // Reset cursor to zoom-in if fully zoomed out, otherwise grab
+    lightboxImg.style.cursor = currentScale > 1 ? "grab" : "zoom-in";
+  };
+
+  document.addEventListener("mouseup", stopDragging);
+}
+
+/**
+ * Global function to show/hide the inline transformation configuration per feature
+ */
+function toggleFeatureSettings(featureId) {
+  const settingsPanel = document.getElementById(`settings_${featureId}`);
+  if (settingsPanel) {
+    settingsPanel.classList.toggle("d-none");
+  }
+}
+
 // Bootstrap execution
-document.addEventListener("DOMContentLoaded", initRunModelsPage);
+document.addEventListener("DOMContentLoaded", () => {
+  renderStep1Layout();
+  setupLightbox();
+});

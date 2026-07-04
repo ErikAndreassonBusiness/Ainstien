@@ -157,12 +157,21 @@
         <!-- Configuration Left Sidebar Column -->
         <div class="col-lg-4 col-12">
           <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white py-2">
+            <div
+              class="card-header bg-white py-2 d-flex justify-content-between align-items-center"
+            >
               <h5
                 class="m-0 fw-bold text-dark fs-6 text-uppercase tracking-wide"
               >
                 Model Configurations
               </h5>
+              <button
+                type="button"
+                id="btn-back-to-step-1"
+                class="btn btn-outline-secondary btn-sm fw-bold text-uppercase text-xs"
+              >
+                &larr; Back
+              </button>
             </div>
             <div class="card-body p-3 bg-light-subtle">
               <!-- State Summary Component -->
@@ -192,73 +201,51 @@
                   >
                     3. Select Regressors
                   </h6>
-                  <button
-                    type="button"
-                    id="btn-select-all-models"
-                    class="btn btn-link p-0 text-xs text-decoration-none fw-bold text-uppercase"
-                  >
-                    Select All
-                  </button>
                 </div>
-                <div class="ps-1">
-                  <div class="form-check mb-2">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="models"
-                      value="linear_regression"
-                      id="model_lr"
-                      checked
-                    />
-                    <label
-                      class="form-check-label text-xs fw-semibold"
-                      for="model_lr"
-                      >Linear Regression</label
-                    >
-                  </div>
-                  <div class="form-check mb-2">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="models"
-                      value="ridge"
-                      id="model_ridge"
-                      checked
-                    />
-                    <label
-                      class="form-check-label text-xs fw-semibold"
-                      for="model_ridge"
-                      >Ridge Regression</label
-                    >
-                  </div>
-                  <div class="form-check mb-2">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="models"
-                      value="lasso"
-                      id="model_lasso"
-                    />
-                    <label
-                      class="form-check-label text-xs fw-semibold"
-                      for="model_lasso"
-                      >Lasso Regression</label
-                    >
-                  </div>
-                  <div class="form-check mb-2">
-                    <input
-                      class="form-check-input"
-                      type="checkbox"
-                      name="models"
-                      value="random_forest"
-                      id="model_rf"
-                    />
-                    <label
-                      class="form-check-label text-xs fw-semibold"
-                      for="model_rf"
-                      >Random Forest Regressor</label
-                    >
-                  </div>
+                <div class="form-check mb-2">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="models"
+                    value="lasso"
+                    id="model_lasso"
+                    checked
+                  />
+                  <label
+                    class="form-check-label fw-semibold text-sm"
+                    for="model_lasso"
+                    >Lasso (L1 Regularization)</label
+                  >
+                </div>
+                <div class="form-check mb-2">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="models"
+                    value="ridge"
+                    id="model_ridge"
+                    checked
+                  />
+                  <label
+                    class="form-check-label fw-semibold text-sm"
+                    for="model_ridge"
+                    >Ridge (L2 Regularization)</label
+                  >
+                </div>
+                <div class="form-check mb-3">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="models"
+                    value="elasticnet"
+                    id="model_elasticnet"
+                    checked
+                  />
+                  <label
+                    class="form-check-label fw-semibold text-sm"
+                    for="model_elasticnet"
+                    >Elastic-Net (Mixed L1/L2)</label
+                  >
                 </div>
               </div>
 
@@ -332,13 +319,23 @@
         <!-- Performance & Calculation Outputs Column -->
         <div class="col-lg-8 col-12">
           <div class="card border-0 shadow-sm h-100 mb-3">
-            <div class="card-header bg-white py-2">
+            <div
+              class="card-header bg-white py-2 d-flex justify-content-between align-items-center"
+            >
               <h5
                 class="m-0 fw-bold text-dark fs-6 text-uppercase tracking-wide"
               >
                 Model Performance Results
               </h5>
+              <button
+                type="button"
+                id="btn-go-to-step-3"
+                class="btn btn-success btn-sm fw-bold text-uppercase d-none text-xs"
+              >
+                Save Model Configurations &rarr;
+              </button>
             </div>
+
             <div class="card-body p-3 bg-white">
               <div class="table-responsive border rounded bg-white mb-4">
                 <table class="table table-hover align-middle mb-0">
@@ -346,7 +343,8 @@
                     class="table-light text-xxs text-uppercase tracking-wider"
                   >
                     <tr>
-                      <th scope="col" style="width: 40%">Algorithm Model</th>
+                      <th scope="col" style="width: 10%">Select</th>
+                      <th scope="col" style="width: 35%">Algorithm Model</th>
                       <th scope="col" class="text-end">R² Score</th>
                       <th scope="col" class="text-end">MAPE</th>
                       <th scope="col" class="text-end">MAE</th>
@@ -389,6 +387,18 @@
   <!-- ====== STEP 3 PANEL: CONFIGURATION SAVED REGISTRY ====== -->
   <div id="panel-step-3" class="pipeline-panel d-none">
     <!-- Static summary of confirmed, persistent settings -->
+  </div>
+</div>
+<!-- ====== FULLSCREEN IMAGE LIGHTBOX ====== -->
+<div id="image-lightbox" class="lightbox-overlay d-none">
+  <span class="lightbox-close" id="lightbox-close">&times;</span>
+  <div class="lightbox-container">
+    <img
+      id="lightbox-img"
+      class="lightbox-content"
+      src=""
+      alt="Zoomed Diagnostic Image"
+    />
   </div>
 </div>
 {% endblock %} {% block scripts %}

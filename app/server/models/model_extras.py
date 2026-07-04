@@ -40,12 +40,12 @@ def get_correlation_matrix(data):
 def get_target_names(): 
     return {
         "targets": [
-            {"value": "future_price", "label_fallback": "Future Price Target"},
+            {"value": "future_max_price", "label_fallback": "Future Price Target"},
             {"value": "future_growth", "label_fallback": "Future Growth Target"}
     ]}
 
 # === See Company Outliers ===
-def compute_database_zscores(target_variable="future_price"):
+def compute_database_zscores(target_variable="future_max_price"):
     """
     Queries all companies and reports, flattens the financial data,
     and computes Z-scores to isolate extreme outlier entries.
