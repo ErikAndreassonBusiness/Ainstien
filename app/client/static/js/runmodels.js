@@ -262,7 +262,7 @@ function setupCheckboxToggle(btnId, selector, label) {
 }
 
 /**
- * Helper function to inject checkboxes into scrolling features viewport panels
+ * Helper function to inject checkboxes with inline pencil transformation options
  */
 function renderCheckboxes(featureArray, containerId, inputName) {
   const container = document.getElementById(containerId);
@@ -272,10 +272,32 @@ function renderCheckboxes(featureArray, containerId, inputName) {
   featureArray.forEach((feature) => {
     const cleanLabel = formatFeatureLabel(feature);
     const div = document.createElement("div");
-    div.className = "form-check mb-2";
+    div.className = "mb-3 border-bottom pb-2";
     div.innerHTML = `
-      <input class="form-check-input" type="checkbox" name="${inputName}" value="${feature}" id="feat_${feature}" checked />
-      <label class="form-check-label fw-semibold text-sm" for="feat_${feature}">${cleanLabel}</label>
+      <div class="d-flex justify-content-between align-items-center form-check mb-1">
+        <div>
+          <input class="form-check-input" type="checkbox" name="${inputName}" value="${feature}" id="feat_${feature}" checked />
+          <label class="form-check-label fw-semibold text-sm cursor-pointer" for="feat_${feature}">${cleanLabel}</label>
+        </div>
+        <!-- Pencil Icon Button -->
+        <button type="button" class="btn btn-link btn-sm text-secondary p-0 text-decoration-none" onclick="toggleFeatureSettings('${feature}')" title="Transform Feature">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Hidden transformation options drawer -->
+      <div id="settings_${feature}" class="d-none mt-1 ps-4 text-xs bg-light p-2 rounded border">
+        <label class="fw-bold text-muted d-block mb-1">Mathematical Transformation:</label>
+        <select class="form-select form-select-sm feature-transform-select w-100" name="transform_${feature}" data-feature="${feature}" style="font-size: 0.75rem;">
+          <option value="none" selected>None (Linear)</option>
+          <option value="log">Logarithmic ( log(x) )</option>
+          <option value="square">Squared ( x² )</option>
+          <option value="sqrt">Square Root ( √x )</option>
+          <option value="inverse">Inverse ( 1/x )</option>
+        </select>
+      </div>
     `;
     container.appendChild(div);
   });
@@ -323,6 +345,17 @@ async function getDiagnostics() {
   try {
     const allFeatures = await fetchFeatureNames();
 
+    // For edited features
+    const transformationsMap = {};
+    selectedFeatures.forEach((feature) => {
+      const selectElement = document.querySelector(
+        `select[name="transform_${feature}"]`,
+      );
+      if (selectElement && selectElement.value !== "none") {
+        transformationsMap[feature] = selectElement.value;
+      }
+    });
+
     const payload = {
       fundamental_features: getFundamentFeatures(selectedFeatures, allFeatures),
       metric_features: getMetricFeatures(selectedFeatures, allFeatures),
@@ -333,6 +366,7 @@ async function getDiagnostics() {
         ?.checked
         ? "on"
         : "off",
+      transformations: transformationsMap,
     };
 
     // Await core analytical computation call from backend engines
@@ -488,6 +522,16 @@ async function getModelResults(e, selectedFeatures, targetKey, logTransform) {
 
   const allFeatures = await fetchFeatureNames();
 
+  const transformationsMap = {};
+  selectedFeatures.forEach((feature) => {
+    const selectElement = document.querySelector(
+      `select[name="transform_${feature}"]`,
+    );
+    if (selectElement && selectElement.value !== "none") {
+      transformationsMap[feature] = selectElement.value;
+    }
+  });
+
   const payload = {
     fundamental_features: getFundamentFeatures(selectedFeatures, allFeatures),
     metric_features: getMetricFeatures(selectedFeatures, allFeatures),
@@ -502,6 +546,7 @@ async function getModelResults(e, selectedFeatures, targetKey, logTransform) {
       : "off",
     test_split:
       e.target.querySelector('input[name="test_split"]')?.value || "0.8",
+    transformations: transformationsMap,
   };
 
   try {
@@ -845,6 +890,16 @@ function setupLightbox() {
   };
 
   document.addEventListener("mouseup", stopDragging);
+}
+
+/**
+ * Global function to show/hide the inline transformation configuration per feature
+ */
+function toggleFeatureSettings(featureId) {
+  const settingsPanel = document.getElementById(`settings_${featureId}`);
+  if (settingsPanel) {
+    settingsPanel.classList.toggle("d-none");
+  }
 }
 
 // Bootstrap execution
