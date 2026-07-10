@@ -96,7 +96,6 @@ class Fundamental(db.Model): #4 år bak
 
     # ======== Income Statement (MSEK???) ========
     revenue: Mapped[float] = mapped_column(nullable=False)
-    depreciation: Mapped[float] = mapped_column(nullable=False)
     ebitda: Mapped[float] = mapped_column(nullable=False)
     ebit: Mapped[float] = mapped_column(nullable=False)
     net_income: Mapped[float] = mapped_column(nullable=False)
@@ -112,8 +111,8 @@ class Fundamental(db.Model): #4 år bak
 
     # Omsättningstillgångar
     current_assets: Mapped[float] = mapped_column(nullable=False)
-    inventory: Mapped[float] = mapped_column(nullable=False)
-    account_receivables: Mapped[float] = mapped_column(nullable=False)
+    #inventory: Mapped[float] = mapped_column(nullable=False) - går ej med börsdata
+    #account_receivables: Mapped[float] = mapped_column(nullable=False) - går ej med börsdata
     cash: Mapped[float] = mapped_column(nullable=False)
 
     # Anläggsningstillgångar
@@ -192,8 +191,8 @@ class Metric(db.Model):
             "quick_ratio_percent": self.quick_ratio_percent,
             "net_debt_ebitda_ratio": self.net_debt_ebitda_ratio,
             "equity_ratio_percent": self.equity_ratio_percent,
-            "assets_turnover_ratio": self.assets_turnover_ratio,
-            "inventory_turnover_ratio": self.inventory_turnover_ratio,
+            #"assets_turnover_ratio": self.assets_turnover_ratio,
+            #"inventory_turnover_ratio": self.inventory_turnover_ratio,
             "roa": self.roa,
             "roe": self.roe,
             "roi": self.roi,
