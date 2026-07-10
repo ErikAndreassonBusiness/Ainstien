@@ -18,10 +18,8 @@ from .db_queries import (
     get_metrics_attrbiute_names
 )
 
-from .models.feature_analysis import print_diagnostics
-
+from .models.feature_analysis import print_diagnostics, get_target_names
 from .models.run_models import run_models
-from .models.model_extras import get_correlation_matrix, get_target_names
 
 # ========== API routes ============
 

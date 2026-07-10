@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 from app.server.db_queries import (
     get_all_companies, 
-    get_all_reports, 
+    get_all_annual_reports, 
     get_all_fundamentals, 
     get_all_metrics,
     build_dataframe_for_models,

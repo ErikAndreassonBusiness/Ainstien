@@ -10,13 +10,15 @@ class Company(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     ticker: Mapped[str] = mapped_column(unique=True, nullable=False)
+    #borsdata_id: Mapped[int] = mapped_column(unique=True, nullable=False)
     name: Mapped[str] = mapped_column(nullable=True)
 
      # ==== Connections to other entities ====
-    reports: Mapped[list['Report']] = relationship(back_populates='company')
+    annual_reports: Mapped[list['Annual_Report']] = relationship(back_populates='company')
+    quarterly_reports: Mapped[list['Quarterly_Report']] = relationship(back_populates='company')
 
-class Report(db.Model): 
-    __tablename__ = "report"
+class Annual_Report(db.Model): 
+    __tablename__ = "annual_report"
     id: Mapped[int] = mapped_column(primary_key=True)
     report_date: Mapped[date] = mapped_column(nullable=False)
 
@@ -27,18 +29,56 @@ class Report(db.Model):
     one_month_price : Mapped[float] = mapped_column(nullable=False)
     two_month_price : Mapped[float] = mapped_column(nullable=False)
     three_month_price : Mapped[float] = mapped_column(nullable=False)
-    #six_month_price : Mapped[float] = mapped_column(nullable=False)
-    #twelve_month_price : Mapped[float] = mapped_column(nullable=False)
 
     max_average_future_price: Mapped[float] = mapped_column(nullable=False) #y (Target), currently 3 months
 
     # ==== Connections to other entities ====
     company_id: Mapped[int] = mapped_column(ForeignKey('company.id'), nullable=False)
-    company: Mapped["Company"] = relationship(back_populates='reports')
+    company: Mapped["Company"] = relationship(back_populates='annual_reports')
 
-    # Relationship (delete-orphan: Om report tas bort, tas även fundementals och metrics bort)
-    fundamental: Mapped["Fundamental"] = relationship(back_populates='report', cascade="all, delete-orphan")
-    metric: Mapped["Metric"] = relationship(back_populates='report', cascade="all, delete-orphan")
+    fundamental_id: Mapped[int] = mapped_column(ForeignKey('fundamental.id'), nullable=True)
+    fundamental: Mapped["Fundamental"] = relationship(
+        cascade="all, delete-orphan", 
+        single_parent=True)
+
+    metric_id: Mapped[int] = mapped_column(ForeignKey('metric.id'), nullable=True) #Not requiered for the first report
+    metric: Mapped["Metric"] = relationship(
+        cascade="all, delete-orphan", 
+        single_parent=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "report_date": self.report_date.isoformat(),  # Converts date object to "YYYY-MM-DD" string
+            "fundamentals": self.fundamental.to_dict() if self.fundamental else None,
+            "metrics": self.metric.to_dict() if self.metric else None
+        }
+
+class Quarterly_Report(db.Model): 
+    __tablename__ = "quarterly_report"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    report_date: Mapped[date] = mapped_column(nullable=False)
+
+    # ==== For our predictions =====
+    share_outstanding: Mapped[int] = mapped_column(nullable=False)
+
+    current_price : Mapped[float] = mapped_column(nullable=False)
+    one_month_price : Mapped[float] = mapped_column(nullable=False)
+    two_month_price : Mapped[float] = mapped_column(nullable=False)
+    three_month_price : Mapped[float] = mapped_column(nullable=False)
+
+    max_average_future_price: Mapped[float] = mapped_column(nullable=False) #y (Target), currently 3 months
+
+    # ==== Connections to other entities ====
+    company_id: Mapped[int] = mapped_column(ForeignKey('company.id'), nullable=False)
+    company: Mapped["Company"] = relationship(back_populates='quarterly_reports')
+
+    fundamental_id: Mapped[int] = mapped_column(ForeignKey('fundamental.id'), nullable=True)
+    fundamental: Mapped["Fundamental"] = relationship(cascade="all, delete-orphan", single_parent=True)
+
+    metric_id: Mapped[int] = mapped_column(ForeignKey('metric.id'), nullable=True) #Not requiered for the first report
+    metric: Mapped["Metric"] = relationship(cascade="all, delete-orphan", single_parent=True)
+
 
     def to_dict(self):
         return {
@@ -51,9 +91,6 @@ class Report(db.Model):
 class Fundamental(db.Model): #4 år bak
     __tablename__ = "fundamental"
     id: Mapped[int] = mapped_column(primary_key=True)
-
-    report_id: Mapped[int] = mapped_column(ForeignKey('report.id'), nullable=False)
-    report: Mapped["Report"] = relationship(back_populates='fundamental')
 
     # substansvarde: Mapped[float] = mapped_column(nullable=False)
 
@@ -109,9 +146,6 @@ class Fundamental(db.Model): #4 år bak
 class Metric(db.Model):
     __tablename__ = "metric"
     id: Mapped[int] = mapped_column(primary_key=True)
-
-    report_id: Mapped[int] = mapped_column(ForeignKey('report.id'), nullable=False)
-    report: Mapped["Report"] = relationship(back_populates='metric')
 
     """ ========================== Growth ratios ======================= """
     #Omsättningstillväxt (%)

@@ -17,6 +17,14 @@ def get_settings(data):
         "transformation_map": data.get('transformations')
     }
 
+# === Target Variants ===
+def get_target_names(): 
+    return {
+        "targets": [
+            {"value": "future_max_price", "label_fallback": "Future Price Target"},
+            {"value": "future_growth", "label_fallback": "Future Growth Target"}
+    ]}
+
 def print_data_summary(X, y):
     df_check = X.copy()
     df_check['TARGET'] = y

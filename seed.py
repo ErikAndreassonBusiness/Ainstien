@@ -9,7 +9,7 @@ import time
 from datetime import date, timedelta
 
 from app import create_app
-from app.server.database import db, Company, Report, Fundamental, Metric
+from app.server.database import db, Company, Annual_Report, Fundamental, Metric
 
 from seed_db.seed_reports import *
 from seed_db.seed_metrics import *
@@ -207,8 +207,8 @@ def instance_company_entity(ticker, ticker_obj):
         name=ticker_obj.info.get('shortName', "Unknown Company")
     )
 
-def instance_report_entity(ticker_obj, report_date, company_obj, inc, bal): 
-    return Report(
+def instance_report_entity(ticker_obj, report_date, company_obj, fundamental_obj, inc, bal, metric_obj = None): 
+    return Annual_Report(
         report_date = report_date, 
         share_outstanding = get_shares_outstanding(
             bal=bal, 
@@ -220,34 +220,35 @@ def instance_report_entity(ticker_obj, report_date, company_obj, inc, bal):
         
         one_month_price = get_price_at_report_date(
             ticker_obj=ticker_obj, 
-            date=report_date + + timedelta(days=30)),
+            date=report_date + timedelta(days=30)),
 
         two_month_price = get_price_at_report_date(
             ticker_obj=ticker_obj, 
-            date=report_date + + timedelta(days=60)),
+            date=report_date + timedelta(days=60)),
         
         three_month_price = get_price_at_report_date(
             ticker_obj=ticker_obj, 
-            date=report_date + + timedelta(days=90)),
+            date=report_date + timedelta(days=90)),
         
         # six_month_price = get_price_at_report_date(
         #     ticker_obj=ticker_obj, 
-        #     date=report_date + + timedelta(days=180)),
+        #     date=report_date + timedelta(days=180)),
         
         # twelve_month_price = get_price_at_report_date(
         #     ticker_obj=ticker_obj, 
-        #     date=report_date + + timedelta(days=360)),
+        #     date=report_date + timedelta(days=360)),
 
         max_average_future_price = get_max_avarage_future_prices(
             ticker_obj=ticker_obj, 
             date=report_date),
 
         company = company_obj,
+        fundamental = fundamental_obj,
+        metric = metric_obj,
     )
 
-def instance_fundamental_entity(report_obj, date, inc, bal): 
+def instance_fundamental_entity(date, inc, bal): 
     return Fundamental(
-        report=report_obj,
         #substansvarde = get_substansvarde(bal, date),
         revenue=get_revenue(inc, date),
         depreciation=get_depreciation(inc, date),
@@ -266,9 +267,8 @@ def instance_fundamental_entity(report_obj, date, inc, bal):
         fixed_assets=get_fixed_assets(bal, date),
     )
 
-def instance_metric_entity(report_obj, date, prev_date, inc, bal): 
+def instance_metric_entity(date, prev_date, inc, bal): 
     return Metric(
-        report=report_obj,
         revenue_growth_percent=get_revenue_growth(inc, date, prev_date),
         profit_growth_percent=get_profit_growth(inc, date, prev_date),
         quick_ratio_percent=get_quick_ratio(bal, date),
@@ -284,17 +284,15 @@ def instance_metric_entity(report_obj, date, prev_date, inc, bal):
     )
 
 def instance_entities(ticker_obj, new_company, date, prev_date, inc, bal): 
-    new_report = instance_report_entity(ticker_obj, date, new_company, inc, bal)
-    new_fundamental = instance_fundamental_entity(new_report, date, inc, bal)
-
-    if prev_date != date:
-        new_metric = instance_metric_entity(new_report, date, prev_date, inc, bal)
-
-    db.session.add(new_report)
+    new_fundamental = instance_fundamental_entity(date, inc, bal)
     db.session.add(new_fundamental)
 
     if prev_date != date:
+        new_metric = instance_metric_entity(date, prev_date, inc, bal)
         db.session.add(new_metric)
+    
+    new_report = instance_report_entity(ticker_obj, date, new_company, new_fundamental, inc, bal, new_metric if prev_date != date else None)
+    db.session.add(new_report)
 
 # === Main Logic Function ===
 def run_seeding_engine(): 
