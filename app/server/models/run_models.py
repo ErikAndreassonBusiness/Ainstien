@@ -20,6 +20,20 @@ from app.server.db_queries import (
 
 from .data_functions import get_features_and_target_df
 
+def get_settings(data):
+    print("Data: ", data)
+    return {
+        "chosen_models": data.get('models'),
+        "fundamental_features": data.get('fundamental_features'),
+        "metric_features": data.get('metric_features'),
+        "chosen_target": data.get('target_variable'),
+        "log_transform_target": data.get('log_transform'),
+        "cv_folds": data.get('cv_folds'), 
+        "positive_coef": data.get('positive_coefficients'),
+        "split": data.get('test_split'), 
+        "transformation_map": data.get('transformations')
+    }
+
 def split_data(X, y, settings):
     split = float(settings.get("split"))
     test_cutoff = int(split * len(X))
@@ -63,80 +77,6 @@ def calc_errors(actual_y_test, actual_predictions):
         np.sqrt(mean_squared_error(actual_y_test, actual_predictions))
     )
 
-
-def get_settings(data):
-    print("Data: ", data)
-    return {
-        "chosen_models": data.get('models'),
-        "fundamental_features": data.get('fundamental_features'),
-        "metric_features": data.get('metric_features'),
-        "chosen_target": data.get('target_variable'),
-        "log_transform_target": data.get('log_transform'),
-        "cv_folds": data.get('cv_folds'), 
-        "positive_coef": data.get('positive_coefficients'),
-        "split": data.get('test_split'), 
-        "transformation_map": data.get('transformations')
-    }
-
-
-def print_sanity_check(X, y):
-    df_check = X.copy()
-    df_check['TARGET'] = y
-
-    print("--- DATA SUMMARY ---")
-    print(df_check.describe())
-
-    # Correlatiom Heatmap
-    plt.figure(figsize=(14, 12))  
-    correlation_matrix = df_check.corr() 
-    mask = np.triu(np.ones_like(correlation_matrix, dtype=bool))
-    
-    sns.heatmap(
-        correlation_matrix, 
-        mask=mask,
-        annot=True,            
-        cmap='coolwarm', 
-        fmt=".2f", 
-        linewidths=0.5,
-        cbar_kws={"shrink": .8}
-    )
-    plt.title("Linear Correlation Heatmap (Features vs Target)")
-    plt.tight_layout()
-    plt.savefig('app/client/static/images/correlation_matrix.png')
-    plt.close()
-
-    # Plot Outliers
-    num_features = len(X.columns)
-    fig, axes = plt.subplots(nrows=int(np.ceil(num_features/4)), ncols=4, figsize=(16, num_features))
-    axes = axes.flatten()
-    
-    for i, col in enumerate(X.columns):
-        sns.boxplot(y=df_check[col], ax=axes[i])
-        axes[i].set_title(col, fontsize=9)
-        axes[i].set_ylabel('')
-        
-    # Clear unused axes
-    for j in range(i + 1, len(axes)):
-        fig.delaxes(axes[j])
-        
-    plt.suptitle("Individual Feature Boxplots (Outlier Check)", fontsize=16)
-    plt.tight_layout()
-    plt.savefig('app/client/static/images/outliers_scaled.png') 
-    plt.close()
-
-    # Target Distirbution
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-    sns.histplot(df_check['TARGET'], kde=True, ax=axes[0])
-    axes[0].set_title("Target Distribution (Skewness Check)")
-    
-    sns.boxplot(x=df_check['TARGET'], ax=axes[1])
-    axes[1].set_title("Target Boxplot (Outlier Check)")
-    
-    plt.tight_layout()
-    plt.savefig('app/client/static/images/target_distribution.png') 
-    plt.close()
-
-
 def print_baseline(y_train): 
     y_mean = np.mean(y_train)
     y_prediction_baseline = [y_mean] * len(y_train)
@@ -175,12 +115,14 @@ def calc_all_models(settings, X_train_scaled, X_test_scaled, y_train, y_test):
     return performance_list, coefficients_dict
 
 
+#
+# --- Main functiion ---
+#
 def run_models(data): 
     settings = get_settings(data)
 
     # Handle data
     X, y = get_features_and_target_df(settings=settings)
-    print_sanity_check(X, y)
     X_train, X_test, y_train, y_test = split_data(X, y, settings)
     X_train_scaled, X_test_scaled = scale_features(X_train, X_test)
     

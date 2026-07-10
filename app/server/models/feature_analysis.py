@@ -9,7 +9,6 @@ from app.server.db_queries import build_dataframe_for_models
 from .data_functions import get_features_and_target_df
 
 def get_settings(data):
-    print('Data received for settings: ', data, "\n")
     return {
         "fundamental_features": data.get('fundamental_features'),
         "metric_features": data.get('metric_features'),
@@ -17,6 +16,13 @@ def get_settings(data):
         "log_transform_target": data.get('log_transform'), 
         "transformation_map": data.get('transformations')
     }
+
+def print_data_summary(X, y):
+    df_check = X.copy()
+    df_check['TARGET'] = y
+
+    print("--- DATA SUMMARY ---")
+    print(df_check.describe())
 
 def remove_past_images():
     current_dir = Path(__file__).resolve().parent
@@ -115,7 +121,9 @@ def print_correlation_heatmap(df_check, timestamp):
     plt.savefig(f"app/client/static/images/correlation_matrix{timestamp}.png")
     plt.close()
 
-
+#
+# --- Main function ---
+#
 def print_diagnostics(data):
     timestamp = int(time.time())
     X, y = get_features_and_target_df(get_settings(data))
@@ -126,10 +134,12 @@ def print_diagnostics(data):
 
     # Run printers cleanly by passing exactly what they need
     remove_past_images()
+    print_data_summary(X, y)
     print_target_outliers(df_check, timestamp)
     print_feature_outliers(X, timestamp)
     print_correlation_heatmap(df_check, timestamp)
     print_feature_target_plot(X, y, timestamp)
+    
 
     return {
         "status": "success", 
