@@ -10,8 +10,12 @@ class Company(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     ticker: Mapped[str] = mapped_column(unique=True, nullable=False)
-    #borsdata_id: Mapped[int] = mapped_column(unique=True, nullable=False)
-    name: Mapped[str] = mapped_column(nullable=True)
+    borsdata_id: Mapped[int] = mapped_column(unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
+    lista: Mapped[str] = mapped_column(nullable=False)
+    branch: Mapped[str] = mapped_column(nullable=False)
+    sektor: Mapped[str] = mapped_column(nullable=False)
+    land: Mapped[str] = mapped_column(nullable=False)
 
      # ==== Connections to other entities ====
     annual_reports: Mapped[list['Annual_Report']] = relationship(back_populates='company')

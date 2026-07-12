@@ -2,16 +2,40 @@ import glob
 import os
 
 import pandas as pd
+import yfinance as yf
 import time
 from datetime import date, timedelta
 
 from app import create_app
 from app.server.database import db, Company, Annual_Report, Quarterly_Report, Fundamental, Metric
 
+
+#
+# --- Getters for each excel-page
+# 
+
+def get_report_val(df, attr_name, col_name): 
+    # Exctract data from a report
+    mask = df['Report'] == attr_name
+    if mask.any():
+        val = df.loc[mask, col_name].values[0]
+        # Handle empty/NaN values in Excel cleanly
+        if pd.notna(val): 
+            return float(val)
+        
+        raise ValueError
+
+def get_info_val(label_name):
+        # Look for the row where column index 1 contains our label
+        mask = info_df.iloc[:, 1].astype(str).str.strip() == label_name
+        if mask.any():
+            val = info_df.loc[mask, info_df.columns[2]].values[0]
+            return str(val).strip() if pd.notna(val) else None
+        raise ValueError
+
 #
 # --- Helper functions
 #
-
 def get_file_path_for_company(export_folder, all_files, company_name):
     file_path = None
 
@@ -25,46 +49,36 @@ def get_file_path_for_company(export_folder, all_files, company_name):
     
     return file_path
 
-def get_stock_data_from_excel(file_path):
-    # --- Get company from Excel list ---
-    return pd.read_excel(file_path, sheet_name=None)
 
-# Get data from a report and column
-def get_val(df, attr_name, col_name): 
-    mask = df['Report'] == attr_name
-    if mask.any():
-        val = df.loc[mask, col_name].values[0]
-        # Handle empty/NaN values in Excel cleanly
-        if pd.notna(val): 
-            return float(val)
-        
-        raise ValueError
+    # --- Get company from Excel list ---
+def get_stock_data_from_excel(file_path):
+    return pd.read_excel(file_path, sheet_name=None)
 
 def get_fundamental_data(df, col): 
     return {
-        "revenue": get_val(df, 'Nettoomsättning', col),
-        "ebitda": get_val(df, 'EBITDA', col),
-        "ebit": get_val(df, 'Rörelseresultat', col),
-        "net_income": get_val(df, 'Resultat Före Skatt', col),
-        "total_assets": get_val(df, 'Summa Tillgångar', col),
-        "total_equity": get_val(df, 'Summa Eget Kapital', col),
-        "total_debt": get_val(df, 'Totala Skulder', col),
-        "short_term_debt": get_val(df, 'Kortfristiga Skulder', col),
-        "long_term_debt": get_val(df, 'Långfristiga Skulder', col),
-        "current_assets": get_val(df, 'Summa Omsättningstillgångar', col),
-        "cash": get_val(df, 'Kassa/Bank', col),
-        "fixed_assets": get_val(df, 'Summa Anläggningstillgångar', col)
+        "revenue": get_report_val(df, 'Nettoomsättning', col),
+        "ebitda": get_report_val(df, 'EBITDA', col),
+        "ebit": get_report_val(df, 'Rörelseresultat', col),
+        "net_income": get_report_val(df, 'Resultat Före Skatt', col),
+        "total_assets": get_report_val(df, 'Summa Tillgångar', col),
+        "total_equity": get_report_val(df, 'Summa Eget Kapital', col),
+        "total_debt": get_report_val(df, 'Totala Skulder', col),
+        "short_term_debt": get_report_val(df, 'Kortfristiga Skulder', col),
+        "long_term_debt": get_report_val(df, 'Långfristiga Skulder', col),
+        "current_assets": get_report_val(df, 'Summa Omsättningstillgångar', col),
+        "cash": get_report_val(df, 'Kassa/Bank', col),
+        "fixed_assets": get_report_val(df, 'Summa Anläggningstillgångar', col)
     }
 
 def get_metric_data(df, fundamental_data, col, report_columns): 
     col_index = list(report_columns).index(col)
     prev_col = list(report_columns)[col_index - 1] if col_index > 0 else None
 
-    prev_revenue = get_val(df, 'Nettoomsättning', prev_col) if prev_col else 0
-    prev_net_income = get_val(df, 'Resultat Före Skatt', prev_col) if prev_col else 0
+    prev_revenue = get_report_val(df, 'Nettoomsättning', prev_col) if prev_col else 0
+    prev_net_income = get_report_val(df, 'Resultat Före Skatt', prev_col) if prev_col else 0
 
     # Store variables for visability
-    net_debt = get_val(df, 'Nettoskuld', col)
+    net_debt = get_report_val(df, 'Nettoskuld', col)
     ebitda = fundamental_data["ebitda"]
     revenue = fundamental_data["revenue"]
     ebit = fundamental_data["ebit"]
@@ -93,22 +107,33 @@ def get_metric_data(df, fundamental_data, col, report_columns):
         "profit_margin_percent": (net_income / revenue * 100) if revenue > 0 else 0.0
     }
 
+# --- IMPORTANT! A yfinance function!
+def get_shares_outstanding(ticker, date): 
+    ticker_obj = yf.Ticker(ticker)
+    bal = ticker_obj.balance_sheet
+    shares = bal.loc['Ordinary Shares Number', date]
+
+    if pd.isna(shares) or shares == 0: 
+            raise ValueError("Abort!")
+    else: 
+        return round(shares/1_000_000) #Millions
 
 #
 # =========== Instances of Entities ===========
 #
-def instance_company_entity(row, file_path):
-    # Extract ticker from file
-    filename = os.path.basename(file_path)
-    ticker = filename.split('-')[0]
-
+def instance_company_entity(info_df):
     new_company = Company(
-        #borsdata_id=row["Börsdata ID"], #lägg till senare
-        name=row.Bolagsnamn, 
-        ticker=ticker)
+        borsdata_id= get_info_val(info_df, 'Börsdata ID'), 
+        name=get_info_val(info_df, 'Bolag'), 
+        ticker=get_info_val(info_df, 'Ticker'), 
+        sektor = get_info_val(info_df, 'Sektor'), 
+        branch = get_info_val(info_df, 'Bransch'), 
+        lista = get_info_val(info_df, 'Lista'), 
+        land = get_info_val(info_df, 'Land'))
 
     db.session.add(new_company)
     return new_company
+
 
 def instance_fundamental_entity(fundamental_data):
     return Fundamental(
@@ -126,6 +151,7 @@ def instance_fundamental_entity(fundamental_data):
         fixed_assets=fundamental_data["fixed_assets"],
     )
 
+
 def instance_metric_entity(metric_data):
     return Metric(
         revenue_growth_percent=metric_data["revenue_growth_percent"],
@@ -141,11 +167,11 @@ def instance_metric_entity(metric_data):
     )
 
 
-def instance_annual_report_entity(companu_obj, fundamental_obj, metric_obj, df): 
+def instance_annual_report_entity(df, companu_obj, fundamental_obj, metric_obj = None): 
     return Annual_Report(
         report_date = report_date, 
-        share_outstanding = get_shares_outstanding( #fixa med shares outstanding
-            bal=bal, 
+        share_outstanding = get_shares_outstanding( 
+            ticker = company_obj.ticker, 
             date=report_date), 
 
         current_price = get_price_at_report_date(
@@ -176,17 +202,24 @@ def instance_annual_report_entity(companu_obj, fundamental_obj, metric_obj, df):
 #
 # --- Main instancing method
 # 
-def instance_annual_reports(year_df, company_obj): 
-    report_columns = year_df.columns[2: ] #ska bli dynamisk, eller ha fixt antal år
+def instance_anual_data_entities(year_df, company_obj): 
+    report_columns = [col for col in year_df.columns if str(col).strip().isdigit() and len(str(col).strip()) == 4] #get all valid reports
+    report_columns.sort()
 
+    if len(report_columns) < 5: #minimum of 5 years reports
+        raise ValueError("Not enough reports in company")
+
+    first_year = True
     for col in report_columns:
         fundamental_data = get_fundamental_data(year_df, col)
         new_fundamental = instance_fundamental_entity(fundamental_data)
 
-        metric_data = get_metric_data(year_df, fundamental_data, col, report_columns)
-        new_metric = instance_metric_entity(year_df)
+        if not first_year: #skip metric report firtst
+            metric_data = get_metric_data(year_df, fundamental_data, col, report_columns)
+            new_metric = instance_metric_entity(year_df)
+            first_year = False
 
-        new_annual_report = instance_annual_report_entity(company_obj,new_fundamental, new_metric, year_df)
+        new_annual_report = instance_annual_report_entity(year_df, company_obj,new_fundamental, new_metric)
         
         db.session.add(new_fundamental)
         db.session.add(new_metric)
@@ -204,25 +237,14 @@ def run_seeding_engine():
     all_files = os.listdir(export_folder)
     for row in allstocks_df.itertuples():
         try: 
-            file_path = get_file_path_for_company(export_folder, all_files, row.Bolagsnamn)
-
             # --- Load Excel sheets ---
+            file_path = get_file_path_for_company(export_folder, all_files, row.Bolagsnamn)
             excel_data = get_stock_data_from_excel(file_path)
-            
-            new_company = instance_company_entity(row, file_path)
-            
-            # --- Process Annual Reports ---
-            if 'Year' in excel_data:
-                year_df = excel_data['Year']
-                instance_annual_reports(year_df, new_company)
 
-            # --- 3. Process Quarterly Reports (from 'Quarter' sheet) ---
-            if 'Quarter' in excel_data:
-                quarter_df = excel_data['Quarter']
-                new_fundamental = instance_fundamental_entity(quarter_df)
-                new_metric = instance_metric_entity(quarter_df)
-                new_annual_report(new_company, quarter_df)
-                print(quarter_df.head())
+            # Instance and add entities
+            new_company = instance_company_entity(excel_data["Info"])
+            instance_anual_data_entities(excel_data['Year'], new_company) # Report, fundamental and metrics
+            instance_anual_data_entities(excel_data['Quarter'], new_company) # Report, fundamental and metrics
 
             # --- Commit everything
             db.session.commit()
@@ -230,7 +252,6 @@ def run_seeding_engine():
 
         except Exception as e: 
             print(f"  Skipping {row.Bolagsnamn}: Error: {str(e)}")
-
 
 
 def seed_db():
