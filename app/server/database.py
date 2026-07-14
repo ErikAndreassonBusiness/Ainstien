@@ -10,7 +10,7 @@ class Company(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     ticker: Mapped[str] = mapped_column(unique=True, nullable=False)
-    borsdata_id: Mapped[int] = mapped_column(unique=True, nullable=False)
+    yf_ticker: Mapped[str] = mapped_column(unique=True, nullable=False)
     name: Mapped[str] = mapped_column(nullable=False)
     lista: Mapped[str] = mapped_column(nullable=False)
     branch: Mapped[str] = mapped_column(nullable=False)
@@ -27,7 +27,7 @@ class Annual_Report(db.Model):
     report_date: Mapped[date] = mapped_column(nullable=False)
 
     # ==== For our predictions =====
-    share_outstanding: Mapped[int] = mapped_column(nullable=False)
+    #share_outstanding: Mapped[int] = mapped_column(nullable=False) #Borde vara false
 
     current_price : Mapped[float] = mapped_column(nullable=False)
     one_month_price : Mapped[float] = mapped_column(nullable=False)
@@ -64,7 +64,7 @@ class Quarterly_Report(db.Model):
     report_date: Mapped[date] = mapped_column(nullable=False)
 
     # ==== For our predictions =====
-    share_outstanding: Mapped[int] = mapped_column(nullable=False)
+    #share_outstanding: Mapped[int] = mapped_column(nullable=False)
 
     current_price : Mapped[float] = mapped_column(nullable=False)
     one_month_price : Mapped[float] = mapped_column(nullable=False)
@@ -170,10 +170,10 @@ class Metric(db.Model):
 
     """ ============== Efficiency ratios: Asset use and productivity ============= """
     #Kaptialomsättningshastighet (ggr)
-    assets_turnover_ratio: Mapped[float] = mapped_column(nullable=False) #Sales / Tot. Average Assets
+    #assets_turnover_ratio: Mapped[float] = mapped_column(nullable=False) #Sales / Tot. Average Assets
 
     #Varulagersomsättningshastighet (ggr)
-    inventory_turnover_ratio : Mapped[float] = mapped_column(nullable=False) # Cost of Goods Sold / Average Inventory 
+    #inventory_turnover_ratio : Mapped[float] = mapped_column(nullable=False) # Cost of Goods Sold / Average Inventory 
 
     # Return on Assets
     roa : Mapped[float] = mapped_column(nullable=False) #Net Income / Tot. Average Assets 
