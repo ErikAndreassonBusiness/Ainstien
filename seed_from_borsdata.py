@@ -5,6 +5,7 @@ import pandas as pd
 import yfinance as yf
 import time
 from datetime import date, timedelta
+import datetime
 
 from app import create_app
 from app.server.database import db, Company, Annual_Report, Quarterly_Report, Fundamental, Metric
@@ -25,7 +26,7 @@ def get_report_val(df, attr_name, col_name):
         
         raise ValueError
 
-def get_info_val(label_name):
+def get_info_val(info_df, label_name):
         # Look for the row where column index 1 contains our label
         mask = info_df.iloc[:, 1].astype(str).str.strip() == label_name
         if mask.any():
@@ -33,6 +34,43 @@ def get_info_val(label_name):
             return str(val).strip() if pd.notna(val) else None
         raise ValueError
 
+def get_max_avarage_future_prices(ticker_obj, date): 
+    future_target_date = date + timedelta(days=90)
+
+    fetch_start = future_target_date - timedelta(days=30)
+    fetch_end = future_target_date + timedelta(days=30)
+
+    prices = ticker_obj.history(start=fetch_start, end=fetch_end, interval="1d")
+
+    if prices.empty or len(prices) < 30:
+        raise ValueError(f"Abort! Not enough price history to calculate MA50 for {future_target_date}")
+
+    ma30_series = prices['Close'].rolling(window=30).mean()
+    ma30_value = ma30_series.iloc[-1]
+
+    if pd.isna(ma30_value):
+        raise ValueError(f"Abort! MA50 calculation resulted in NaN at {future_target_date}")
+
+    return round(float(ma30_value), 2)
+
+
+def get_price_at_report_date(ticker_obj, date): 
+    end_date = date + timedelta(days=7) # handeling holidays
+
+    report_date_prices = ticker_obj.history(
+        start=date, 
+        end=end_date, 
+        interval="1d")
+    
+    if report_date_prices.empty:
+        raise ValueError(f"No price data found for {ticker_obj.ticker} around {date}")
+
+    price = report_date_prices['Close'].iloc[0]
+
+    if pd.isna(price):
+        raise ValueError(f"Price data is NaN for {ticker_obj.ticker}")
+    else:
+        return round(price, 2)
 #
 # --- Helper functions
 #
@@ -108,8 +146,7 @@ def get_metric_data(df, fundamental_data, col, report_columns):
     }
 
 # --- IMPORTANT! A yfinance function!
-def get_shares_outstanding(ticker, date): 
-    ticker_obj = yf.Ticker(ticker)
+def get_shares_outstanding(ticker_obj, date): 
     bal = ticker_obj.balance_sheet
     shares = bal.loc['Ordinary Shares Number', date]
 
@@ -167,37 +204,72 @@ def instance_metric_entity(metric_data):
     )
 
 
-def instance_annual_report_entity(df, companu_obj, fundamental_obj, metric_obj = None): 
-    return Annual_Report(
-        report_date = report_date, 
-        share_outstanding = get_shares_outstanding( 
-            ticker = company_obj.ticker, 
-            date=report_date), 
+def instance_annual_report_entity(year, df, company_obj, fundamental_obj, metric_obj = None): 
+    ticker_obj = yf.Ticker(company_obj.ticker)
+    date = datetime.datetime(int(year), 2, 15) # datum: 15 feb. year
 
-        current_price = get_price_at_report_date(
-            ticker_obj=ticker_obj, 
-            date=report_date),
-        
-        one_month_price = get_price_at_report_date(
-            ticker_obj=ticker_obj, 
-            date=report_date + timedelta(days=30)),
+    if metric_obj is not None: 
+        return Annual_Report(
+            report_date = date, 
+            share_outstanding = get_shares_outstanding( 
+                ticker_obj= ticker_obj, 
+                date= date), 
 
-        two_month_price = get_price_at_report_date(
-            ticker_obj=ticker_obj, 
-            date=report_date + timedelta(days=60)),
-        
-        three_month_price = get_price_at_report_date(
-            ticker_obj=ticker_obj, 
-            date=report_date + timedelta(days=90)),
+            current_price = get_price_at_report_date(
+                ticker_obj=ticker_obj, 
+                date=date),
+            
+            one_month_price = get_price_at_report_date(
+                ticker_obj=ticker_obj, 
+                date=date + timedelta(days=30)),
 
-        max_average_future_price = get_max_avarage_future_prices(
-            ticker_obj=ticker_obj, 
-            date=report_date),
+            two_month_price = get_price_at_report_date(
+                ticker_obj=ticker_obj, 
+                date=date + timedelta(days=60)),
+            
+            three_month_price = get_price_at_report_date(
+                ticker_obj=ticker_obj, 
+                date=date + timedelta(days=90)),
 
-        company = company_obj,
-        fundamental = fundamental_obj,
-        metric = metric_obj,
-    )
+            max_average_future_price = get_max_avarage_future_prices(
+                ticker_obj=ticker_obj, 
+                date=date),
+
+            company = company_obj,
+            fundamental = fundamental_obj,
+            metric = metric_obj,
+        )
+
+    else: 
+        return Annual_Report(
+            report_date = date, 
+            share_outstanding = get_shares_outstanding( 
+                ticker_obj= ticker_obj, 
+                date= date), 
+
+            current_price = get_price_at_report_date(
+                ticker_obj=ticker_obj, 
+                date=date),
+            
+            one_month_price = get_price_at_report_date(
+                ticker_obj=ticker_obj, 
+                date=date + timedelta(days=30)),
+
+            two_month_price = get_price_at_report_date(
+                ticker_obj=ticker_obj, 
+                date=date + timedelta(days=60)),
+            
+            three_month_price = get_price_at_report_date(
+                ticker_obj=ticker_obj, 
+                date=date + timedelta(days=90)),
+
+            max_average_future_price = get_max_avarage_future_prices(
+                ticker_obj=ticker_obj, 
+                date=date),
+
+            company = company_obj,
+            fundamental = fundamental_obj,
+        )
 
 #
 # --- Main instancing method
@@ -217,13 +289,16 @@ def instance_anual_data_entities(year_df, company_obj):
         if not first_year: #skip metric report firtst
             metric_data = get_metric_data(year_df, fundamental_data, col, report_columns)
             new_metric = instance_metric_entity(year_df)
-            first_year = False
-
-        new_annual_report = instance_annual_report_entity(year_df, company_obj,new_fundamental, new_metric)
+            new_annual_report = instance_annual_report_entity(col, year_df, company_obj,new_fundamental, new_metric)
+        else: 
+            new_annual_report = instance_annual_report_entity(col, year_df, company_obj, new_fundamental)
         
         db.session.add(new_fundamental)
-        db.session.add(new_metric)
+        if not first_year: #skip metric report firtst
+            db.session.add(new_metric)
         db.session.add(new_annual_report)
+
+        first_year = False
 
 def run_seeding_engine():
     export_folder = 'Borsdata - Export'
@@ -244,14 +319,14 @@ def run_seeding_engine():
             # Instance and add entities
             new_company = instance_company_entity(excel_data["Info"])
             instance_anual_data_entities(excel_data['Year'], new_company) # Report, fundamental and metrics
-            instance_anual_data_entities(excel_data['Quarter'], new_company) # Report, fundamental and metrics
+            #instance_anual_data_entities(excel_data['Quarter'], new_company) # Report, fundamental and metrics
 
             # --- Commit everything
             db.session.commit()
             print(f"Successfully seeded {row.Bolagsnamn} ({len(year_df)} annual, {len(quarter_df)} quarterly reports)")
 
         except Exception as e: 
-            print(f"  Skipping {row.Bolagsnamn}: Error: {str(e)}")
+            print(f"  Skipping {row.Bolagsnamn}: Error: {traceback.print_exc()}" )
 
 
 def seed_db():
