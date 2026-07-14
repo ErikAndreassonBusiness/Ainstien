@@ -10,8 +10,12 @@ class Company(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     ticker: Mapped[str] = mapped_column(unique=True, nullable=False)
-    #borsdata_id: Mapped[int] = mapped_column(unique=True, nullable=False)
-    name: Mapped[str] = mapped_column(nullable=True)
+    yf_ticker: Mapped[str] = mapped_column(unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
+    lista: Mapped[str] = mapped_column(nullable=False)
+    branch: Mapped[str] = mapped_column(nullable=False)
+    sektor: Mapped[str] = mapped_column(nullable=False)
+    land: Mapped[str] = mapped_column(nullable=False)
 
      # ==== Connections to other entities ====
     annual_reports: Mapped[list['Annual_Report']] = relationship(back_populates='company')
@@ -23,7 +27,7 @@ class Annual_Report(db.Model):
     report_date: Mapped[date] = mapped_column(nullable=False)
 
     # ==== For our predictions =====
-    share_outstanding: Mapped[int] = mapped_column(nullable=False)
+    #share_outstanding: Mapped[int] = mapped_column(nullable=False) #Borde vara false
 
     current_price : Mapped[float] = mapped_column(nullable=False)
     one_month_price : Mapped[float] = mapped_column(nullable=False)
@@ -60,7 +64,7 @@ class Quarterly_Report(db.Model):
     report_date: Mapped[date] = mapped_column(nullable=False)
 
     # ==== For our predictions =====
-    share_outstanding: Mapped[int] = mapped_column(nullable=False)
+    #share_outstanding: Mapped[int] = mapped_column(nullable=False)
 
     current_price : Mapped[float] = mapped_column(nullable=False)
     one_month_price : Mapped[float] = mapped_column(nullable=False)
@@ -96,7 +100,6 @@ class Fundamental(db.Model): #4 år bak
 
     # ======== Income Statement (MSEK???) ========
     revenue: Mapped[float] = mapped_column(nullable=False)
-    depreciation: Mapped[float] = mapped_column(nullable=False)
     ebitda: Mapped[float] = mapped_column(nullable=False)
     ebit: Mapped[float] = mapped_column(nullable=False)
     net_income: Mapped[float] = mapped_column(nullable=False)
@@ -112,8 +115,8 @@ class Fundamental(db.Model): #4 år bak
 
     # Omsättningstillgångar
     current_assets: Mapped[float] = mapped_column(nullable=False)
-    inventory: Mapped[float] = mapped_column(nullable=False)
-    account_receivables: Mapped[float] = mapped_column(nullable=False)
+    #inventory: Mapped[float] = mapped_column(nullable=False) - går ej med börsdata
+    #account_receivables: Mapped[float] = mapped_column(nullable=False) - går ej med börsdata
     cash: Mapped[float] = mapped_column(nullable=False)
 
     # Anläggsningstillgångar
@@ -167,10 +170,10 @@ class Metric(db.Model):
 
     """ ============== Efficiency ratios: Asset use and productivity ============= """
     #Kaptialomsättningshastighet (ggr)
-    assets_turnover_ratio: Mapped[float] = mapped_column(nullable=False) #Sales / Tot. Average Assets
+    #assets_turnover_ratio: Mapped[float] = mapped_column(nullable=False) #Sales / Tot. Average Assets
 
     #Varulagersomsättningshastighet (ggr)
-    inventory_turnover_ratio : Mapped[float] = mapped_column(nullable=False) # Cost of Goods Sold / Average Inventory 
+    #inventory_turnover_ratio : Mapped[float] = mapped_column(nullable=False) # Cost of Goods Sold / Average Inventory 
 
     # Return on Assets
     roa : Mapped[float] = mapped_column(nullable=False) #Net Income / Tot. Average Assets 
@@ -192,8 +195,8 @@ class Metric(db.Model):
             "quick_ratio_percent": self.quick_ratio_percent,
             "net_debt_ebitda_ratio": self.net_debt_ebitda_ratio,
             "equity_ratio_percent": self.equity_ratio_percent,
-            "assets_turnover_ratio": self.assets_turnover_ratio,
-            "inventory_turnover_ratio": self.inventory_turnover_ratio,
+            #"assets_turnover_ratio": self.assets_turnover_ratio,
+            #"inventory_turnover_ratio": self.inventory_turnover_ratio,
             "roa": self.roa,
             "roe": self.roe,
             "roi": self.roi,
