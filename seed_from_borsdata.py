@@ -325,7 +325,7 @@ def instance_annual_data_entities(shares_outstanding, year_df, price_df, company
     report_columns.sort()
 
     first_year = True
-    shares_outstanding = int(float(shares_outstanding.replace(",", ".").replace(" ", "").strip())) # str to int
+    shares_outstanding = float(shares_outstanding.replace(",", ".").replace(" ", "").strip()) # str to float
 
     for col in report_columns:
         fundamental_data = get_fundamental_data(year_df, col)
