@@ -21,7 +21,6 @@ from app.server.db_queries import (
 from .data_functions import get_features_and_target_df
 
 def get_settings(data):
-    print("Data: ", data)
     return {
         "chosen_models": data.get('models'),
         "fundamental_features": data.get('fundamental_features'),
