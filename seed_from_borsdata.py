@@ -320,25 +320,24 @@ def instance_annual_report_entity(year, price_df, share_outstanding, company_obj
 #
 # --- Main instancing method
 # 
-def instance_annual_data_entities(export_folder, year_df, price_df, company_obj): 
+def instance_annual_data_entities(shares_outstanding, year_df, price_df, company_obj): 
     report_columns = [col for col in year_df.columns if str(col).strip().isdigit() and len(str(col).strip()) == 4] #get all valid reports
     report_columns.sort()
 
     first_year = True
-    shares_df = pd.read_csv(f'{export_folder}/{company_obj.ticker}-{company_obj.name}.xlsx - Shares.csv')
-    shares_outstanding_dict = get_shares_outstading_dict(shares_df)
+    shares_outstanding = int(float(shares_outstanding.replace(",", ".").replace(" ", "").strip())) # str to int
 
     for col in report_columns:
         fundamental_data = get_fundamental_data(year_df, col)
         new_fundamental = instance_fundamental_entity(fundamental_data)
 
-        share_outstanding = shares_outstanding_dict.get(f"Q4 {col}")
+        
         if not first_year: #skip metric first report
             metric_data = get_metric_data(year_df, fundamental_data, col, report_columns)
             new_metric = instance_metric_entity(metric_data=metric_data)
-            new_annual_report = instance_annual_report_entity(col, price_df, share_outstanding, company_obj,new_fundamental, new_metric)
+            new_annual_report = instance_annual_report_entity(col, price_df, shares_outstanding, company_obj,new_fundamental, new_metric)
         else: 
-            new_annual_report = instance_annual_report_entity(col, price_df, share_outstanding, company_obj, new_fundamental)
+            new_annual_report = instance_annual_report_entity(col, price_df, shares_outstanding, company_obj, new_fundamental)
 
         db.session.add(new_fundamental)
         if not first_year: #skip metric report firtst
@@ -352,8 +351,7 @@ def run_seeding_engine():
 
     # --- Get a list of stocks to seed in db ---
     allstocks_df = pd.read_csv(f'{export_folder}/Borsdata_AInstein_Screener.csv')
-    col_to_keep = allstocks_df.columns.get_loc('Bolagsnamn')
-    allstocks_df = allstocks_df.iloc[:, :col_to_keep + 1] 
+    allstocks_df = allstocks_df[["Bolagsnamn", "Antal Aktier - Senaste"]]
 
     # Determine the past 4 full years dynamically for Annuals
     current_year = datetime.datetime.now().year 
@@ -404,7 +402,7 @@ def run_seeding_engine():
             new_company = instance_company_entity(info_df=info_df)
             
             instance_annual_data_entities( 
-                export_folder = export_folder,
+                shares_outstanding = row._2,
                 year_df=filtered_year_df, 
                 price_df=price_df, 
                 company_obj=new_company) 
