@@ -27,7 +27,7 @@ class Annual_Report(db.Model):
     report_date: Mapped[date] = mapped_column(nullable=False)
 
     # ==== For our predictions =====
-    #share_outstanding: Mapped[int] = mapped_column(nullable=False) #Borde vara false
+    share_outstanding: Mapped[int] = mapped_column(nullable=False) #Borde vara false
 
     current_price : Mapped[float] = mapped_column(nullable=False)
     one_month_price : Mapped[float] = mapped_column(nullable=False)
@@ -64,7 +64,7 @@ class Quarterly_Report(db.Model):
     report_date: Mapped[date] = mapped_column(nullable=False)
 
     # ==== For our predictions =====
-    #share_outstanding: Mapped[int] = mapped_column(nullable=False)
+    share_outstanding: Mapped[int] = mapped_column(nullable=False)
 
     current_price : Mapped[float] = mapped_column(nullable=False)
     one_month_price : Mapped[float] = mapped_column(nullable=False)

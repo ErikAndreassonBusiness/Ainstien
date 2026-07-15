@@ -14,6 +14,35 @@ from app.server.database import db, Company, Annual_Report, Quarterly_Report, Fu
 #
 # ========== Getters and helper function ==========
 # 
+import re
+import pandas as pd
+
+
+def get_shares_outstading_dict(df):
+    result = {}
+
+    values = df["Börsvärde"].astype(str).str.strip().tolist()
+    quarter_pattern = re.compile(r"Q[1-4]\s+\d{4}")
+
+    for i in range(len(values)):
+        if quarter_pattern.match(values[i]):
+            quarter = values[i]
+
+            if i + 2 < len(values):
+                shares_str = (
+                    values[i + 2].replace(",", ".").replace(" ", "").strip()
+                )
+                try:
+                    shares = float(shares_str)
+                    if shares.is_integer():
+                        shares = int(shares)
+                except ValueError:
+                    shares = shares_str
+
+                result[quarter] = shares
+
+    return result
+
 def get_report_val(df, attr_name, col_name): 
     # Exctract data from a report
     mask = df['Report'] == attr_name
@@ -34,6 +63,36 @@ def get_info_val(info_df, label_name):
         raise ValueError
 
 
+def get_shares_outstanding(ticker, date):
+    ticker_obj = yf.Ticker(ticker)
+    df = ticker_obj.balance_sheet
+        
+    shares_row = df.loc['Ordinary Shares Number']
+    shares_row.index = pd.to_datetime(shares_row.index)
+    
+    # Get valid dates
+    target_date = pd.to_datetime(date)
+    valid_shares = shares_row[shares_row.index <= target_date]
+    
+    if valid_shares.empty:
+        # If target date is past the oldest record, get the oldest
+        closest_date = shares_row.index.min()
+    else:
+        # Grab the closest date
+        closest_date = valid_shares.index.max()
+        
+    shares_val = shares_row[closest_date]
+    
+    if pd.isna(shares_val) or shares_val == 0:
+        print(f"No valid shares found on or near {target_date.strftime('%Y-%m-%d')}.")
+        raise ValueError("  No valid amount of shares outstanding found")
+        
+    print(f"Target Date: {target_date.strftime('%Y-%m-%d')} | Closest Report Date: {closest_date.strftime('%Y-%m-%d')}")
+    print(f"Shares outstanding: {shares_val}")
+    
+    return int(shares_val) 
+
+
 def get_max_average_future_prices(price_df, date):
     fetch_end = (date + timedelta(days=90 + 15)).strftime('%Y-%m-%d')
 
@@ -46,10 +105,6 @@ def get_max_average_future_prices(price_df, date):
     ma30_value = window_df['ma30'].max()
 
     return round(float(ma30_value), 2)
-
-
-from datetime import timedelta
-import pandas as pd
 
 def get_price_at_report_date(price_df, date):
     date_str = date.strftime('%Y-%m-%d')
@@ -93,6 +148,9 @@ def get_stock_data_from_excel(file_path):
     return pd.read_excel(file_path, sheet_name=None)
 
 def get_fundamental_data(df, col): 
+    if get_report_val(df, 'Summa Eget Kapital', col) < 0: 
+        raise ValueError("  Total Equity is < 0!")
+
     return {
         "revenue": get_report_val(df, 'Nettoomsättning', col),
         "ebitda": get_report_val(df, 'EBITDA', col),
@@ -195,12 +253,14 @@ def instance_metric_entity(metric_data):
     )
 
 
-def instance_annual_report_entity(year, price_df, company_obj, fundamental_obj, metric_obj = None): 
+def instance_annual_report_entity(year, price_df, share_outstanding, company_obj, fundamental_obj, metric_obj = None): 
     date = datetime.datetime(int(year), 2, 15) # datum: 15 feb. year
 
     if metric_obj is not None: 
         return Annual_Report(
             report_date = date, 
+
+            share_outstanding = share_outstanding,
 
             current_price = get_price_at_report_date(
                 price_df=price_df, 
@@ -231,6 +291,8 @@ def instance_annual_report_entity(year, price_df, company_obj, fundamental_obj, 
         return Annual_Report(
             report_date = date, 
 
+             share_outstanding = share_outstanding,
+
             current_price = get_price_at_report_date(
                 price_df=price_df, 
                 date=date),
@@ -258,21 +320,25 @@ def instance_annual_report_entity(year, price_df, company_obj, fundamental_obj, 
 #
 # --- Main instancing method
 # 
-def instance_annual_data_entities(year_df, price_df, company_obj): 
+def instance_annual_data_entities(export_folder, year_df, price_df, company_obj): 
     report_columns = [col for col in year_df.columns if str(col).strip().isdigit() and len(str(col).strip()) == 4] #get all valid reports
     report_columns.sort()
 
     first_year = True
+    shares_df = pd.read_csv(f'{export_folder}/{company_obj.ticker}-{company_obj.name}.xlsx - Shares.csv')
+    shares_outstanding_dict = get_shares_outstading_dict(shares_df)
+
     for col in report_columns:
         fundamental_data = get_fundamental_data(year_df, col)
         new_fundamental = instance_fundamental_entity(fundamental_data)
 
+        share_outstanding = shares_outstanding_dict.get(f"Q4 {col}")
         if not first_year: #skip metric first report
             metric_data = get_metric_data(year_df, fundamental_data, col, report_columns)
             new_metric = instance_metric_entity(metric_data=metric_data)
-            new_annual_report = instance_annual_report_entity(col, price_df, company_obj,new_fundamental, new_metric)
+            new_annual_report = instance_annual_report_entity(col, price_df, share_outstanding, company_obj,new_fundamental, new_metric)
         else: 
-            new_annual_report = instance_annual_report_entity(col, price_df, company_obj, new_fundamental)
+            new_annual_report = instance_annual_report_entity(col, price_df, share_outstanding, company_obj, new_fundamental)
 
         db.session.add(new_fundamental)
         if not first_year: #skip metric report firtst
@@ -285,11 +351,11 @@ def run_seeding_engine():
     export_folder = 'Borsdata - Export'
 
     # --- Get a list of stocks to seed in db ---
-    allstocks_df = pd.read_csv(f'{export_folder}/Borsdata_2026-07-10.csv')
+    allstocks_df = pd.read_csv(f'{export_folder}/Borsdata_AInstein_Screener.csv')
     col_to_keep = allstocks_df.columns.get_loc('Bolagsnamn')
     allstocks_df = allstocks_df.iloc[:, :col_to_keep + 1] 
 
-    # Determine the past 5 full years dynamically for Annuals
+    # Determine the past 4 full years dynamically for Annuals
     current_year = datetime.datetime.now().year 
     target_5_years = [str(current_year - i) for i in range(1, 6)] 
 
@@ -307,7 +373,7 @@ def run_seeding_engine():
             price_df = excel_data["PriceDay"]
 
             # ==========================================
-            # 1. ANNUAL REPORT FILTERING (Past 5 Years)
+            # 1. ANNUAL REPORT FILTERING (Past 4 Years)
             # ==========================================
             existing_target_cols = [col for col in year_df.columns if str(col).strip() in target_5_years]
             
@@ -338,6 +404,7 @@ def run_seeding_engine():
             new_company = instance_company_entity(info_df=info_df)
             
             instance_annual_data_entities( 
+                export_folder = export_folder,
                 year_df=filtered_year_df, 
                 price_df=price_df, 
                 company_obj=new_company) 
