@@ -148,6 +148,9 @@ def get_stock_data_from_excel(file_path):
     return pd.read_excel(file_path, sheet_name=None)
 
 def get_fundamental_data(df, col): 
+    if get_report_val(df, 'Summa Eget Kapital', col) < 0: 
+        raise ValueError("  Total Equity is < 0!")
+
     return {
         "revenue": get_report_val(df, 'Nettoomsättning', col),
         "ebitda": get_report_val(df, 'EBITDA', col),
@@ -250,17 +253,14 @@ def instance_metric_entity(metric_data):
     )
 
 
-def instance_annual_report_entity(year, price_df, company_obj, fundamental_obj, metric_obj = None): 
+def instance_annual_report_entity(year, price_df, share_outstanding, company_obj, fundamental_obj, metric_obj = None): 
     date = datetime.datetime(int(year), 2, 15) # datum: 15 feb. year
 
     if metric_obj is not None: 
         return Annual_Report(
             report_date = date, 
 
-            share_outstanding = get_shares_outstanding(
-                ticker = company_obj.yf_ticker,
-                date = date, 
-            ),
+            share_outstanding = share_outstanding,
 
             current_price = get_price_at_report_date(
                 price_df=price_df, 
@@ -291,9 +291,7 @@ def instance_annual_report_entity(year, price_df, company_obj, fundamental_obj, 
         return Annual_Report(
             report_date = date, 
 
-             share_outstanding = get_shares_outstanding(
-                ticker = company_obj.yf_ticker,
-                date = date),
+             share_outstanding = share_outstanding,
 
             current_price = get_price_at_report_date(
                 price_df=price_df, 
@@ -329,19 +327,18 @@ def instance_annual_data_entities(export_folder, year_df, price_df, company_obj)
     first_year = True
     shares_df = pd.read_csv(f'{export_folder}/{company_obj.ticker}-{company_obj.name}.xlsx - Shares.csv')
     shares_outstanding_dict = get_shares_outstading_dict(shares_df)
-    print("Shares dictionary: ", shares_outstanding_dict)
-    print("Report columns: ", report_columns)
 
     for col in report_columns:
         fundamental_data = get_fundamental_data(year_df, col)
         new_fundamental = instance_fundamental_entity(fundamental_data)
 
+        share_outstanding = shares_outstanding_dict.get(f"Q4 {col}")
         if not first_year: #skip metric first report
             metric_data = get_metric_data(year_df, fundamental_data, col, report_columns)
             new_metric = instance_metric_entity(metric_data=metric_data)
-            new_annual_report = instance_annual_report_entity(col, price_df, company_obj,new_fundamental, new_metric)
+            new_annual_report = instance_annual_report_entity(col, price_df, share_outstanding, company_obj,new_fundamental, new_metric)
         else: 
-            new_annual_report = instance_annual_report_entity(col, price_df, company_obj, new_fundamental)
+            new_annual_report = instance_annual_report_entity(col, price_df, share_outstanding, company_obj, new_fundamental)
 
         db.session.add(new_fundamental)
         if not first_year: #skip metric report firtst
